@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.7.0
+ * Version: 0.8.0
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.7.0' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.8.0' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -413,7 +413,18 @@ function diamondistry_render_gallery() {
 		);
 	}
 
+
+	wp_enqueue_script(
+		'diamondistry-gallery',
+		DIAMONDISTRY_CORE_URL . 'assets/js/gallery.js',
+		array(),
+		DIAMONDISTRY_CORE_VERSION,
+		true
+	);
+
+
 	ob_start();
+
 	?>
 
 	<div class="diamondistry-gallery">
@@ -422,28 +433,123 @@ function diamondistry_render_gallery() {
 
 			<?php
 
-			$data = diamondistry_get_painting_data(
-				$painting
-			);
+			$data =
+				diamondistry_get_painting_data(
+					$painting
+				);
 
-			$play_url = add_query_arg(
-				'painting',
-				$painting->post_name,
-				home_url( '/play/' )
-			);
+			if ( ! $data ) {
+				continue;
+			}
+
+
+			$play_url =
+				add_query_arg(
+					'painting',
+					$painting->post_name,
+					home_url(
+						'/play/'
+					)
+				);
+
+
+			$total_cells =
+				$data['width'] *
+				$data['height'];
+
+
+			/*
+			 * Create easy palette lookup:
+			 *
+			 * 1 => #ef7c8e
+			 * 2 => #f5c451
+			 * ...
+			 */
+			$palette_map =
+				array();
+
+			foreach (
+				$data['palette']
+				as
+				$color
+			) {
+				if (
+					isset(
+						$color['id'],
+						$color['hex']
+					)
+				) {
+					$palette_map[
+						absint(
+							$color['id']
+						)
+					] =
+						sanitize_hex_color(
+							$color['hex']
+						);
+				}
+			}
 
 			?>
 
 			<a
 				class="diamondistry-gallery-card"
 				href="<?php echo esc_url( $play_url ); ?>"
+				data-painting-id="<?php echo esc_attr( $data['id'] ); ?>"
+				data-total="<?php echo esc_attr( $total_cells ); ?>"
 			>
 
 				<div class="diamondistry-gallery-preview">
-					<span aria-hidden="true">
-						💎
-					</span>
+
+					<span
+						class="diamondistry-gallery-badge"
+						hidden
+					></span>
+
+					<div
+						class="diamondistry-gallery-preview-grid"
+						style="
+							--painting-width:
+							<?php echo esc_attr( $data['width'] ); ?>;
+							--painting-height:
+							<?php echo esc_attr( $data['height'] ); ?>;
+						"
+						aria-hidden="true"
+					>
+
+						<?php foreach ( $data['pattern'] as $color_id ) : ?>
+
+							<?php
+
+							$color_id =
+								absint(
+									$color_id
+								);
+
+							$hex =
+								isset(
+									$palette_map[
+										$color_id
+									]
+								)
+									? $palette_map[
+										$color_id
+									]
+									: '#eeeeee';
+
+							?>
+
+							<span
+								class="diamondistry-gallery-preview-cell"
+								style="background-color: <?php echo esc_attr( $hex ); ?>;"
+							></span>
+
+						<?php endforeach; ?>
+
+					</div>
+
 				</div>
+
 
 				<div class="diamondistry-gallery-content">
 
@@ -456,6 +562,7 @@ function diamondistry_render_gallery() {
 						);
 						?>
 					</h2>
+
 
 					<div class="diamondistry-gallery-meta">
 
@@ -479,6 +586,25 @@ function diamondistry_render_gallery() {
 						</span>
 
 					</div>
+
+
+					<div
+						class="diamondistry-gallery-progress"
+						hidden
+					>
+
+						<div class="diamondistry-gallery-progress-track">
+
+							<div
+								class="diamondistry-gallery-progress-bar"
+							></div>
+
+						</div>
+
+						<span class="diamondistry-gallery-progress-text"></span>
+
+					</div>
+
 
 					<span class="diamondistry-gallery-action">
 						Start painting →

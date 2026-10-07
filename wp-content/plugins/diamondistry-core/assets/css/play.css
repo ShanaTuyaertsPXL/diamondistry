@@ -8,6 +8,10 @@
   color: #222;
 }
 
+/* -------------------------------------------------------
+   Game header
+------------------------------------------------------- */
+
 .diamondistry-game-header {
   display: flex;
   justify-content: space-between;
@@ -50,6 +54,10 @@
   white-space: nowrap;
 }
 
+/* -------------------------------------------------------
+   Main progress
+------------------------------------------------------- */
+
 .diamondistry-progress {
   height: 10px;
   margin-bottom: 32px;
@@ -70,6 +78,10 @@
   transition: width 0.25s ease;
 }
 
+/* -------------------------------------------------------
+   Workspace
+------------------------------------------------------- */
+
 .diamondistry-workspace {
   display: grid;
 
@@ -82,6 +94,10 @@
 
   align-items: start;
 }
+
+/* -------------------------------------------------------
+   Painting grid
+------------------------------------------------------- */
 
 .diamondistry-grid {
   grid-area: canvas;
@@ -146,6 +162,10 @@
   z-index: 3;
 }
 
+/* -------------------------------------------------------
+   Completed diamond
+------------------------------------------------------- */
+
 .diamondistry-cell.is-completed {
   position: relative;
 
@@ -197,9 +217,17 @@
   transform: rotate(-20deg);
 }
 
+/* -------------------------------------------------------
+   Wrong placement
+------------------------------------------------------- */
+
 .diamondistry-cell.is-wrong {
   animation: diamondistry-shake 0.3s ease;
 }
+
+/* -------------------------------------------------------
+   Sidebar
+------------------------------------------------------- */
 
 .diamondistry-sidebar {
   grid-area: sidebar;
@@ -219,6 +247,10 @@
   margin-top: 0;
   margin-bottom: 16px;
 }
+
+/* -------------------------------------------------------
+   Palette
+------------------------------------------------------- */
 
 .diamondistry-palette {
   display: grid;
@@ -265,6 +297,10 @@
 .diamondistry-color.is-complete.is-selected {
   opacity: 0.7;
 }
+
+/* -------------------------------------------------------
+   Palette preview
+------------------------------------------------------- */
 
 .diamondistry-color-preview {
   display: grid;
@@ -333,6 +369,10 @@
   filter: grayscale(0.15);
 }
 
+/* -------------------------------------------------------
+   Help + message
+------------------------------------------------------- */
+
 .diamondistry-help {
   margin-top: 24px;
 
@@ -348,6 +388,10 @@
 
   font-weight: 700;
 }
+
+/* -------------------------------------------------------
+   Reset button
+------------------------------------------------------- */
 
 .diamondistry-reset {
   width: 100%;
@@ -386,21 +430,26 @@
   outline-offset: 2px;
 }
 
-/* Gallery */
+/* =======================================================
+   Gallery
+======================================================= */
 
 .diamondistry-gallery {
   display: grid;
 
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 
   gap: 24px;
 
-  max-width: 1000px;
+  max-width: 1100px;
 
   margin: 40px auto 60px;
-
   padding: 0 24px;
 }
+
+/* -------------------------------------------------------
+   Gallery card
+------------------------------------------------------- */
 
 .diamondistry-gallery-card {
   display: block;
@@ -432,34 +481,106 @@
   box-shadow: 0 18px 45px rgb(0 0 0 / 0.09);
 }
 
+/* -------------------------------------------------------
+   Gallery preview
+------------------------------------------------------- */
+
 .diamondistry-gallery-preview {
+  position: relative;
+
   display: grid;
   place-items: center;
 
   aspect-ratio: 16 / 10;
 
-  background: linear-gradient(135deg, #fafafa, #f0f0f0);
+  padding: 28px;
 
-  font-size: 3.75rem;
+  overflow: hidden;
+
+  background: linear-gradient(135deg, #fafafa, #f2f2f2);
 }
+
+.diamondistry-gallery-preview-grid {
+  display: grid;
+
+  grid-template-columns: repeat(var(--painting-width), 1fr);
+
+  width: min(72%, 260px);
+
+  aspect-ratio: var(--painting-width) / var(--painting-height);
+
+  overflow: hidden;
+
+  border-radius: 10px;
+
+  background: #e5e5e5;
+
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.12);
+
+  transform: scale(1);
+
+  transition: transform 0.2s ease;
+}
+
+.diamondistry-gallery-card:hover .diamondistry-gallery-preview-grid {
+  transform: scale(1.035);
+}
+
+.diamondistry-gallery-preview-cell {
+  display: block;
+
+  min-width: 0;
+  min-height: 0;
+
+  aspect-ratio: 1;
+}
+
+/* -------------------------------------------------------
+   Gallery status badge
+------------------------------------------------------- */
+
+.diamondistry-gallery-badge {
+  position: absolute;
+
+  top: 16px;
+  right: 16px;
+
+  z-index: 2;
+
+  padding: 6px 9px;
+
+  border-radius: 999px;
+
+  background: rgb(255 255 255 / 0.94);
+
+  color: #444;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+}
+
+.diamondistry-gallery-card.is-completed .diamondistry-gallery-badge {
+  color: #2f7d4f;
+}
+
+/* -------------------------------------------------------
+   Gallery content
+------------------------------------------------------- */
 
 .diamondistry-gallery-content {
   padding: 22px;
 }
 
 .diamondistry-gallery-card h2 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
+
+  color: #222;
 
   font-size: 1.4rem;
-}
 
-.diamondistry-gallery-description {
-  margin: 0 0 18px;
-
-  color: #666;
-
-  font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: 1.25;
 }
 
 .diamondistry-gallery-meta {
@@ -478,14 +599,73 @@
   font-weight: 600;
 }
 
+/* -------------------------------------------------------
+   Gallery progress
+------------------------------------------------------- */
+
+.diamondistry-gallery-progress {
+  margin-top: 18px;
+}
+
+.diamondistry-gallery-progress-track {
+  width: 100%;
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #ededed;
+}
+
+.diamondistry-gallery-progress-bar {
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #222;
+
+  transition: width 0.25s ease;
+}
+
+.diamondistry-gallery-progress-text {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #777;
+
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   Gallery action
+------------------------------------------------------- */
+
 .diamondistry-gallery-action {
   display: inline-block;
 
   margin-top: 18px;
 
+  color: #222;
+
   font-size: 0.9rem;
   font-weight: 700;
 }
+
+.diamondistry-gallery-card.is-in-progress .diamondistry-gallery-action {
+  font-weight: 800;
+}
+
+.diamondistry-gallery-card.is-completed .diamondistry-gallery-action {
+  color: #2f7d4f;
+}
+
+/* -------------------------------------------------------
+   Empty state
+------------------------------------------------------- */
 
 .diamondistry-empty {
   max-width: 1000px;
@@ -504,6 +684,10 @@
   text-align: center;
 }
 
+/* -------------------------------------------------------
+   Animation
+------------------------------------------------------- */
+
 @keyframes diamondistry-shake {
   0%,
   100% {
@@ -518,6 +702,10 @@
     transform: translateX(4px);
   }
 }
+
+/* =======================================================
+   Responsive
+======================================================= */
 
 @media (max-width: 950px) {
   .diamondistry-workspace {
@@ -581,6 +769,10 @@
 
     padding: 0 16px;
   }
+
+  .diamondistry-gallery-preview-grid {
+    width: min(70%, 240px);
+  }
 }
 
 @media (max-width: 520px) {
@@ -613,5 +805,13 @@
 
   .diamondistry-color-count small {
     font-size: 0.7rem;
+  }
+
+  .diamondistry-gallery-preview {
+    padding: 20px;
+  }
+
+  .diamondistry-gallery-content {
+    padding: 18px;
   }
 }
