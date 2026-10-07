@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const message = document.getElementById("diamondistry-message");
   const resetButton = document.getElementById("diamondistry-reset");
 
-  if (!grid || !palette) {
+  if (!grid || !palette || !message) {
     return;
   }
 
@@ -42,13 +42,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const expectedCells = painting.width * painting.height;
 
+  /*
+	|--------------------------------------------------------------------------
+	| Validate painting
+	|--------------------------------------------------------------------------
+	*/
+
   if (painting.pattern.length !== expectedCells) {
     message.textContent = `Ongeldig patroon: verwacht ${expectedCells} vakjes, maar vond ${painting.pattern.length}.`;
 
     return;
   }
 
-  const colors = painting.palette;
+  if (painting.pattern.some((value) => value === 0)) {
+    message.textContent =
+      "Deze painting is nog niet compleet en kan nog niet gespeeld worden.";
+
+    return;
+  }
+
+  const paletteIds = new Set(painting.palette.map((color) => color.id));
+
+  if (painting.pattern.some((value) => !paletteIds.has(value))) {
+    message.textContent =
+      "Deze painting bevat een ongeldige kleur en kan niet geladen worden.";
+
+    return;
+  }
+
+  /*
+	|--------------------------------------------------------------------------
+	| Only use colors that actually occur in the painting
+	|--------------------------------------------------------------------------
+	*/
+
+  const usedColorIds = new Set(painting.pattern);
+
+  const colors = painting.palette.filter((color) => usedColorIds.has(color.id));
+
+  if (colors.length === 0) {
+    message.textContent = "Deze painting bevat geen bruikbare kleuren.";
+
+    return;
+  }
 
   const totalDiamonds = expectedCells;
 
@@ -73,7 +109,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.title = `${painting.title} – Diamondistry`;
 
-  totalElement.textContent = totalDiamonds;
+  if (totalElement) {
+    totalElement.textContent = totalDiamonds;
+  }
+
+  /*
+	|--------------------------------------------------------------------------
+	| Helpers
+	|--------------------------------------------------------------------------
+	*/
 
   function getColor(colorId) {
     return colors.find((color) => color.id === Number(colorId));
@@ -82,6 +126,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function getRemaining(colorId) {
     return totalsByColor[colorId] - completedByColor[colorId];
   }
+
+  /*
+	|--------------------------------------------------------------------------
+	| Grid
+	|--------------------------------------------------------------------------
+	*/
 
   function createGrid() {
     grid.innerHTML = "";
@@ -116,6 +166,12 @@ document.addEventListener("DOMContentLoaded", () => {
       grid.appendChild(cell);
     });
   }
+
+  /*
+	|--------------------------------------------------------------------------
+	| Palette
+	|--------------------------------------------------------------------------
+	*/
 
   function createPalette() {
     palette.innerHTML = "";
@@ -152,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
 					</span>
 
 					<span class="diamondistry-color-count">
-
 						<strong
 							data-remaining="${color.id}"
 						>
@@ -164,7 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
 						>
 							0 / 0
 						</small>
-
 					</span>
 				`;
 
@@ -226,6 +280,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /*
+	|--------------------------------------------------------------------------
+	| Complete cells
+	|--------------------------------------------------------------------------
+	*/
+
   function completeCell(cell, color) {
     cell.dataset.completed = "true";
 
@@ -284,13 +344,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /*
+	|--------------------------------------------------------------------------
+	| Progress
+	|--------------------------------------------------------------------------
+	*/
+
   function updateProgress() {
     const percentage =
       totalDiamonds > 0 ? (completed / totalDiamonds) * 100 : 0;
 
-    completedElement.textContent = completed;
+    if (completedElement) {
+      completedElement.textContent = completed;
+    }
 
-    progressBar.style.width = `${percentage}%`;
+    if (progressBar) {
+      progressBar.style.width = `${percentage}%`;
+    }
 
     if (completed === totalDiamonds) {
       message.textContent = `✨ ${painting.title} voltooid! +${painting.reward} Diamonds`;
@@ -313,7 +383,9 @@ document.addEventListener("DOMContentLoaded", () => {
         `[data-remaining="${color.id}"]`,
       );
 
-      const totalElement = document.querySelector(`[data-total="${color.id}"]`);
+      const totalElementForColor = document.querySelector(
+        `[data-total="${color.id}"]`,
+      );
 
       const button = document.querySelector(
         `.diamondistry-color[data-color="${color.id}"]`,
@@ -324,8 +396,8 @@ document.addEventListener("DOMContentLoaded", () => {
           remaining === 0 ? "✓ Klaar" : `${remaining} over`;
       }
 
-      if (totalElement) {
-        totalElement.textContent = `${done} / ${total}`;
+      if (totalElementForColor) {
+        totalElementForColor.textContent = `${done} / ${total}`;
       }
 
       if (button) {
@@ -333,6 +405,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  /*
+	|--------------------------------------------------------------------------
+	| Local storage
+	|--------------------------------------------------------------------------
+	*/
 
   function saveProgress() {
     const completedCells = [];
@@ -375,6 +453,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch {
       localStorage.removeItem(storageKey);
 
+      updateProgress();
+      updatePaletteCounts();
+
       return;
     }
 
@@ -382,6 +463,9 @@ document.addEventListener("DOMContentLoaded", () => {
       progress.paintingId !== painting.id ||
       !Array.isArray(progress.completedCells)
     ) {
+      updateProgress();
+      updatePaletteCounts();
+
       return;
     }
 
@@ -391,9 +475,22 @@ document.addEventListener("DOMContentLoaded", () => {
       completedByColor[color.id] = 0;
     });
 
+    const restoredIndexes = new Set();
+
     progress.completedCells.forEach((index) => {
+      const numericIndex = Number(index);
+
+      if (
+        !Number.isInteger(numericIndex) ||
+        numericIndex < 0 ||
+        numericIndex >= totalDiamonds ||
+        restoredIndexes.has(numericIndex)
+      ) {
+        return;
+      }
+
       const cell = document.querySelector(
-        `.diamondistry-cell[data-index="${index}"]`,
+        `.diamondistry-cell[data-index="${numericIndex}"]`,
       );
 
       if (!cell) {
@@ -405,6 +502,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!color) {
         return;
       }
+
+      restoredIndexes.add(numericIndex);
 
       completeCell(cell, color);
 
@@ -428,6 +527,12 @@ document.addEventListener("DOMContentLoaded", () => {
       message.textContent = `Verder waar je gebleven was — ${percentage}% voltooid`;
     }
   }
+
+  /*
+	|--------------------------------------------------------------------------
+	| Reset
+	|--------------------------------------------------------------------------
+	*/
 
   function resetPainting() {
     const confirmed = window.confirm(
@@ -474,6 +579,12 @@ document.addEventListener("DOMContentLoaded", () => {
     message.textContent = "Painting opnieuw gestart.";
   }
 
+  /*
+	|--------------------------------------------------------------------------
+	| Pointer controls
+	|--------------------------------------------------------------------------
+	*/
+
   grid.addEventListener("pointerdown", (event) => {
     const cell = event.target.closest(".diamondistry-cell");
 
@@ -483,7 +594,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     isPainting = true;
 
-    grid.setPointerCapture(event.pointerId);
+    if (typeof grid.setPointerCapture === "function") {
+      grid.setPointerCapture(event.pointerId);
+    }
 
     placeDiamond(cell);
   });
@@ -505,7 +618,10 @@ document.addEventListener("DOMContentLoaded", () => {
   grid.addEventListener("pointerup", (event) => {
     isPainting = false;
 
-    if (grid.hasPointerCapture(event.pointerId)) {
+    if (
+      typeof grid.hasPointerCapture === "function" &&
+      grid.hasPointerCapture(event.pointerId)
+    ) {
       grid.releasePointerCapture(event.pointerId);
     }
   });
@@ -513,7 +629,10 @@ document.addEventListener("DOMContentLoaded", () => {
   grid.addEventListener("pointercancel", (event) => {
     isPainting = false;
 
-    if (grid.hasPointerCapture(event.pointerId)) {
+    if (
+      typeof grid.hasPointerCapture === "function" &&
+      grid.hasPointerCapture(event.pointerId)
+    ) {
       grid.releasePointerCapture(event.pointerId);
     }
   });
@@ -527,6 +646,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (resetButton) {
     resetButton.addEventListener("click", resetPainting);
   }
+
+  /*
+	|--------------------------------------------------------------------------
+	| Start
+	|--------------------------------------------------------------------------
+	*/
 
   createGrid();
   createPalette();

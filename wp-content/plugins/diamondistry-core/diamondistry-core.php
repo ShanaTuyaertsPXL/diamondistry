@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.4.0
+ * Version: 0.7.0
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.4.0' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.7.0' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 

@@ -3,6 +3,8 @@
   gap: 28px;
 }
 
+/* Settings */
+
 .diamondistry-admin-settings {
   display: flex;
   align-items: end;
@@ -11,10 +13,10 @@
 
   padding: 20px;
 
-  background: #f6f7f7;
-
   border: 1px solid #dcdcde;
-  border-radius: 8px;
+  border-radius: 10px;
+
+  background: #f6f7f7;
 }
 
 .diamondistry-admin-field {
@@ -30,111 +32,309 @@
   width: 120px;
 }
 
-.diamondistry-admin-section {
+/* Workspace */
+
+.diamondistry-admin-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 22px;
+  align-items: start;
+}
+
+.diamondistry-admin-main {
+  min-width: 0;
+}
+
+.diamondistry-admin-sidebar {
+  position: sticky;
+  top: 46px;
+
+  display: grid;
+  gap: 18px;
+}
+
+/* Panels */
+
+.diamondistry-admin-panel {
+  min-width: 0;
+
   padding: 20px;
 
   border: 1px solid #dcdcde;
-  border-radius: 8px;
+  border-radius: 10px;
 
   background: #fff;
 }
 
-.diamondistry-admin-section-header {
+.diamondistry-admin-panel-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: flex-start;
 
-  gap: 20px;
+  gap: 14px;
 
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
-.diamondistry-admin-section-header h3 {
+.diamondistry-admin-panel-header h3 {
   margin: 0 0 4px;
 }
 
-.diamondistry-admin-section-header p {
+.diamondistry-admin-panel-header p {
   margin: 0;
 
   color: #646970;
+
+  font-size: 12px;
+  line-height: 1.45;
 }
 
-.diamondistry-admin-palette {
-  display: grid;
-  gap: 10px;
+.diamondistry-admin-palette-header {
+  align-items: center;
 }
 
-.diamondistry-admin-color {
-  display: grid;
+/* Toolbar */
 
-  grid-template-columns:
-    auto
-    minmax(140px, 1fr)
-    70px
-    70px
-    auto;
-
+.diamondistry-admin-toolbar {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 
-  gap: 12px;
+  gap: 10px;
+
+  flex-wrap: wrap;
+
+  margin-bottom: 12px;
 
   padding: 10px;
 
-  border: 2px solid transparent;
+  border: 1px solid #dcdcde;
   border-radius: 8px;
 
   background: #f6f7f7;
 }
 
+.diamondistry-admin-toolbar-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Selected color */
+
+.diamondistry-selected-color {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 40px;
+
+  margin-bottom: 12px;
+  padding: 8px 11px;
+
+  border: 1px solid #dcdcde;
+  border-radius: 7px;
+
+  background: #fff;
+}
+
+.diamondistry-selected-label {
+  color: #646970;
+
+  font-size: 12px;
+}
+
+.diamondistry-selected-swatch {
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 22px;
+
+  border-radius: 5px;
+
+  background: var(--color);
+
+  box-shadow:
+    inset 1px 1px 2px rgb(255 255 255 / 0.4),
+    inset -1px -1px 2px rgb(0 0 0 / 0.15);
+}
+
+/* Status */
+
+.diamondistry-admin-status {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+
+  border-radius: 7px;
+}
+
+.diamondistry-admin-status.is-incomplete {
+  background: #fcf0f1;
+  color: #8a2424;
+}
+
+.diamondistry-admin-status.is-complete {
+  background: #edfaef;
+  color: #1e6b2b;
+}
+
+/* Palette sidebar */
+
+.diamondistry-admin-palette {
+  display: grid;
+  gap: 8px;
+
+  max-height: 430px;
+  overflow-y: auto;
+
+  padding-right: 3px;
+}
+
+.diamondistry-admin-color {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 8px;
+
+  border: 2px solid transparent;
+  border-radius: 8px;
+
+  background: #f6f7f7;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.diamondistry-admin-color:hover {
+  background: #f0f0f1;
+}
+
 .diamondistry-admin-color.is-selected {
   border-color: #2271b1;
-
   background: #f0f6fc;
 }
 
-.diamondistry-admin-color-select {
-  padding: 0;
+.diamondistry-admin-color.is-editing {
+  cursor: default;
 
-  border: 0;
+  border-color: #8c8f94;
 
-  background: transparent;
-
-  cursor: pointer;
+  background: #fff;
 }
+
+/* Swatches */
 
 .diamondistry-admin-swatch {
   display: grid;
   place-items: center;
 
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
 
   border-radius: 7px;
 
   background: var(--color);
 
-  color: #fff;
+  color: var(--symbol-color, #111);
 
   font-weight: 800;
 
   box-shadow:
-    inset 2px 2px 3px rgb(255 255 255 / 0.3),
-    inset -2px -2px 3px rgb(0 0 0 / 0.15);
+    inset 2px 2px 3px rgb(255 255 255 / 0.32),
+    inset -2px -2px 3px rgb(0 0 0 / 0.14);
 }
 
-.diamondistry-admin-color-name,
-.diamondistry-admin-color-symbol {
+.diamondistry-admin-color-summary {
+  display: grid;
+  gap: 2px;
+
+  min-width: 0;
+}
+
+.diamondistry-admin-color-summary strong {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diamondistry-admin-color-summary span {
+  color: #646970;
+
+  font-size: 11px;
+}
+
+.diamondistry-admin-color-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.diamondistry-admin-color-edit,
+.diamondistry-admin-color-remove {
+  min-width: 30px;
+}
+
+/* Color editor */
+
+.diamondistry-admin-color-edit-fields {
+  grid-column: 1 / -1;
+
+  display: grid;
+  gap: 10px;
+
   width: 100%;
 }
+
+.diamondistry-admin-color-edit-fields label {
+  display: grid;
+  gap: 4px;
+}
+
+.diamondistry-admin-color-edit-fields label span {
+  color: #646970;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.diamondistry-admin-color-edit-fields input[type="text"] {
+  width: 100%;
+}
+
+.diamondistry-admin-color-edit-fields input[type="color"] {
+  width: 100%;
+  height: 36px;
+
+  padding: 2px;
+}
+
+.diamondistry-admin-color-edit-actions {
+  grid-column: 1 / -1;
+
+  display: flex;
+  gap: 6px;
+}
+
+/* Grid */
 
 .diamondistry-admin-grid-wrapper {
   overflow: auto;
 
   padding: 14px;
 
-  background: #e5e5e5;
-
   border-radius: 10px;
+
+  background: #e5e5e5;
 }
 
 .diamondistry-admin-grid {
@@ -143,6 +343,11 @@
 
   width: max-content;
   min-width: 100%;
+
+  touch-action: none;
+
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .diamondistry-admin-cell {
@@ -158,31 +363,139 @@
   border: 0;
   border-radius: 4px;
 
-  background: #fff;
+  background: var(--cell-color, #fff);
+  color: var(--symbol-color, #111);
 
-  color: #111;
-
-  font-size: 14px;
   font-weight: 800;
 
-  cursor: pointer;
+  cursor: crosshair;
+
+  box-shadow:
+    inset 1px 1px 2px rgb(255 255 255 / 0.25),
+    inset -1px -1px 2px rgb(0 0 0 / 0.08);
 }
 
 .diamondistry-admin-cell:hover {
+  position: relative;
+
+  z-index: 2;
+
   outline: 2px solid #2271b1;
   outline-offset: -2px;
 }
 
-@media (max-width: 782px) {
-  .diamondistry-admin-color {
-    grid-template-columns:
-      auto
-      1fr;
+.diamondistry-admin-cell.is-empty {
+  position: relative;
+
+  border: 1px dashed #c3c4c7;
+
+  background: #fff;
+
+  box-shadow: none;
+}
+
+.diamondistry-admin-cell.is-empty::after {
+  content: "";
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #dcdcde;
+}
+
+/* Preview */
+
+.diamondistry-admin-preview-frame {
+  padding: 10px;
+
+  overflow: hidden;
+
+  border-radius: 9px;
+
+  background: #e5e5e5;
+}
+
+.diamondistry-admin-preview {
+  display: grid;
+  gap: 1px;
+
+  width: 100%;
+
+  overflow: hidden;
+
+  border-radius: 4px;
+
+  background: #fff;
+}
+
+.diamondistry-preview-cell {
+  display: block;
+
+  min-width: 0;
+  min-height: 0;
+
+  aspect-ratio: 1;
+}
+
+.diamondistry-preview-cell.is-empty {
+  background: repeating-linear-gradient(
+    45deg,
+    #fff,
+    #fff 3px,
+    #eee 3px,
+    #eee 6px
+  );
+}
+
+.diamondistry-admin-preview-info {
+  margin-top: 10px;
+
+  color: #646970;
+
+  font-size: 12px;
+
+  text-align: center;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .diamondistry-admin-workspace {
+    grid-template-columns: 1fr;
   }
 
-  .diamondistry-admin-color-hex,
-  .diamondistry-admin-color-symbol,
-  .diamondistry-admin-color-remove {
-    grid-column: 2;
+  .diamondistry-admin-sidebar {
+    position: static;
+
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+
+  .diamondistry-admin-palette {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 782px) {
+  .diamondistry-admin-settings {
+    align-items: stretch;
+  }
+
+  .diamondistry-admin-field input[type="number"] {
+    width: 100%;
+  }
+
+  .diamondistry-admin-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .diamondistry-admin-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .diamondistry-admin-preview-frame {
+    max-width: 320px;
   }
 }
