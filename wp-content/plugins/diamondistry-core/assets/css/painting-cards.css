@@ -1,0 +1,242 @@
+.diamondistry-painting-card {
+  display: block;
+
+  overflow: hidden;
+
+  border: 1px solid #e5e5e5;
+  border-radius: 18px;
+
+  background: #fff;
+
+  color: #222;
+
+  text-decoration: none;
+
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.04);
+
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.diamondistry-painting-card:hover {
+  transform: translateY(-3px);
+
+  border-color: #ccc;
+
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.08);
+}
+
+/* -------------------------------------------------------
+   Preview wrapper
+------------------------------------------------------- */
+
+.diamondistry-painting-card-preview {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  aspect-ratio: 16 / 10;
+
+  padding: 26px;
+
+  overflow: hidden;
+
+  background: linear-gradient(135deg, #fafafa, #f2f2f2);
+}
+
+/* -------------------------------------------------------
+   Painting preview
+------------------------------------------------------- */
+
+.diamondistry-card-preview-grid {
+  display: grid;
+
+  grid-template-columns: repeat(var(--painting-width), 1fr);
+
+  width: min(72%, 240px);
+
+  aspect-ratio: var(--painting-width) / var(--painting-height);
+
+  overflow: hidden;
+
+  border-radius: 9px;
+
+  background: #ddd;
+
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.12);
+
+  transition: transform 0.18s ease;
+}
+
+.diamondistry-painting-card:hover .diamondistry-card-preview-grid {
+  transform: scale(1.025);
+}
+
+.diamondistry-card-preview-cell {
+  display: block;
+
+  min-width: 0;
+  min-height: 0;
+
+  aspect-ratio: 1;
+
+  background: var(--cell-color);
+}
+
+/* -------------------------------------------------------
+   In-progress gimmick
+------------------------------------------------------- */
+
+.diamondistry-card-preview-grid.is-progress .diamondistry-card-preview-cell {
+  background: #dedede;
+}
+
+.diamondistry-card-preview-grid.is-progress
+  .diamondistry-card-preview-cell.is-filled {
+  background: var(--cell-color);
+}
+
+/*
+ * New and completed paintings show the complete artwork.
+ */
+
+.diamondistry-card-preview-grid.is-new .diamondistry-card-preview-cell,
+.diamondistry-card-preview-grid.is-completed .diamondistry-card-preview-cell {
+  background: var(--cell-color);
+}
+
+/* -------------------------------------------------------
+   Badge
+------------------------------------------------------- */
+
+.diamondistry-painting-card-badge {
+  position: absolute;
+
+  top: 14px;
+  right: 14px;
+
+  z-index: 2;
+
+  padding: 6px 9px;
+
+  border-radius: 999px;
+
+  background: rgb(255 255 255 / 0.94);
+
+  color: #444;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.08);
+}
+
+.diamondistry-painting-card.is-completed .diamondistry-painting-card-badge {
+  color: #2f7d4f;
+}
+
+/* -------------------------------------------------------
+   Content
+------------------------------------------------------- */
+
+.diamondistry-painting-card-content {
+  padding: 21px;
+}
+
+.diamondistry-painting-card h3 {
+  margin: 0 0 12px;
+
+  color: #222;
+
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.diamondistry-painting-card-meta {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding-top: 13px;
+
+  border-top: 1px solid #eee;
+
+  color: #666;
+
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   Progress
+------------------------------------------------------- */
+
+.diamondistry-painting-card-progress {
+  margin-top: 17px;
+}
+
+.diamondistry-painting-card-progress-track {
+  width: 100%;
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #ededed;
+}
+
+.diamondistry-painting-card-progress-bar {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #222;
+}
+
+.diamondistry-painting-card-progress-text {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #777;
+
+  font-size: 0.73rem;
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   Completed
+------------------------------------------------------- */
+
+.diamondistry-painting-card-completed {
+  margin-top: 17px;
+
+  color: #2f7d4f;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------
+   Action
+------------------------------------------------------- */
+
+.diamondistry-painting-card-action {
+  display: inline-block;
+
+  margin-top: 18px;
+
+  color: #222;
+
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.diamondistry-painting-card.is-completed .diamondistry-painting-card-action {
+  color: #2f7d4f;
+}

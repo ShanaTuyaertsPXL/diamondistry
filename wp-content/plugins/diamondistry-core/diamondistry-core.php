@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.10.0
+ * Version: 0.12.0
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.10.0' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.12.0' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -22,6 +22,10 @@ define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 */
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/progress.php';
+
+require_once DIAMONDISTRY_CORE_PATH . 'includes/painting-cards.php';
+
+require_once DIAMONDISTRY_CORE_PATH . 'includes/dashboard.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/admin/painting-editor.php';
 
@@ -446,17 +450,31 @@ add_shortcode(
 
 function diamondistry_render_gallery() {
 
-	$paintings = get_posts(
-		array(
-			'post_type'      => 'ddp_painting',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'orderby'        => 'title',
-			'order'          => 'ASC',
-		)
-	);
+	$paintings =
+		get_posts(
+			array(
+				'post_type' =>
+					'ddp_painting',
 
-	if ( empty( $paintings ) ) {
+				'post_status' =>
+					'publish',
+
+				'posts_per_page' =>
+					-1,
+
+				'orderby' =>
+					'title',
+
+				'order' =>
+					'ASC',
+			)
+		);
+
+	if (
+		empty(
+			$paintings
+		)
+	) {
 		return sprintf(
 			'<div class="diamondistry-empty">%s</div>',
 			esc_html__(
@@ -467,6 +485,9 @@ function diamondistry_render_gallery() {
 	}
 
 
+	diamondistry_enqueue_painting_card_assets();
+
+
 	wp_enqueue_script(
 		'diamondistry-gallery',
 		DIAMONDISTRY_CORE_URL . 'assets/js/gallery.js',
@@ -475,45 +496,48 @@ function diamondistry_render_gallery() {
 		true
 	);
 
+
 	$gallery_user =
-	array(
-		'loggedIn' =>
-			is_user_logged_in(),
+		array(
+			'loggedIn' =>
+				is_user_logged_in(),
 
-		'progress' =>
-			array(),
+			'progress' =>
+				array(),
 
-		'balance' =>
-			0,
+			'balance' =>
+				0,
+		);
+
+
+	if (
+		is_user_logged_in()
+	) {
+
+		$user_id =
+			get_current_user_id();
+
+		$gallery_user[
+			'progress'
+		] =
+			diamondistry_get_all_user_progress(
+				$user_id
+			);
+
+		$gallery_user[
+			'balance'
+		] =
+			diamondistry_get_user_balance(
+				$user_id
+			);
+	}
+
+
+	wp_localize_script(
+		'diamondistry-gallery',
+		'DiamondistryGalleryUser',
+		$gallery_user
 	);
-
-
-if (
-	is_user_logged_in()
-) {
-
-	$user_id =
-		get_current_user_id();
-
-
-	$gallery_user['progress'] =
-		diamondistry_get_all_user_progress(
-			$user_id
-		);
-
-
-	$gallery_user['balance'] =
-		diamondistry_get_user_balance(
-			$user_id
-		);
-}
-
-
-wp_localize_script(
-	'diamondistry-gallery',
-	'DiamondistryGalleryUser',
-	$gallery_user
-);
 
 
 	ob_start();
@@ -522,191 +546,54 @@ wp_localize_script(
 
 	<div class="diamondistry-gallery">
 
-		<?php foreach ( $paintings as $painting ) : ?>
+		<?php foreach (
+			$paintings as
+			$painting
+		) : ?>
 
 			<?php
 
-			$data =
-				diamondistry_get_painting_data(
-					$painting
-				);
+			$progress =
+				null;
 
-			if ( ! $data ) {
-				continue;
-			}
-
-
-			$play_url =
-				add_query_arg(
-					'painting',
-					$painting->post_name,
-					home_url(
-						'/play/'
-					)
-				);
-
-
-			$total_cells =
-				$data['width'] *
-				$data['height'];
-
-
-			/*
-			 * Create easy palette lookup:
-			 *
-			 * 1 => #ef7c8e
-			 * 2 => #f5c451
-			 * ...
-			 */
-			$palette_map =
-				array();
-
-			foreach (
-				$data['palette']
-				as
-				$color
+			if (
+				is_user_logged_in()
 			) {
+
+				$key =
+					(string)
+					$painting->ID;
+
 				if (
 					isset(
-						$color['id'],
-						$color['hex']
+						$gallery_user[
+							'progress'
+						][
+							$key
+						]
 					)
 				) {
-					$palette_map[
-						absint(
-							$color['id']
-						)
-					] =
-						sanitize_hex_color(
-							$color['hex']
-						);
+					$progress =
+						$gallery_user[
+							'progress'
+						][
+							$key
+						];
 				}
 			}
 
+			echo diamondistry_render_painting_card(
+				$painting,
+				array(
+					'context' =>
+						'gallery',
+
+					'progress' =>
+						$progress,
+				)
+			);
+
 			?>
-
-			<a
-				class="diamondistry-gallery-card"
-				href="<?php echo esc_url( $play_url ); ?>"
-				data-painting-id="<?php echo esc_attr( $data['id'] ); ?>"
-				data-painting-post-id="<?php echo esc_attr( $painting->ID ); ?>"
-				data-total="<?php echo esc_attr( $total_cells ); ?>"
-			>
-
-				<div class="diamondistry-gallery-preview">
-
-					<span
-						class="diamondistry-gallery-badge"
-						hidden
-					></span>
-
-					<div
-						class="diamondistry-gallery-preview-grid"
-						style="
-							--painting-width:
-							<?php echo esc_attr( $data['width'] ); ?>;
-							--painting-height:
-							<?php echo esc_attr( $data['height'] ); ?>;
-						"
-						aria-hidden="true"
-					>
-
-						<?php foreach ( $data['pattern'] as $color_id ) : ?>
-
-							<?php
-
-							$color_id =
-								absint(
-									$color_id
-								);
-
-							$hex =
-								isset(
-									$palette_map[
-										$color_id
-									]
-								)
-									? $palette_map[
-										$color_id
-									]
-									: '#eeeeee';
-
-							?>
-
-							<span
-								class="diamondistry-gallery-preview-cell"
-								style="background-color: <?php echo esc_attr( $hex ); ?>;"
-							></span>
-
-						<?php endforeach; ?>
-
-					</div>
-
-				</div>
-
-
-				<div class="diamondistry-gallery-content">
-
-					<h2>
-						<?php
-						echo esc_html(
-							get_the_title(
-								$painting
-							)
-						);
-						?>
-					</h2>
-
-
-					<div class="diamondistry-gallery-meta">
-
-						<span>
-							<?php
-							echo esc_html(
-								$data['width'] .
-								' × ' .
-								$data['height']
-							);
-							?>
-						</span>
-
-						<span>
-							<?php
-							echo esc_html(
-								$data['reward']
-							);
-							?>
-							💎
-						</span>
-
-					</div>
-
-
-					<div
-						class="diamondistry-gallery-progress"
-						hidden
-					>
-
-						<div class="diamondistry-gallery-progress-track">
-
-							<div
-								class="diamondistry-gallery-progress-bar"
-							></div>
-
-						</div>
-
-						<span class="diamondistry-gallery-progress-text"></span>
-
-					</div>
-
-
-					<span class="diamondistry-gallery-action">
-						Start painting →
-					</span>
-
-				</div>
-
-			</a>
 
 		<?php endforeach; ?>
 

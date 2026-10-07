@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const cards = document.querySelectorAll(".diamondistry-gallery-card");
+  const cards = document.querySelectorAll(
+    ".diamondistry-painting-card--gallery",
+  );
 
   if (!cards.length) {
     return;
@@ -16,18 +18,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return null;
     }
 
-    /*
-     * PHP/JSON object keys always arrive as strings.
-     */
     const key = String(postId);
 
     if (userState.progress[key]) {
       return userState.progress[key];
     }
 
-    /*
-     * Extra defensive fallback.
-     */
     const matchingKey = Object.keys(userState.progress).find(
       (progressKey) => Number(progressKey) === Number(postId),
     );
@@ -35,20 +31,42 @@ document.addEventListener("DOMContentLoaded", () => {
     return matchingKey ? userState.progress[matchingKey] : null;
   }
 
-  function getValidCompletedCount(completedCells, total) {
+  function getValidIndexes(completedCells, total) {
     if (!Array.isArray(completedCells)) {
-      return 0;
+      return [];
     }
 
-    const validIndexes = new Set(
-      completedCells
-        .map((index) => Number(index))
-        .filter(
-          (index) => Number.isInteger(index) && index >= 0 && index < total,
-        ),
+    return Array.from(
+      new Set(
+        completedCells
+          .map((index) => Number(index))
+          .filter(
+            (index) => Number.isInteger(index) && index >= 0 && index < total,
+          ),
+      ),
     );
+  }
 
-    return validIndexes.size;
+  function updatePreview(card, status, completedIndexes) {
+    const preview = card.querySelector(".diamondistry-card-preview-grid");
+
+    if (!preview) {
+      return;
+    }
+
+    preview.classList.remove("is-new", "is-progress", "is-completed");
+
+    preview.classList.add(`is-${status}`);
+
+    const completedSet = new Set(completedIndexes);
+
+    preview
+      .querySelectorAll(".diamondistry-card-preview-cell")
+      .forEach((cell) => {
+        const index = Number(cell.dataset.index);
+
+        cell.classList.toggle("is-filled", completedSet.has(index));
+      });
   }
 
   cards.forEach((card) => {
@@ -62,26 +80,33 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const action = card.querySelector(".diamondistry-gallery-action");
+    const action = card.querySelector(".diamondistry-painting-card-action");
 
-    const progress = card.querySelector(".diamondistry-gallery-progress");
+    const progress = card.querySelector(".diamondistry-painting-card-progress");
 
     const progressBar = card.querySelector(
-      ".diamondistry-gallery-progress-bar",
+      ".diamondistry-painting-card-progress-bar",
     );
 
     const progressText = card.querySelector(
-      ".diamondistry-gallery-progress-text",
+      ".diamondistry-painting-card-progress-text",
     );
 
-    const badge = card.querySelector(".diamondistry-gallery-badge");
+    const badge = card.querySelector(".diamondistry-painting-card-badge");
 
-    let completed = 0;
+    const completedMeta = card.querySelector(
+      ".diamondistry-painting-card-completed",
+    );
+
+    let completedIndexes = [];
+
     let completedFlag = false;
+
+    let rewardClaimed = false;
 
     /*
     |--------------------------------------------------------------------------
-    | Logged-in user
+    | Logged in
     |--------------------------------------------------------------------------
     */
 
@@ -89,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const serverProgress = getServerProgress(paintingPostId);
 
       if (serverProgress) {
-        completed = getValidCompletedCount(
+        completedIndexes = getValidIndexes(
           serverProgress.completedCells,
           total,
         );
@@ -98,6 +123,11 @@ document.addEventListener("DOMContentLoaded", () => {
           serverProgress.completed === true ||
           serverProgress.completed === 1 ||
           serverProgress.completed === "1";
+
+        rewardClaimed =
+          serverProgress.rewardClaimed === true ||
+          serverProgress.rewardClaimed === 1 ||
+          serverProgress.rewardClaimed === "1";
       }
     }
 
@@ -117,33 +147,35 @@ document.addEventListener("DOMContentLoaded", () => {
           const data = JSON.parse(stored);
 
           if (data.paintingId === paintingSlug) {
-            completed = getValidCompletedCount(data.completedCells, total);
+            completedIndexes = getValidIndexes(data.completedCells, total);
           }
         } catch {
-          // Ignore damaged local progress.
+          // Ignore damaged local state.
         }
       }
     }
 
-    /*
-     * Server's completed flag is authoritative.
-     *
-     * This also makes the gallery resilient if an older
-     * saved progress record has an imperfect cell array.
-     */
-    if (userState.loggedIn && completedFlag) {
+    let completed = completedIndexes.length;
+
+    if (completedFlag) {
       completed = total;
     }
 
     const percentage = Math.min(100, Math.round((completed / total) * 100));
 
-    /*
-    |--------------------------------------------------------------------------
-    | Reset classes first
-    |--------------------------------------------------------------------------
-    */
+    let status = "new";
 
-    card.classList.remove("is-new", "is-in-progress", "is-completed");
+    if (completed >= total) {
+      status = "completed";
+    } else if (completed > 0) {
+      status = "progress";
+    }
+
+    card.classList.remove("is-new", "is-progress", "is-completed");
+
+    card.classList.add(`is-${status}`);
+
+    updatePreview(card, status, completedIndexes);
 
     /*
     |--------------------------------------------------------------------------
@@ -151,9 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
     |--------------------------------------------------------------------------
     */
 
-    if (completed === 0) {
-      card.classList.add("is-new");
-
+    if (status === "new") {
       if (action) {
         action.textContent = "Start painting →";
       }
@@ -166,6 +196,10 @@ document.addEventListener("DOMContentLoaded", () => {
         badge.hidden = true;
       }
 
+      if (completedMeta) {
+        completedMeta.hidden = true;
+      }
+
       return;
     }
 
@@ -175,23 +209,13 @@ document.addEventListener("DOMContentLoaded", () => {
     |--------------------------------------------------------------------------
     */
 
-    if (completed >= total) {
-      card.classList.add("is-completed");
-
+    if (status === "completed") {
       if (action) {
-        action.textContent = "Completed ✓";
+        action.textContent = "View painting →";
       }
 
       if (progress) {
-        progress.hidden = false;
-      }
-
-      if (progressBar) {
-        progressBar.style.width = "100%";
-      }
-
-      if (progressText) {
-        progressText.textContent = "100% completed";
+        progress.hidden = true;
       }
 
       if (badge) {
@@ -200,16 +224,22 @@ document.addEventListener("DOMContentLoaded", () => {
         badge.textContent = "✓ Completed";
       }
 
+      if (completedMeta) {
+        completedMeta.hidden = false;
+
+        completedMeta.textContent = rewardClaimed
+          ? "✓ Reward claimed"
+          : "Reward available";
+      }
+
       return;
     }
 
     /*
     |--------------------------------------------------------------------------
-    | In progress
+    | Progress
     |--------------------------------------------------------------------------
     */
-
-    card.classList.add("is-in-progress");
 
     if (action) {
       action.textContent = "Continue painting →";
@@ -230,7 +260,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (badge) {
       badge.hidden = false;
 
-      badge.textContent = "In progress";
+      badge.textContent = `${percentage}%`;
+    }
+
+    if (completedMeta) {
+      completedMeta.hidden = true;
     }
   });
 });
