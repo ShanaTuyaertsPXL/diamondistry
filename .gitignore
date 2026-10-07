@@ -1,0 +1,28 @@
+# WordPress core
+wp-admin/
+wp-includes/
+
+# User generated content
+wp-content/uploads/
+
+# Cache
+wp-content/cache/
+
+# Environment files
+.env
+.env.*
+
+# Dependencies
+node_modules/
+vendor/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
