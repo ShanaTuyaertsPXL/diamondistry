@@ -184,6 +184,93 @@ function diamondistry_get_painting_reward_by_id(
 
 /*
 |--------------------------------------------------------------------------
+| Reward revoke helper
+|--------------------------------------------------------------------------
+*/
+
+function diamondistry_revoke_painting_reward(
+	$user_id,
+	$painting_id,
+	&$all_progress
+) {
+
+	$key =
+		(string)
+		$painting_id;
+
+	if (
+		! isset(
+			$all_progress[
+				$key
+			]
+		) ||
+		! is_array(
+			$all_progress[
+				$key
+			]
+		)
+	) {
+		return false;
+	}
+
+	$was_claimed =
+		! empty(
+			$all_progress[
+				$key
+			]['rewardClaimed']
+		);
+
+	/*
+	 * Only subtract diamonds when the reward
+	 * was actually claimed.
+	 */
+	if (
+		$was_claimed
+	) {
+
+		$reward =
+			diamondistry_get_painting_reward_by_id(
+				$painting_id
+			);
+
+		$current_balance =
+			diamondistry_get_user_balance(
+				$user_id
+			);
+
+		$new_balance =
+			max(
+				0,
+				$current_balance -
+				$reward
+			);
+
+		update_user_meta(
+			$user_id,
+			DIAMONDISTRY_BALANCE_META_KEY,
+			$new_balance
+		);
+	}
+
+	$all_progress[
+		$key
+	]['rewardClaimed'] =
+		false;
+
+	$all_progress[
+		$key
+	]['updatedAt'] =
+		current_time(
+			'mysql',
+			true
+		);
+
+	return $was_claimed;
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | Redirect helper
 |--------------------------------------------------------------------------
 */
@@ -281,7 +368,7 @@ function diamondistry_handle_player_admin_actions() {
 
 	/*
 	|--------------------------------------------------------------------------
-	| Reset one painting progress
+	| Reset one painting progress only
 	|--------------------------------------------------------------------------
 	*/
 
@@ -315,21 +402,11 @@ function diamondistry_handle_player_admin_actions() {
 			$painting_id;
 
 		$reward_claimed =
-			false;
-
-		if (
-			isset(
+			! empty(
 				$all_progress[
 					$key
 				]['rewardClaimed']
-			)
-		) {
-			$reward_claimed =
-				(bool)
-				$all_progress[
-					$key
-				]['rewardClaimed'];
-		}
+			);
 
 		$all_progress[
 			$key
@@ -372,7 +449,9 @@ function diamondistry_handle_player_admin_actions() {
 	| Reset one painting reward
 	|--------------------------------------------------------------------------
 	|
-	| Keeps current balance unchanged.
+	| Progress stays untouched.
+	| Reward claim is removed.
+	| Reward value is removed from balance if it was claimed.
 	|
 	*/
 
@@ -401,42 +480,17 @@ function diamondistry_handle_player_admin_actions() {
 				$user_id
 			);
 
-		$key =
-			(string)
-			$painting_id;
+		diamondistry_revoke_painting_reward(
+			$user_id,
+			$painting_id,
+			$all_progress
+		);
 
-		if (
-			isset(
-				$all_progress[
-					$key
-				]
-			) &&
-			is_array(
-				$all_progress[
-					$key
-				]
-			)
-		) {
-
-			$all_progress[
-				$key
-			]['rewardClaimed'] =
-				false;
-
-			$all_progress[
-				$key
-			]['updatedAt'] =
-				current_time(
-					'mysql',
-					true
-				);
-
-			update_user_meta(
-				$user_id,
-				DIAMONDISTRY_PROGRESS_META_KEY,
-				$all_progress
-			);
-		}
+		update_user_meta(
+			$user_id,
+			DIAMONDISTRY_PROGRESS_META_KEY,
+			$all_progress
+		);
 
 		diamondistry_players_redirect(
 			$user_id,
@@ -447,128 +501,12 @@ function diamondistry_handle_player_admin_actions() {
 
 	/*
 	|--------------------------------------------------------------------------
-	| Revoke one painting reward
-	|--------------------------------------------------------------------------
-	|
-	| Sets rewardClaimed to false AND subtracts the painting reward
-	| from the user's current balance.
-	|
-	*/
-
-	if (
-		'revoke_painting_reward' ===
-		$action
-	) {
-
-		$painting_id =
-			isset(
-				$_POST['painting_id']
-			)
-				? absint(
-					$_POST['painting_id']
-				)
-				: 0;
-
-		if (
-			! $painting_id
-		) {
-			return;
-		}
-
-		$all_progress =
-			diamondistry_get_all_user_progress(
-				$user_id
-			);
-
-		$key =
-			(string)
-			$painting_id;
-
-		$was_claimed =
-			! empty(
-				$all_progress[
-					$key
-				]['rewardClaimed']
-			);
-
-		/*
-		 * Only subtract diamonds if this reward was
-		 * actually marked as claimed.
-		 */
-		if (
-			$was_claimed
-		) {
-
-			$reward =
-				diamondistry_get_painting_reward_by_id(
-					$painting_id
-				);
-
-			$current_balance =
-				diamondistry_get_user_balance(
-					$user_id
-				);
-
-			$new_balance =
-				max(
-					0,
-					$current_balance -
-					$reward
-				);
-
-			update_user_meta(
-				$user_id,
-				DIAMONDISTRY_BALANCE_META_KEY,
-				$new_balance
-			);
-		}
-
-		if (
-			isset(
-				$all_progress[
-					$key
-				]
-			) &&
-			is_array(
-				$all_progress[
-					$key
-				]
-			)
-		) {
-
-			$all_progress[
-				$key
-			]['rewardClaimed'] =
-				false;
-
-			$all_progress[
-				$key
-			]['updatedAt'] =
-				current_time(
-					'mysql',
-					true
-				);
-
-			update_user_meta(
-				$user_id,
-				DIAMONDISTRY_PROGRESS_META_KEY,
-				$all_progress
-			);
-		}
-
-		diamondistry_players_redirect(
-			$user_id,
-			'painting-reward-revoked'
-		);
-	}
-
-
-	/*
-	|--------------------------------------------------------------------------
 	| Reset one painting progress + reward
 	|--------------------------------------------------------------------------
 	|
-	| Does NOT change current balance.
+	| Progress goes back to 0.
+	| Reward claim is removed.
+	| Reward value is removed from balance if it was claimed.
 	|
 	*/
 
@@ -596,6 +534,12 @@ function diamondistry_handle_player_admin_actions() {
 			diamondistry_get_all_user_progress(
 				$user_id
 			);
+
+		diamondistry_revoke_painting_reward(
+			$user_id,
+			$painting_id,
+			$all_progress
+		);
 
 		$key =
 			(string)
@@ -639,7 +583,7 @@ function diamondistry_handle_player_admin_actions() {
 
 	/*
 	|--------------------------------------------------------------------------
-	| Reset all progress
+	| Reset all progress only
 	|--------------------------------------------------------------------------
 	*/
 
@@ -841,16 +785,13 @@ function diamondistry_render_players_notice() {
 				'Painting progress reset.',
 
 			'painting-reward-reset' =>
-				'Painting reward reset. Balance was not changed.',
-
-			'painting-reward-revoked' =>
-				'Painting reward revoked and removed from the diamond balance.',
+				'Painting reward reset and removed from the diamond balance.',
 
 			'painting-all-reset' =>
-				'Painting progress and reward reset. Balance was not changed.',
+				'Painting progress and reward reset. Reward was removed from the diamond balance.',
 
 			'all-progress-reset' =>
-				'All painting progress reset.',
+				'All painting progress reset. Rewards and balance were kept.',
 
 			'rewards-reset' =>
 				'All rewards and diamond balance reset.',
@@ -1556,12 +1497,17 @@ function diamondistry_render_player_detail(
 									>
 
 									<button
-										type="submit"
-										class="button button-small"
-										onclick="return confirm('Reset progress for this painting? The reward stays protected.');"
-									>
-										Reset progress
-									</button>
+	type="submit"
+	class="button button-small"
+	<?php
+	echo $completed_cells <= 0
+		? 'disabled'
+		: '';
+	?>
+	onclick="return confirm('Reset progress for this painting? Reward and balance stay unchanged.');"
+>
+	Reset progress
+</button>
 
 								</form>
 
@@ -1596,56 +1542,17 @@ function diamondistry_render_player_detail(
 									<button
 										type="submit"
 										class="button button-small"
-										onclick="return confirm('Reset reward claim? Current diamond balance will NOT change.');"
+										<?php
+										echo ! $reward_claimed
+											? 'disabled'
+											: '';
+										?>
+										onclick="return confirm('Reset this reward? <?php echo esc_js( $reward ); ?> diamonds will be removed from the balance. Progress stays unchanged.');"
 									>
 										Reset reward
 									</button>
 
 								</form>
-
-
-								<?php if (
-									$reward_claimed
-								) : ?>
-
-									<form method="post">
-
-										<?php
-										wp_nonce_field(
-											'diamondistry_player_admin_action',
-											'diamondistry_player_nonce'
-										);
-										?>
-
-										<input
-											type="hidden"
-											name="diamondistry_player_action"
-											value="revoke_painting_reward"
-										>
-
-										<input
-											type="hidden"
-											name="user_id"
-											value="<?php echo esc_attr( $user_id ); ?>"
-										>
-
-										<input
-											type="hidden"
-											name="painting_id"
-											value="<?php echo esc_attr( $painting_id ); ?>"
-										>
-
-										<button
-											type="submit"
-											class="button button-small"
-											onclick="return confirm('Revoke this reward? <?php echo esc_js( $reward ); ?> diamonds will be removed from the current balance and the reward can be earned again.');"
-										>
-											Revoke reward (-<?php echo esc_html( $reward ); ?> 💎)
-										</button>
-
-									</form>
-
-								<?php endif; ?>
 
 
 								<form method="post">
@@ -1678,7 +1585,7 @@ function diamondistry_render_player_detail(
 									<button
 										type="submit"
 										class="button button-small"
-										onclick="return confirm('Reset progress AND reward claim? Current diamond balance will NOT change.');"
+										onclick="return confirm('Reset progress and reward? Progress goes to 0 and any claimed reward is removed from the balance.');"
 									>
 										Reset both
 									</button>
@@ -1707,9 +1614,9 @@ function diamondistry_render_player_detail(
 
 	<p>
 		<strong>Reset all progress</strong>
-		keeps claimed rewards protected.
+		resets only painting progress and keeps rewards/balance intact.
 		<strong>Reset all rewards + balance</strong>
-		allows every reward to be earned again.
+		resets all reward claims and sets the balance to 0.
 	</p>
 
 	<form
@@ -1742,7 +1649,7 @@ function diamondistry_render_player_detail(
 		<button
 			type="submit"
 			class="button"
-			onclick="return confirm('Reset ALL painting progress? Claimed rewards remain protected.');"
+			onclick="return confirm('Reset ALL painting progress? Rewards and diamond balance stay unchanged.');"
 		>
 			Reset all progress
 		</button>
