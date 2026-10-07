@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.8.0
+ * Version: 0.9.1
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.8.0' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.9.1' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -20,6 +20,8 @@ define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 | Admin files
 |--------------------------------------------------------------------------
 */
+
+require_once DIAMONDISTRY_CORE_PATH . 'includes/progress.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/admin/painting-editor.php';
 
@@ -258,6 +260,55 @@ function diamondistry_enqueue_play_assets( $painting ) {
 		'DiamondistryPainting',
 		$data ? $data : array()
 	);
+
+	$user_progress =
+	array(
+		'loggedIn' =>
+			is_user_logged_in(),
+
+		'progress' =>
+			null,
+
+		'balance' =>
+			0,
+
+		'ajaxUrl' =>
+			admin_url(
+				'admin-ajax.php'
+			),
+
+		'nonce' =>
+			wp_create_nonce(
+				'diamondistry_progress'
+			),
+	);
+
+
+if (
+	is_user_logged_in()
+) {
+
+	$user_id =
+		get_current_user_id();
+
+	$user_progress['progress'] =
+		diamondistry_get_user_painting_progress(
+			$user_id,
+			$painting->ID
+		);
+
+	$user_progress['balance'] =
+		diamondistry_get_user_balance(
+			$user_id
+		);
+}
+
+
+wp_localize_script(
+	'diamondistry-play',
+	'DiamondistryUser',
+	$user_progress
+);
 }
 
 /*
@@ -422,6 +473,46 @@ function diamondistry_render_gallery() {
 		true
 	);
 
+	$gallery_user =
+	array(
+		'loggedIn' =>
+			is_user_logged_in(),
+
+		'progress' =>
+			array(),
+
+		'balance' =>
+			0,
+	);
+
+
+if (
+	is_user_logged_in()
+) {
+
+	$user_id =
+		get_current_user_id();
+
+
+	$gallery_user['progress'] =
+		diamondistry_get_all_user_progress(
+			$user_id
+		);
+
+
+	$gallery_user['balance'] =
+		diamondistry_get_user_balance(
+			$user_id
+		);
+}
+
+
+wp_localize_script(
+	'diamondistry-gallery',
+	'DiamondistryGalleryUser',
+	$gallery_user
+);
+
 
 	ob_start();
 
@@ -496,6 +587,7 @@ function diamondistry_render_gallery() {
 				class="diamondistry-gallery-card"
 				href="<?php echo esc_url( $play_url ); ?>"
 				data-painting-id="<?php echo esc_attr( $data['id'] ); ?>"
+				data-painting-post-id="<?php echo esc_attr( $painting->ID ); ?>"
 				data-total="<?php echo esc_attr( $total_cells ); ?>"
 			>
 

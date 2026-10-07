@@ -5,12 +5,60 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  const userState = window.DiamondistryGalleryUser || {
+    loggedIn: false,
+    progress: {},
+    balance: 0,
+  };
+
+  function getServerProgress(postId) {
+    if (!userState.progress || typeof userState.progress !== "object") {
+      return null;
+    }
+
+    /*
+     * PHP/JSON object keys always arrive as strings.
+     */
+    const key = String(postId);
+
+    if (userState.progress[key]) {
+      return userState.progress[key];
+    }
+
+    /*
+     * Extra defensive fallback.
+     */
+    const matchingKey = Object.keys(userState.progress).find(
+      (progressKey) => Number(progressKey) === Number(postId),
+    );
+
+    return matchingKey ? userState.progress[matchingKey] : null;
+  }
+
+  function getValidCompletedCount(completedCells, total) {
+    if (!Array.isArray(completedCells)) {
+      return 0;
+    }
+
+    const validIndexes = new Set(
+      completedCells
+        .map((index) => Number(index))
+        .filter(
+          (index) => Number.isInteger(index) && index >= 0 && index < total,
+        ),
+    );
+
+    return validIndexes.size;
+  }
+
   cards.forEach((card) => {
-    const paintingId = card.dataset.paintingId;
+    const paintingSlug = card.dataset.paintingId;
+
+    const paintingPostId = card.dataset.paintingPostId;
 
     const total = Number(card.dataset.total);
 
-    if (!paintingId || !total) {
+    if (!paintingSlug || !paintingPostId || !total) {
       return;
     }
 
@@ -28,42 +76,78 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const badge = card.querySelector(".diamondistry-gallery-badge");
 
-    const storageKey = `diamondistry-progress-${paintingId}`;
-
     let completed = 0;
+    let completedFlag = false;
 
-    const stored = localStorage.getItem(storageKey);
+    /*
+    |--------------------------------------------------------------------------
+    | Logged-in user
+    |--------------------------------------------------------------------------
+    */
 
-    if (stored) {
-      try {
-        const data = JSON.parse(stored);
+    if (userState.loggedIn) {
+      const serverProgress = getServerProgress(paintingPostId);
 
-        if (
-          data.paintingId === paintingId &&
-          Array.isArray(data.completedCells)
-        ) {
-          const validIndexes = new Set(
-            data.completedCells
-              .map((index) => Number(index))
-              .filter(
-                (index) =>
-                  Number.isInteger(index) && index >= 0 && index < total,
-              ),
-          );
+      if (serverProgress) {
+        completed = getValidCompletedCount(
+          serverProgress.completedCells,
+          total,
+        );
 
-          completed = validIndexes.size;
-        }
-      } catch {
-        // Invalid local data:
-        // simply show painting as new.
+        completedFlag =
+          serverProgress.completed === true ||
+          serverProgress.completed === 1 ||
+          serverProgress.completed === "1";
       }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Guest
+    |--------------------------------------------------------------------------
+    */
+
+    if (!userState.loggedIn) {
+      const storageKey = `diamondistry-progress-${paintingSlug}`;
+
+      const stored = localStorage.getItem(storageKey);
+
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+
+          if (data.paintingId === paintingSlug) {
+            completed = getValidCompletedCount(data.completedCells, total);
+          }
+        } catch {
+          // Ignore damaged local progress.
+        }
+      }
+    }
+
+    /*
+     * Server's completed flag is authoritative.
+     *
+     * This also makes the gallery resilient if an older
+     * saved progress record has an imperfect cell array.
+     */
+    if (userState.loggedIn && completedFlag) {
+      completed = total;
     }
 
     const percentage = Math.min(100, Math.round((completed / total) * 100));
 
     /*
     |--------------------------------------------------------------------------
-    | Not started
+    | Reset classes first
+    |--------------------------------------------------------------------------
+    */
+
+    card.classList.remove("is-new", "is-in-progress", "is-completed");
+
+    /*
+    |--------------------------------------------------------------------------
+    | New
     |--------------------------------------------------------------------------
     */
 
