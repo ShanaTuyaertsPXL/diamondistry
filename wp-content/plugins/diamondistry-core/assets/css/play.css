@@ -207,3 +207,14 @@
     flex-direction: column;
   }
 }
+
+.diamondistry-grid {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.diamondistry-cell {
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}

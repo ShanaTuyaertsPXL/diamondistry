@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let selectedColor = colors[0].id;
   let completed = 0;
+  let isPainting = false;
 
   totalElement.textContent = totalDiamonds;
 
@@ -86,6 +87,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         button.classList.add("is-selected");
+
+        message.textContent = `${color.name} geselecteerd`;
       });
 
       palette.appendChild(button);
@@ -109,34 +112,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
         cell.textContent = color.symbol;
 
-        cell.addEventListener("click", () => {
-          placeDiamond(cell, color);
-        });
-
         grid.appendChild(cell);
       }
     }
   }
 
-  function placeDiamond(cell, color) {
+  function placeDiamond(cell) {
+    if (!cell || !cell.classList.contains("diamondistry-cell")) {
+      return;
+    }
+
     if (cell.dataset.completed === "true") {
       return;
     }
 
-    if (Number(selectedColor) !== color.id) {
+    const cellColorId = Number(cell.dataset.color);
+
+    const color = colors.find((item) => item.id === cellColorId);
+
+    if (!color) {
+      return;
+    }
+
+    if (selectedColor !== color.id) {
       cell.classList.remove("is-wrong");
 
       void cell.offsetWidth;
 
       cell.classList.add("is-wrong");
 
-      message.textContent = "Oeps — probeer een diamond met hetzelfde symbool.";
+      message.textContent = "Verkeerde diamond — kies hetzelfde symbool.";
 
       return;
     }
 
     cell.dataset.completed = "true";
 
+    cell.classList.remove("is-wrong");
     cell.classList.add("is-completed");
 
     cell.style.setProperty("--diamond-color", color.hex);
@@ -161,6 +173,48 @@ document.addEventListener("DOMContentLoaded", () => {
       message.textContent = "✨ Painting voltooid! +50 Diamonds";
     }
   }
+
+  grid.addEventListener("pointerdown", (event) => {
+    const cell = event.target.closest(".diamondistry-cell");
+
+    if (!cell) {
+      return;
+    }
+
+    isPainting = true;
+
+    grid.setPointerCapture(event.pointerId);
+
+    placeDiamond(cell);
+  });
+
+  grid.addEventListener("pointermove", (event) => {
+    if (!isPainting) {
+      return;
+    }
+
+    const element = document.elementFromPoint(event.clientX, event.clientY);
+
+    const cell = element?.closest(".diamondistry-cell");
+
+    if (cell && grid.contains(cell)) {
+      placeDiamond(cell);
+    }
+  });
+
+  grid.addEventListener("pointerup", () => {
+    isPainting = false;
+  });
+
+  grid.addEventListener("pointercancel", () => {
+    isPainting = false;
+  });
+
+  grid.addEventListener("pointerleave", (event) => {
+    if (event.buttons === 0) {
+      isPainting = false;
+    }
+  });
 
   createPalette();
   createGrid();
