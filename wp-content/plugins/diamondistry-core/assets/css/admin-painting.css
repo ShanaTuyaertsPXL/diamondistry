@@ -1,0 +1,188 @@
+.diamondistry-admin-editor {
+  display: grid;
+  gap: 28px;
+}
+
+.diamondistry-admin-settings {
+  display: flex;
+  align-items: end;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  padding: 20px;
+
+  background: #f6f7f7;
+
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+}
+
+.diamondistry-admin-field {
+  display: grid;
+  gap: 6px;
+}
+
+.diamondistry-admin-field label {
+  font-weight: 600;
+}
+
+.diamondistry-admin-field input[type="number"] {
+  width: 120px;
+}
+
+.diamondistry-admin-section {
+  padding: 20px;
+
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+
+  background: #fff;
+}
+
+.diamondistry-admin-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+
+  gap: 20px;
+
+  margin-bottom: 18px;
+}
+
+.diamondistry-admin-section-header h3 {
+  margin: 0 0 4px;
+}
+
+.diamondistry-admin-section-header p {
+  margin: 0;
+
+  color: #646970;
+}
+
+.diamondistry-admin-palette {
+  display: grid;
+  gap: 10px;
+}
+
+.diamondistry-admin-color {
+  display: grid;
+
+  grid-template-columns:
+    auto
+    minmax(140px, 1fr)
+    70px
+    70px
+    auto;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 10px;
+
+  border: 2px solid transparent;
+  border-radius: 8px;
+
+  background: #f6f7f7;
+}
+
+.diamondistry-admin-color.is-selected {
+  border-color: #2271b1;
+
+  background: #f0f6fc;
+}
+
+.diamondistry-admin-color-select {
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.diamondistry-admin-swatch {
+  display: grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 7px;
+
+  background: var(--color);
+
+  color: #fff;
+
+  font-weight: 800;
+
+  box-shadow:
+    inset 2px 2px 3px rgb(255 255 255 / 0.3),
+    inset -2px -2px 3px rgb(0 0 0 / 0.15);
+}
+
+.diamondistry-admin-color-name,
+.diamondistry-admin-color-symbol {
+  width: 100%;
+}
+
+.diamondistry-admin-grid-wrapper {
+  overflow: auto;
+
+  padding: 14px;
+
+  background: #e5e5e5;
+
+  border-radius: 10px;
+}
+
+.diamondistry-admin-grid {
+  display: grid;
+  gap: 3px;
+
+  width: max-content;
+  min-width: 100%;
+}
+
+.diamondistry-admin-cell {
+  display: grid;
+  place-items: center;
+
+  min-width: 36px;
+
+  aspect-ratio: 1;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 4px;
+
+  background: #fff;
+
+  color: #111;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.diamondistry-admin-cell:hover {
+  outline: 2px solid #2271b1;
+  outline-offset: -2px;
+}
+
+@media (max-width: 782px) {
+  .diamondistry-admin-color {
+    grid-template-columns:
+      auto
+      1fr;
+  }
+
+  .diamondistry-admin-color-hex,
+  .diamondistry-admin-color-symbol,
+  .diamondistry-admin-color-remove {
+    grid-column: 2;
+  }
+}
