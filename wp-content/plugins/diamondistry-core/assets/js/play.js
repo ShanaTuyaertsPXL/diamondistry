@@ -11,32 +11,47 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const paintingId = "diamond-meadow";
-  const storageKey = `diamondistry-progress-${paintingId}`;
+  const painting = {
+    id: "diamond-meadow",
+    title: "Diamond Meadow",
+    width: 10,
+    height: 10,
+    reward: 50,
 
-  const colors = [
-    {
-      id: 1,
-      name: "Rose",
-      hex: "#ef7c8e",
-      symbol: "●",
-    },
-    {
-      id: 2,
-      name: "Sunshine",
-      hex: "#f5c451",
-      symbol: "◆",
-    },
-    {
-      id: 3,
-      name: "Meadow",
-      hex: "#75b798",
-      symbol: "▲",
-    },
-  ];
+    palette: [
+      {
+        id: 1,
+        name: "Rose",
+        hex: "#ef7c8e",
+        symbol: "●",
+      },
+      {
+        id: 2,
+        name: "Sunshine",
+        hex: "#f5c451",
+        symbol: "◆",
+      },
+      {
+        id: 3,
+        name: "Meadow",
+        hex: "#75b798",
+        symbol: "▲",
+      },
+    ],
 
-  const gridSize = 10;
-  const totalDiamonds = gridSize * gridSize;
+    pattern: [
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 3, 3, 3, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 3, 3,
+      3, 3, 3, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    ],
+  };
+
+  const colors = painting.palette;
+
+  const totalDiamonds = painting.width * painting.height;
+
+  const storageKey = `diamondistry-progress-${painting.id}`;
 
   let selectedColor = colors[0].id;
   let completed = 0;
@@ -52,51 +67,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   totalElement.textContent = totalDiamonds;
 
-  function getPatternColor(row, column) {
-    if (row < 3) {
-      return 1;
-    }
-
-    if (row >= 3 && row <= 6 && column >= 3 && column <= 6) {
-      return 2;
-    }
-
-    return 3;
+  function getColor(colorId) {
+    return colors.find((color) => color.id === Number(colorId));
   }
 
   function createGrid() {
-    let cellIndex = 0;
+    grid.style.gridTemplateColumns = `repeat(${painting.width}, 1fr)`;
 
-    for (let row = 0; row < gridSize; row++) {
-      for (let column = 0; column < gridSize; column++) {
-        const colorId = getPatternColor(row, column);
+    painting.pattern.forEach((colorId, index) => {
+      const color = getColor(colorId);
 
-        const color = colors.find((item) => item.id === colorId);
-
-        if (!color) {
-          continue;
-        }
-
-        totalsByColor[color.id]++;
-
-        const cell = document.createElement("button");
-
-        cell.type = "button";
-        cell.className = "diamondistry-cell";
-
-        cell.dataset.color = color.id;
-        cell.dataset.completed = "false";
-        cell.dataset.index = cellIndex;
-
-        cell.setAttribute("aria-label", `${color.name} diamond`);
-
-        cell.textContent = color.symbol;
-
-        grid.appendChild(cell);
-
-        cellIndex++;
+      if (!color) {
+        return;
       }
-    }
+
+      totalsByColor[color.id]++;
+
+      const cell = document.createElement("button");
+
+      cell.type = "button";
+      cell.className = "diamondistry-cell";
+
+      cell.dataset.color = color.id;
+      cell.dataset.completed = "false";
+      cell.dataset.index = index;
+
+      cell.setAttribute("aria-label", `${color.name} diamond`);
+
+      cell.textContent = color.symbol;
+
+      grid.appendChild(cell);
+    });
   }
 
   function createPalette() {
@@ -105,12 +106,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       button.type = "button";
       button.className = "diamondistry-color";
+      button.dataset.color = color.id;
 
       if (index === 0) {
         button.classList.add("is-selected");
       }
-
-      button.dataset.color = color.id;
 
       button.innerHTML = `
 				<span
@@ -121,8 +121,13 @@ document.addEventListener("DOMContentLoaded", () => {
 				</span>
 
 				<span class="diamondistry-color-info">
-					<strong>${color.symbol} ${color.name}</strong>
-					<small>Diamond ${color.id}</small>
+					<strong>
+						${color.symbol} ${color.name}
+					</strong>
+
+					<small>
+						Diamond ${color.id}
+					</small>
 				</span>
 
 				<span class="diamondistry-color-count">
@@ -146,20 +151,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function selectColor(colorId, showMessage = true) {
-    const color = colors.find((item) => item.id === colorId);
+    const color = getColor(colorId);
 
     if (!color) {
       return;
     }
 
-    selectedColor = colorId;
+    selectedColor = color.id;
 
-    document.querySelectorAll(".diamondistry-color").forEach((item) => {
-      item.classList.remove("is-selected");
+    document.querySelectorAll(".diamondistry-color").forEach((button) => {
+      button.classList.remove("is-selected");
     });
 
     const activeButton = document.querySelector(
-      `.diamondistry-color[data-color="${colorId}"]`,
+      `.diamondistry-color[data-color="${color.id}"]`,
     );
 
     if (activeButton) {
@@ -187,6 +192,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (remaining > 0) {
         selectColor(nextColor.id, false);
         saveProgress();
+
+        message.textContent = `${nextColor.symbol} ${nextColor.name} geselecteerd`;
+
         return;
       }
     }
@@ -201,9 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const cellColorId = Number(cell.dataset.color);
-
-    const color = colors.find((item) => item.id === cellColorId);
+    const color = getColor(cell.dataset.color);
 
     if (!color) {
       return;
@@ -230,11 +236,10 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePaletteCounts();
     saveProgress();
 
-    const remainingForCurrentColor =
-      totalsByColor[color.id] - completedByColor[color.id];
+    const remaining = totalsByColor[color.id] - completedByColor[color.id];
 
-    if (remainingForCurrentColor === 0 && completed < totalDiamonds) {
-      message.textContent = `✓ ${color.name} klaar — volgende kleur geselecteerd`;
+    if (remaining === 0 && completed < totalDiamonds) {
+      message.textContent = `✓ ${color.name} klaar`;
 
       selectNextAvailableColor();
     }
@@ -251,21 +256,6 @@ document.addEventListener("DOMContentLoaded", () => {
     cell.textContent = "";
   }
 
-  function restoreCell(cell) {
-    const colorId = Number(cell.dataset.color);
-
-    const color = colors.find((item) => item.id === colorId);
-
-    if (!color) {
-      return;
-    }
-
-    completeCell(cell, color);
-
-    completed++;
-    completedByColor[color.id]++;
-  }
-
   function updateProgress() {
     const percentage = (completed / totalDiamonds) * 100;
 
@@ -274,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
     progressBar.style.width = `${percentage}%`;
 
     if (completed === totalDiamonds) {
-      message.textContent = "✨ Painting voltooid! +50 Diamonds";
+      message.textContent = `✨ Painting voltooid! +${painting.reward} Diamonds`;
 
       return;
     }
@@ -285,7 +275,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function updatePaletteCounts() {
     colors.forEach((color) => {
       const total = totalsByColor[color.id];
+
       const done = completedByColor[color.id];
+
       const remaining = total - done;
 
       const remainingElement = document.querySelector(
@@ -324,7 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const progress = {
       version: 1,
-      paintingId,
+      paintingId: painting.id,
       selectedColor,
       completedCells,
       updatedAt: new Date().toISOString(),
@@ -334,24 +326,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function loadProgress() {
-    const storedProgress = localStorage.getItem(storageKey);
+    const stored = localStorage.getItem(storageKey);
 
-    if (!storedProgress) {
+    if (!stored) {
       updateProgress();
       updatePaletteCounts();
+
       return;
     }
 
     let progress;
 
     try {
-      progress = JSON.parse(storedProgress);
-    } catch (error) {
+      progress = JSON.parse(stored);
+    } catch {
       localStorage.removeItem(storageKey);
       return;
     }
 
-    if (!Array.isArray(progress.completedCells)) {
+    if (
+      progress.paintingId !== painting.id ||
+      !Array.isArray(progress.completedCells)
+    ) {
       return;
     }
 
@@ -370,7 +366,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      restoreCell(cell);
+      const color = getColor(cell.dataset.color);
+
+      if (!color) {
+        return;
+      }
+
+      completeCell(cell, color);
+
+      completed++;
+      completedByColor[color.id]++;
     });
 
     if (colors.some((color) => color.id === progress.selectedColor)) {
@@ -381,18 +386,18 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePaletteCounts();
 
     if (completed > 0 && completed < totalDiamonds) {
-      message.textContent = `Verder waar je gebleven was — ${Math.round(
-        (completed / totalDiamonds) * 100,
-      )}% voltooid`;
+      const percentage = Math.round((completed / totalDiamonds) * 100);
+
+      message.textContent = `Verder waar je gebleven was — ${percentage}% voltooid`;
     }
   }
 
   function resetPainting() {
-    const shouldReset = window.confirm(
+    const confirmed = window.confirm(
       "Weet je zeker dat je deze painting opnieuw wilt beginnen?",
     );
 
-    if (!shouldReset) {
+    if (!confirmed) {
       return;
     }
 
@@ -406,9 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.querySelectorAll(".diamondistry-cell").forEach((cell) => {
-      const colorId = Number(cell.dataset.color);
-
-      const color = colors.find((item) => item.id === colorId);
+      const color = getColor(cell.dataset.color);
 
       cell.dataset.completed = "false";
 
@@ -470,12 +473,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (grid.hasPointerCapture(event.pointerId)) {
       grid.releasePointerCapture(event.pointerId);
-    }
-  });
-
-  grid.addEventListener("pointerleave", (event) => {
-    if (event.buttons === 0) {
-      isPainting = false;
     }
   });
 
