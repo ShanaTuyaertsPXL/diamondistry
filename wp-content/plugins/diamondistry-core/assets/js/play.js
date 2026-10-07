@@ -38,6 +38,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let completed = 0;
   let isPainting = false;
 
+  const totalsByColor = {};
+  const completedByColor = {};
+
+  colors.forEach((color) => {
+    totalsByColor[color.id] = 0;
+    completedByColor[color.id] = 0;
+  });
+
   totalElement.textContent = totalDiamonds;
 
   function getPatternColor(row, column) {
@@ -50,6 +58,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return 3;
+  }
+
+  function createGrid() {
+    for (let row = 0; row < gridSize; row++) {
+      for (let column = 0; column < gridSize; column++) {
+        const colorId = getPatternColor(row, column);
+
+        const color = colors.find((item) => item.id === colorId);
+
+        if (!color) {
+          continue;
+        }
+
+        totalsByColor[color.id]++;
+
+        const cell = document.createElement("button");
+
+        cell.type = "button";
+        cell.className = "diamondistry-cell";
+
+        cell.dataset.color = color.id;
+        cell.dataset.completed = "false";
+
+        cell.setAttribute("aria-label", `${color.name} diamond`);
+
+        cell.textContent = color.symbol;
+
+        grid.appendChild(cell);
+      }
+    }
   }
 
   function createPalette() {
@@ -73,46 +111,69 @@ document.addEventListener("DOMContentLoaded", () => {
 					${color.symbol}
 				</span>
 
-				<span>
+				<span class="diamondistry-color-info">
 					<strong>${color.symbol} ${color.name}</strong>
 					<small>Diamond ${color.id}</small>
+				</span>
+
+				<span class="diamondistry-color-count">
+					<strong data-remaining="${color.id}">
+						0 over
+					</strong>
+					<small data-total="${color.id}">
+						0 / 0
+					</small>
 				</span>
 			`;
 
       button.addEventListener("click", () => {
-        selectedColor = color.id;
-
-        document.querySelectorAll(".diamondistry-color").forEach((item) => {
-          item.classList.remove("is-selected");
-        });
-
-        button.classList.add("is-selected");
-
-        message.textContent = `${color.name} geselecteerd`;
+        selectColor(color.id);
       });
 
       palette.appendChild(button);
     });
   }
 
-  function createGrid() {
-    for (let row = 0; row < gridSize; row++) {
-      for (let column = 0; column < gridSize; column++) {
-        const colorId = getPatternColor(row, column);
+  function selectColor(colorId) {
+    const color = colors.find((item) => item.id === colorId);
 
-        const color = colors.find((item) => item.id === colorId);
+    if (!color) {
+      return;
+    }
 
-        const cell = document.createElement("button");
+    selectedColor = colorId;
 
-        cell.type = "button";
-        cell.className = "diamondistry-cell";
+    document.querySelectorAll(".diamondistry-color").forEach((item) => {
+      item.classList.remove("is-selected");
+    });
 
-        cell.dataset.color = color.id;
-        cell.dataset.completed = "false";
+    const activeButton = document.querySelector(
+      `.diamondistry-color[data-color="${colorId}"]`,
+    );
 
-        cell.textContent = color.symbol;
+    if (activeButton) {
+      activeButton.classList.add("is-selected");
+    }
 
-        grid.appendChild(cell);
+    message.textContent = `${color.symbol} ${color.name} geselecteerd`;
+  }
+
+  function selectNextAvailableColor() {
+    const currentIndex = colors.findIndex(
+      (color) => color.id === selectedColor,
+    );
+
+    for (let offset = 1; offset <= colors.length; offset++) {
+      const nextIndex = (currentIndex + offset) % colors.length;
+
+      const nextColor = colors[nextIndex];
+
+      const remaining =
+        totalsByColor[nextColor.id] - completedByColor[nextColor.id];
+
+      if (remaining > 0) {
+        selectColor(nextColor.id);
+        return;
       }
     }
   }
@@ -141,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       cell.classList.add("is-wrong");
 
-      message.textContent = "Verkeerde diamond — kies hetzelfde symbool.";
+      message.textContent = `Verkeerde diamond — kies ${color.symbol} ${color.name}.`;
 
       return;
     }
@@ -156,8 +217,19 @@ document.addEventListener("DOMContentLoaded", () => {
     cell.textContent = "";
 
     completed++;
+    completedByColor[color.id]++;
 
     updateProgress();
+    updatePaletteCounts();
+
+    const remainingForCurrentColor =
+      totalsByColor[color.id] - completedByColor[color.id];
+
+    if (remainingForCurrentColor === 0 && completed < totalDiamonds) {
+      message.textContent = `✓ ${color.name} klaar — volgende kleur geselecteerd`;
+
+      selectNextAvailableColor();
+    }
   }
 
   function updateProgress() {
@@ -167,11 +239,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     progressBar.style.width = `${percentage}%`;
 
-    message.textContent = `${Math.round(percentage)}% voltooid`;
-
     if (completed === totalDiamonds) {
       message.textContent = "✨ Painting voltooid! +50 Diamonds";
+      return;
     }
+
+    message.textContent = `${Math.round(percentage)}% voltooid`;
+  }
+
+  function updatePaletteCounts() {
+    colors.forEach((color) => {
+      const total = totalsByColor[color.id];
+      const done = completedByColor[color.id];
+      const remaining = total - done;
+
+      const remainingElement = document.querySelector(
+        `[data-remaining="${color.id}"]`,
+      );
+
+      const totalElement = document.querySelector(`[data-total="${color.id}"]`);
+
+      const button = document.querySelector(
+        `.diamondistry-color[data-color="${color.id}"]`,
+      );
+
+      if (remainingElement) {
+        remainingElement.textContent =
+          remaining === 0 ? "✓ Klaar" : `${remaining} over`;
+      }
+
+      if (totalElement) {
+        totalElement.textContent = `${done} / ${total}`;
+      }
+
+      if (button) {
+        button.classList.toggle("is-complete", remaining === 0);
+      }
+    });
   }
 
   grid.addEventListener("pointerdown", (event) => {
@@ -202,12 +306,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  grid.addEventListener("pointerup", () => {
+  grid.addEventListener("pointerup", (event) => {
     isPainting = false;
+
+    if (grid.hasPointerCapture(event.pointerId)) {
+      grid.releasePointerCapture(event.pointerId);
+    }
   });
 
-  grid.addEventListener("pointercancel", () => {
+  grid.addEventListener("pointercancel", (event) => {
     isPainting = false;
+
+    if (grid.hasPointerCapture(event.pointerId)) {
+      grid.releasePointerCapture(event.pointerId);
+    }
   });
 
   grid.addEventListener("pointerleave", (event) => {
@@ -216,6 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  createPalette();
   createGrid();
+  createPalette();
+  updatePaletteCounts();
 });
