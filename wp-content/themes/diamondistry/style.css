@@ -1,0 +1,22 @@
+/*
+Theme Name: Diamondistry
+Theme URI: https://example.com
+Author: Diamondistry
+Description: Custom block theme for the Diamondistry digital diamond painting platform.
+Version: 0.2.0
+Text Domain: diamondistry
+*/
+
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+}

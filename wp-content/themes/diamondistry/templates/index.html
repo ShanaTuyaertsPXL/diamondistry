@@ -1,11 +1,29 @@
-<!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
-<main class="wp-block-group">
-  <!-- wp:heading {"level":1} -->
-  <h1 class="wp-block-heading">Diamondistry</h1>
-  <!-- /wp:heading -->
+<!-- wp:group {"tagName":"main","style":{"spacing":{"padding":{"top":"48px","right":"24px","bottom":"48px","left":"24px"}}},"layout":{"type":"constrained"}} -->
+<main
+  class="wp-block-group"
+  style="
+    padding-top: 48px;
+    padding-right: 24px;
+    padding-bottom: 48px;
+    padding-left: 24px;
+  "
+>
+  <!-- wp:query-title {"type":"archive"} /-->
 
-  <!-- wp:paragraph -->
-  <p>Digital diamond painting is coming to life. 💎</p>
-  <!-- /wp:paragraph -->
+  <!-- wp:query {"queryId":1,"query":{"perPage":10,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[],"sticky":"","inherit":true}} -->
+  <div class="wp-block-query">
+    <!-- wp:post-template -->
+
+    <!-- wp:group {"style":{"spacing":{"margin":{"bottom":"32px"}}}} -->
+    <div class="wp-block-group" style="margin-bottom: 32px">
+      <!-- wp:post-title {"isLink":true} /-->
+
+      <!-- wp:post-excerpt /-->
+    </div>
+    <!-- /wp:group -->
+
+    <!-- /wp:post-template -->
+  </div>
+  <!-- /wp:query -->
 </main>
 <!-- /wp:group -->
