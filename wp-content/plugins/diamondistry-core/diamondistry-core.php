@@ -86,6 +86,12 @@ function diamondistry_render_playground() {
 					class="diamondistry-message"
 					aria-live="polite"
 				></div>
+                <button
+	type="button"
+	id="diamondistry-reset"
+	class="diamondistry-reset"
+>Reset painting
+</button>
 
 			</aside>
 

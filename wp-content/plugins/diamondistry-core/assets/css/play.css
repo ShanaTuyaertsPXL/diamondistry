@@ -323,3 +323,38 @@
     flex-basis: 40px;
   }
 }
+
+/* Reset button css */
+.diamondistry-reset {
+  width: 100%;
+  margin-top: 24px;
+  padding: 11px 16px;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: #666;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.diamondistry-reset:hover {
+  background: #fff;
+  border-color: #bbb;
+  color: #222;
+}
+
+.diamondistry-reset:focus-visible {
+  outline: 3px solid #222;
+  outline-offset: 2px;
+}
