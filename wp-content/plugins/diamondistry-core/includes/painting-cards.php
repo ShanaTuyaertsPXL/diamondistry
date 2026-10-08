@@ -55,6 +55,9 @@ function diamondistry_normalize_painting_progress(
 
 			'updatedAt' =>
 				null,
+
+			'lastWorkedAt' =>
+				null,
 		);
 	}
 
@@ -122,6 +125,11 @@ function diamondistry_normalize_painting_progress(
 					'updatedAt'
 				]
 				: null,
+
+		'lastWorkedAt' =>
+			diamondistry_get_progress_last_worked_at(
+				$progress
+			),
 	);
 }
 

@@ -79,28 +79,21 @@ function diamondistry_get_player_progress_summary( $user_id ) {
 			$in_progress++;
 		}
 
+		$worked_at =
+			diamondistry_get_progress_last_worked_at(
+				$painting_progress
+			);
+
 		if (
-			! empty(
-				$painting_progress['updatedAt']
+			$worked_at &&
+			(
+				! $last_activity ||
+				$worked_at >
+					$last_activity
 			)
 		) {
-
-			$updated_at =
-				strtotime(
-					$painting_progress['updatedAt']
-				);
-
-			if (
-				$updated_at &&
-				(
-					! $last_activity ||
-					$updated_at >
-						$last_activity
-				)
-			) {
-				$last_activity =
-					$updated_at;
-			}
+			$last_activity =
+				$worked_at;
 		}
 	}
 
@@ -424,6 +417,9 @@ function diamondistry_handle_player_admin_actions() {
 				'rewardClaimed' =>
 					$reward_claimed,
 
+				'lastWorkedAt' =>
+					null,
+
 				'updatedAt' =>
 					current_time(
 						'mysql',
@@ -560,6 +556,9 @@ function diamondistry_handle_player_admin_actions() {
 
 				'rewardClaimed' =>
 					false,
+
+				'lastWorkedAt' =>
+					null,
 
 				'updatedAt' =>
 					current_time(
@@ -1238,7 +1237,7 @@ function diamondistry_render_player_detail(
 					</th>
 
 					<th>
-						Last updated
+						Last worked on
 					</th>
 
 					<th>
@@ -1425,35 +1424,19 @@ function diamondistry_render_player_detail(
 
 							<?php
 
-							if (
-								! empty(
-									$painting_progress[
-										'updatedAt'
-									]
-								)
-							) {
+							$timestamp =
+								diamondistry_get_progress_last_worked_at(
+									$painting_progress
+								);
 
-								$timestamp =
-									strtotime(
-										$painting_progress[
-											'updatedAt'
-										]
-									);
-
-								echo $timestamp
-									? esc_html(
-										wp_date(
-											'Y-m-d H:i',
-											$timestamp
-										)
+							echo $timestamp
+								? esc_html(
+									wp_date(
+										'Y-m-d H:i',
+										$timestamp
 									)
-									: '—';
-
-							} else {
-
-								echo '—';
-
-							}
+								)
+								: '—';
 
 							?>
 

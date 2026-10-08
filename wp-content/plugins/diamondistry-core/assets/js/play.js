@@ -38,16 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
     !Array.isArray(painting.pattern)
   ) {
     message.textContent = "Painting kon niet correct worden geladen.";
-
     return;
   }
 
   painting.postId = Number(painting.postId);
-
   painting.width = Number(painting.width);
-
   painting.height = Number(painting.height);
-
   painting.reward = Number(painting.reward || 0);
 
   painting.palette = painting.palette.map((color) => ({
@@ -61,14 +57,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (painting.pattern.length !== expectedCells) {
     message.textContent = `Ongeldig patroon: verwacht ${expectedCells} vakjes, maar vond ${painting.pattern.length}.`;
-
     return;
   }
 
   if (painting.pattern.some((value) => value === 0)) {
     message.textContent =
       "Deze painting is nog niet compleet en kan nog niet gespeeld worden.";
-
     return;
   }
 
@@ -77,7 +71,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (painting.pattern.some((value) => !paletteIds.has(value))) {
     message.textContent =
       "Deze painting bevat een ongeldige kleur en kan niet geladen worden.";
-
     return;
   }
 
@@ -93,22 +86,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!colors.length) {
     message.textContent = "Deze painting bevat geen bruikbare kleuren.";
-
     return;
   }
 
   const totalDiamonds = expectedCells;
 
-  /*
-   * Guests still use this.
-   *
-   * It is also temporarily used for migration from the
-   * old localStorage system to account progress.
-   */
   const storageKey = `diamondistry-progress-${painting.id}`;
 
   let selectedColor = colors[0]?.id ?? null;
-
   let completed = 0;
   let isPainting = false;
 
@@ -181,13 +166,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const cell = document.createElement("button");
 
       cell.type = "button";
-
       cell.className = "diamondistry-cell";
 
       cell.dataset.color = color.id;
-
       cell.dataset.completed = "false";
-
       cell.dataset.index = index;
 
       cell.textContent = color.symbol;
@@ -211,9 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const button = document.createElement("button");
 
       button.type = "button";
-
       button.className = "diamondistry-color";
-
       button.dataset.color = color.id;
 
       if (index === 0) {
@@ -221,37 +201,33 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       button.innerHTML = `
-          <span
-            class="diamondistry-color-preview"
-            style="--diamond-color: ${color.hex}"
-          >
-            ${color.symbol}
-          </span>
+        <span
+          class="diamondistry-color-preview"
+          style="--diamond-color: ${color.hex}"
+        >
+          ${color.symbol}
+        </span>
 
-          <span class="diamondistry-color-info">
-            <strong>
-              ${color.symbol} ${color.name}
-            </strong>
+        <span class="diamondistry-color-info">
+          <strong>
+            ${color.symbol} ${color.name}
+          </strong>
 
-            <small>
-              Diamond ${color.id}
-            </small>
-          </span>
+          <small>
+            Diamond ${color.id}
+          </small>
+        </span>
 
-          <span class="diamondistry-color-count">
-            <strong
-              data-remaining="${color.id}"
-            >
-              0 over
-            </strong>
+        <span class="diamondistry-color-count">
+          <strong data-remaining="${color.id}">
+            0 over
+          </strong>
 
-            <small
-              data-total="${color.id}"
-            >
-              0 / 0
-            </small>
-          </span>
-        `;
+          <small data-total="${color.id}">
+            0 / 0
+          </small>
+        </span>
+      `;
 
       button.addEventListener("click", () => {
         selectColor(color.id);
@@ -296,7 +272,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (let offset = 1; offset <= colors.length; offset++) {
       const nextIndex = (currentIndex + offset) % colors.length;
-
       const nextColor = colors[nextIndex];
 
       if (getRemaining(nextColor.id) > 0) {
@@ -321,7 +296,6 @@ document.addEventListener("DOMContentLoaded", () => {
     cell.dataset.completed = "true";
 
     cell.classList.remove("is-wrong");
-
     cell.classList.add("is-completed");
 
     cell.style.setProperty("--diamond-color", color.hex);
@@ -361,15 +335,14 @@ document.addEventListener("DOMContentLoaded", () => {
     completeCell(cell, color);
 
     completed++;
-
     completedByColor[color.id]++;
 
     updateProgress();
     updatePaletteCounts();
 
     /*
-     * Completion needs an immediate server save
-     * so the reward can be granted straight away.
+     * Bij volledige painting meteen opslaan,
+     * zodat reward direct kan worden toegekend.
      */
     if (completed === totalDiamonds) {
       persistProgress({
@@ -408,7 +381,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (completed === totalDiamonds) {
       message.textContent = `✨ ${painting.title} voltooid!`;
-
       return;
     }
 
@@ -418,9 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updatePaletteCounts() {
     colors.forEach((color) => {
       const total = totalsByColor[color.id];
-
       const done = completedByColor[color.id];
-
       const remaining = total - done;
 
       const remainingElement = document.querySelector(
@@ -459,13 +429,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveLocalProgress() {
     const progress = {
       version: 2,
-
       paintingId: painting.id,
-
       selectedColor,
-
       completedCells: getCompletedIndexes(),
-
       updatedAt: new Date().toISOString(),
     };
 
@@ -509,13 +475,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const body = new URLSearchParams();
 
     body.set("action", "diamondistry_save_progress");
-
     body.set("nonce", userState.nonce);
-
     body.set("paintingId", String(painting.postId));
-
     body.set("selectedColor", String(selectedColor || 0));
-
     body.set("completedCells", JSON.stringify(getCompletedIndexes()));
 
     try {
@@ -529,26 +491,34 @@ document.addEventListener("DOMContentLoaded", () => {
         body: body.toString(),
 
         credentials: "same-origin",
+
+        /*
+         * Zorgt ervoor dat de save nog kan afronden
+         * als iemand snel de pagina verlaat.
+         */
+        keepalive: true,
       });
 
       const result = await response.json();
 
       if (!result.success) {
         console.error("Diamondistry progress save failed:", result);
-
         return null;
       }
 
       /*
-       * Server is now authoritative.
-       * Old local progress can go.
+       * Server is leidend.
+       * Oude lokale progress mag weg.
        */
       localStorage.removeItem(storageKey);
 
       if (result.data?.rewardGranted) {
         userState.balance = Number(result.data.balance || 0);
 
-        message.textContent = `✨ ${painting.title} voltooid! +${result.data.reward} 💎 · Balance: ${userState.balance} 💎`;
+        message.textContent =
+          `✨ ${painting.title} voltooid! ` +
+          `+${result.data.reward} 💎 · ` +
+          `Balance: ${userState.balance} 💎`;
       } else if (completed === totalDiamonds) {
         message.textContent = `✨ ${painting.title} voltooid!`;
       }
@@ -579,6 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveTimer = window.setTimeout(() => {
       saveTimer = null;
+
       saveServerProgress();
     }, 350);
   }
@@ -633,7 +604,6 @@ document.addEventListener("DOMContentLoaded", () => {
       completeCell(cell, color);
 
       completed++;
-
       completedByColor[color.id]++;
     });
 
@@ -651,8 +621,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadProgress() {
     /*
-     * Logged-in user:
-     * WordPress progress is authoritative.
+     * Ingelogde gebruiker:
+     * WordPress-progress is leidend.
      */
     if (userState.loggedIn) {
       const serverProgress = userState.progress;
@@ -678,11 +648,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       /*
-       * One-time migration:
-       * before v0.9 progress lived in localStorage.
-       *
-       * If server has never seen this painting,
-       * migrate the old browser state.
+       * Eenmalige migratie van oude localStorage
+       * naar WordPress-accountprogress.
        */
       const localProgress = readLocalProgress();
 
@@ -710,7 +677,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /*
-     * Guest.
+     * Gastgebruiker.
      */
     const localProgress = readLocalProgress();
 
@@ -773,9 +740,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const body = new URLSearchParams();
 
     body.set("action", "diamondistry_reset_progress");
-
     body.set("nonce", userState.nonce);
-
     body.set("paintingId", String(painting.postId));
 
     const response = await fetch(userState.ajaxUrl, {
@@ -869,12 +834,50 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  /*
+   * BELANGRIJKE FIX:
+   * na loslaten meteen opslaan.
+   */
   document.addEventListener("pointerup", () => {
+    if (!isPainting) {
+      return;
+    }
+
     isPainting = false;
+
+    persistProgress({
+      immediate: true,
+    });
   });
 
   document.addEventListener("pointercancel", () => {
+    if (!isPainting) {
+      return;
+    }
+
     isPainting = false;
+
+    persistProgress({
+      immediate: true,
+    });
+  });
+
+  /*
+   * Extra veiligheid wanneer tab/pagina
+   * wordt afgesloten of verlaten.
+   */
+  window.addEventListener("pagehide", () => {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+
+      saveTimer = null;
+    }
+
+    if (userState.loggedIn) {
+      saveServerProgress();
+    } else {
+      saveLocalProgress();
+    }
   });
 
   if (resetButton) {

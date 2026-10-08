@@ -66,6 +66,7 @@ function diamondistry_get_user_painting_progress(
 			'selectedColor'  => null,
 			'completed'      => false,
 			'rewardClaimed'  => false,
+			'lastWorkedAt'   => null,
 		);
 	}
 
@@ -106,7 +107,51 @@ function diamondistry_get_user_painting_progress(
 			! empty(
 				$progress['rewardClaimed']
 			),
+
+		'lastWorkedAt' =>
+			diamondistry_get_progress_last_worked_at(
+				$progress
+			),
 	);
+}
+
+
+/**
+ * Return the real last-worked timestamp for a progress record.
+ *
+ * New records use lastWorkedAt as a Unix timestamp. Older records used
+ * updatedAt (UTC MySQL datetime), so we keep a safe legacy fallback only
+ * when the painting actually contains completed cells.
+ */
+function diamondistry_get_progress_last_worked_at( $progress ) {
+
+	if ( ! is_array( $progress ) ) {
+		return null;
+	}
+
+	if (
+		isset( $progress['lastWorkedAt'] ) &&
+		is_numeric( $progress['lastWorkedAt'] ) &&
+		absint( $progress['lastWorkedAt'] ) > 0
+	) {
+		return absint( $progress['lastWorkedAt'] );
+	}
+
+	/*
+	 * Legacy fallback: old versions stored updatedAt in UTC.
+	 * Ignore it when there is no actual painting progress, because resets
+	 * also changed updatedAt and that is not "worked on" activity.
+	 */
+	if (
+		! empty( $progress['completedCells'] ) &&
+		! empty( $progress['updatedAt'] )
+	) {
+		$timestamp = strtotime( $progress['updatedAt'] . ' UTC' );
+
+		return $timestamp ? $timestamp : null;
+	}
+
+	return null;
 }
 
 
@@ -340,6 +385,48 @@ function diamondistry_ajax_save_progress() {
 			: array();
 
 
+	/*
+	 * "Last worked on" only changes when the placed diamonds change.
+	 * Selecting another color or another technical save is not work activity.
+	 */
+	$old_completed_cells =
+		isset( $old_progress['completedCells'] ) &&
+		is_array( $old_progress['completedCells'] )
+			? array_values(
+				array_unique(
+					array_map(
+						'absint',
+						$old_progress['completedCells']
+					)
+				)
+			)
+			: array();
+
+	sort( $old_completed_cells );
+
+	$new_completed_cells =
+		$completed_cells;
+
+	sort( $new_completed_cells );
+
+	$progress_changed =
+		$old_completed_cells !==
+		$new_completed_cells;
+
+	$last_worked_at =
+		diamondistry_get_progress_last_worked_at(
+			$old_progress
+		);
+
+	if ( $progress_changed ) {
+		$last_worked_at =
+			current_time(
+				'timestamp',
+				true
+			);
+	}
+
+
 	$reward_claimed =
 		! empty(
 			$old_progress['rewardClaimed']
@@ -384,6 +471,9 @@ function diamondistry_ajax_save_progress() {
 
 			'rewardClaimed' =>
 				$reward_claimed,
+
+			'lastWorkedAt' =>
+				$last_worked_at,
 
 			'updatedAt' =>
 				current_time(
@@ -515,6 +605,9 @@ function diamondistry_ajax_reset_progress() {
 
 			'rewardClaimed' =>
 				$reward_claimed,
+
+			'lastWorkedAt' =>
+				null,
 
 			'updatedAt' =>
 				current_time(
