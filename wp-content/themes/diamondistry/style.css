@@ -1,22 +1,648 @@
 /*
 Theme Name: Diamondistry
-Theme URI: https://example.com
+Theme URI: https://diamondistry.local
 Author: Diamondistry
-Description: Custom block theme for the Diamondistry digital diamond painting platform.
-Version: 0.2.0
+Description: Custom block theme for Diamondistry.
+Version: 0.6.2
 Text Domain: diamondistry
 */
 
-html {
-  box-sizing: border-box;
+:root {
+  --dd-ink: #1c2144;
+  --dd-text: #3d4266;
+  --dd-muted: #8b90a8;
+  --dd-purple: #6e4df6;
+  --dd-purple-dark: #5736de;
+  --dd-purple-soft: #efeaff;
+  --dd-pink: #ff6f9f;
+  --dd-pink-soft: #fff0f6;
+  --dd-blue: #5f9df7;
+  --dd-green: #3cba7a;
+  --dd-border: #eceaf3;
+  --dd-surface: #ffffff;
+  --dd-background: #ffffff;
+  --dd-radius-sm: 14px;
+  --dd-radius: 22px;
+  --dd-radius-lg: 32px;
+  --dd-shadow: 0 24px 70px rgb(62 52 130 / 0.1);
+  --dd-shadow-soft: 0 10px 30px rgb(42 34 86 / 0.06);
+  --dd-content: 100%;
+  --dd-font: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --dd-serif: Fraunces, Georgia, "Times New Roman", serif;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: inherit;
-}
-
+html { scroll-behavior: smooth; }
+html.is-menu-open { overflow: hidden; }
 body {
   margin: 0;
+  background: #fff;
+  color: var(--dd-text);
+  font-family: var(--dd-font);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+img { max-width: 100%; }
+button, input { font-family: inherit; }
+.wp-site-blocks,
+.dd-shell,
+.dd-shell.wp-block-group,
+.is-layout-constrained > .dd-shell,
+.diamondistry-page-shell,
+.diamondistry-page-shell .wp-block-post-content {
+  max-width: none;
+}
+.wp-site-blocks > * { margin-block-start: 0; margin-block-end: 0; }
+
+.dd-shell,
+.dd-shell.wp-block-group {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+.dd-shell-follow { padding-top: 28px; padding-bottom: 28px; }
+.dd-shell > .wp-block-template-part,
+.dd-shell .wp-block-group { margin: 0; }
+
+.diamondistry-site-header { width: 100%; background: #fff; }
+.diamondistry-site-header-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  min-height: 72px;
+  padding: 8px 48px;
+}
+.diamondistry-site-header-inner > * {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+.diamondistry-brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.diamondistry-site-header p,
+.diamondistry-mobile-panel-head p,
+.diamondistry-footer-brand > p:has(.diamondistry-brand),
+.diamondistry-footer-brand > .diamondistry-brand {
+  margin: 0;
+}
+.diamondistry-logo,
+.wp-block-site-logo .custom-logo {
+  display: block;
+  width: auto !important;
+  height: 38px;
+  max-width: none;
+}
+.wp-block-site-logo { line-height: 0; }
+.diamondistry-site-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.diamondistry-site-nav br { display: none; }
+.diamondistry-site-nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: #111;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.diamondistry-site-nav a:hover { color: #111; }
+.diamondistry-site-nav a.is-current {
+  background: #f4e8ff;
+  color: #6d46ea;
+  padding-bottom: 8px;
+}
+.diamondistry-site-nav a.is-current::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 5px;
+  height: 2px;
+  border-radius: 2px;
+  background: #7b52f2;
+}
+
+.diamondistry-header-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.diamondistry-header-account {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.diamondistry-header-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 5px 11px;
+  border: 1px solid #eeeaf4;
+  border-radius: 999px;
+  background: #fff;
+  color: #1c2144;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: none;
+}
+.diamondistry-header-balance svg { display: block; width: 16px; height: 16px; }
+.diamondistry-header-avatar {
+  overflow: hidden;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgb(37 30 70 / 0.12);
+}
+.diamondistry-header-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.diamondistry-header-login,
+.diamondistry-header-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid #ece8f2;
+  border-radius: 999px;
+  background: #fff;
+  color: #5e637c;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.diamondistry-menu-toggle {
+  display: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ece8f2;
+  border-radius: 14px;
+  background: #fff;
+  color: #2e3354;
+  cursor: pointer;
+}
+.diamondistry-menu-toggle span,
+.diamondistry-menu-toggle span::before,
+.diamondistry-menu-toggle span::after {
+  display: block;
+  width: 16px;
+  height: 2px;
+  border-radius: 99px;
+  background: currentColor;
+  position: relative;
+}
+.diamondistry-menu-toggle span::before,
+.diamondistry-menu-toggle span::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+.diamondistry-menu-toggle span::before { top: -5px; }
+.diamondistry-menu-toggle span::after { top: 5px; }
+
+.diamondistry-mobile-menu[hidden] { display: none; }
+.diamondistry-mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px;
+  background: rgb(28 24 48 / 0.28);
+}
+.admin-bar .diamondistry-mobile-menu { top: 32px; }
+.diamondistry-mobile-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(300px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 16px 14px 18px;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgb(42 34 86 / 0.16);
+}
+.diamondistry-mobile-panel .diamondistry-logo,
+.diamondistry-mobile-panel .custom-logo { height: 30px; }
+.diamondistry-mobile-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.diamondistry-menu-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #8b90a4;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.diamondistry-mobile-links,
+.diamondistry-mobile-account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.diamondistry-mobile-links br { display: none; }
+.diamondistry-mobile-links a,
+.diamondistry-mobile-account a {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  min-height: 40px;
+  margin: 0;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+  color: #111;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+.diamondistry-mobile-links a svg,
+.diamondistry-mobile-account a svg {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: #111;
+}
+.diamondistry-mobile-links a.is-current {
+  background: #f3e8ff;
+  color: #6d46ea;
+}
+.diamondistry-mobile-links a.is-current svg { color: #6d46ea; }
+.diamondistry-mobile-account {
+  margin-top: 6px;
+  padding-top: 6px;
+}
+.diamondistry-mobile-account .diamondistry-header-avatar {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  box-shadow: none;
+}
+
+.diamondistry-home { overflow: hidden; }
+.diamondistry-home-hero {
+  position: relative;
+  width: 100%;
+  height: min(78vh, 760px);
+  min-height: 480px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0;
+  background: #2a2158;
+}
+.diamondistry-home-hero > p,
+.diamondistry-home-hero > .wp-block-shortcode {
+  margin: 0;
+  height: 0;
+  line-height: 0;
+}
+.diamondistry-home-hero-photo {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 140%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+  will-change: transform;
+}
+.diamondistry-home-hero-copy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  max-width: 560px;
+  padding: 72px 48px 120px;
+}
+.diamondistry-home-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 92px;
+}
+.diamondistry-home-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--dd-purple);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.diamondistry-home-kicker span {
+  color: #ff8fba;
+  font-size: 1rem;
+}
+.diamondistry-home-title {
+  margin: 0;
+  color: #24305f;
+  font-family: var(--dd-serif);
+  font-size: clamp(3.1rem, 6vw, 4.7rem);
+  font-weight: 560;
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+}
+.diamondistry-home-lead {
+  max-width: 440px;
+  margin: 18px 0 0;
+  color: #5d6484;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.diamondistry-home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+.dd-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.dd-button:hover { transform: translateY(-2px); }
+.dd-button-primary {
+  background: #ff5f93;
+  color: #fff;
+  box-shadow: 0 10px 22px rgb(255 95 147 / 0.28);
+}
+.dd-button-secondary {
+  border: 1px solid #e6e3ee;
+  background: #fff;
+  color: var(--dd-ink);
+  box-shadow: 0 8px 18px rgb(40 30 80 / 0.06);
+}
+.dd-play {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 2px;
+  border: 1.5px solid #d9d6e4;
+  border-radius: 50%;
+  color: #2a3148;
+}
+
+.diamondistry-home-benefits { padding: 8px 48px 36px; }
+.diamondistry-home-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.diamondistry-home-benefit { padding: 12px 12px 8px; text-align: center; }
+.diamondistry-home-benefit-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: #f3eeff;
+  color: var(--dd-purple);
+}
+.diamondistry-home-benefit:nth-child(2) .diamondistry-home-benefit-icon { background: #fff0f6; color: #ff6f9f; }
+.diamondistry-home-benefit:nth-child(3) .diamondistry-home-benefit-icon { background: #eef5ff; color: #5f9df7; }
+.diamondistry-home-benefit:nth-child(4) .diamondistry-home-benefit-icon { background: #fff4ea; color: #f0a15a; }
+.diamondistry-home-benefit-icon svg { width: 24px; height: 24px; }
+.diamondistry-home-benefit h3 {
+  margin: 0;
+  color: var(--dd-ink);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+.diamondistry-home-benefit p {
+  max-width: 210px;
+  margin: 6px auto 0;
+  color: var(--dd-muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.diamondistry-home-section { padding: 8px 12px 28px; }
+.diamondistry-home-section-inner { width: min(100%, 1040px); margin-inline: auto; }
+.diamondistry-home-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  margin-bottom: 26px;
+}
+.diamondistry-home-eyebrow {
+  margin: 0;
+  color: var(--dd-purple);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.diamondistry-home-section-heading h2 {
+  margin: 4px 0 0;
+  color: var(--dd-ink);
+  font-family: var(--dd-serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 560;
+  letter-spacing: -0.035em;
+}
+.diamondistry-home-section-heading p {
+  max-width: 460px;
+  margin: 0;
+  color: var(--dd-muted);
+  line-height: 1.6;
+}
+.diamondistry-home-paintings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.diamondistry-how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.diamondistry-how-step {
+  padding: 24px;
+  border: 1px solid var(--dd-border);
+  border-radius: 22px;
+  background: #faf9fd;
+}
+.diamondistry-how-number {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 18px;
+  border-radius: 13px;
+  background: var(--dd-purple);
+  color: #fff;
+  font-weight: 800;
+}
+.diamondistry-how-step h3 { margin: 0; color: var(--dd-ink); font-size: 1.05rem; }
+.diamondistry-how-step p { margin: 8px 0 0; color: var(--dd-muted); font-size: 0.92rem; line-height: 1.6; }
+
+.diamondistry-home-cta { padding: 8px 12px 12px; }
+.diamondistry-home-cta-inner {
+  padding: 48px 36px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #211f4a, #543cd7);
+  color: #fff;
+  text-align: center;
+}
+.diamondistry-home-cta-inner h2 {
+  max-width: 680px;
+  margin: 0 auto;
+  font-family: var(--dd-serif);
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  font-weight: 560;
+  letter-spacing: -0.035em;
+}
+.diamondistry-home-cta-inner p {
+  max-width: 520px;
+  margin: 14px auto 22px;
+  color: rgb(255 255 255 / 0.75);
+}
+
+.diamondistry-page-shell { width: auto; margin: 0; padding: 12px 48px 32px; }
+.diamondistry-app-screen .diamondistry-page-shell > .wp-block-post-title { display: none; }
+.diamondistry-page-shell > .wp-block-post-title,
+.diamondistry-page-shell .wp-block-post-title {
+  margin: 8px 0 12px;
+  color: var(--dd-ink);
+  font-family: var(--dd-serif);
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 560;
+  letter-spacing: -0.04em;
+}
+.diamondistry-page-shell .wp-block-post-content { margin: 0; max-width: none; }
+
+.diamondistry-site-footer {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background: #fff;
+}
+.diamondistry-site-footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 28px 48px 36px;
+}
+.diamondistry-footer-brand p {
+  max-width: 420px;
+  margin: 6px 0 0;
+  color: #7d829c;
+  font-size: 0.84rem;
+}
+.diamondistry-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.diamondistry-footer-links a {
+  color: #63677f;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 960px) {
+  .diamondistry-home-benefits-grid,
+  .diamondistry-home-paintings,
+  .diamondistry-how-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .diamondistry-home-hero { height: 520px; min-height: 0; }
+}
+@media (max-width: 782px) {
+  .admin-bar .diamondistry-mobile-menu { top: 46px; }
+}
+@media (max-width: 1100px) {
+  .diamondistry-site-header-inner { padding-inline: 24px; gap: 16px; }
+  .diamondistry-logo,
+  .wp-block-site-logo .custom-logo { height: 34px; }
+  .diamondistry-site-nav { gap: 2px; }
+  .diamondistry-site-nav a { font-size: 15px; padding: 6px 12px; }
+  .diamondistry-site-nav a.is-current { padding-bottom: 7px; }
+  .diamondistry-site-nav a.is-current::after { left: 12px; right: 12px; bottom: 4px; }
+  .diamondistry-header-login,
+  .diamondistry-header-logout { min-height: 32px; padding: 5px 12px; font-size: 13px; }
+  .diamondistry-header-balance { min-height: 32px; font-size: 13px; }
+  .diamondistry-header-avatar { width: 32px; height: 32px; }
+}
+@media (max-width: 860px) {
+  .diamondistry-page-shell { padding-inline: 20px; }
+  .diamondistry-site-header-inner { padding-inline: 20px; }
+  .diamondistry-home-hero-copy { padding: 48px 20px 110px; }
+  .diamondistry-home-benefits,
+  .diamondistry-home-section,
+  .diamondistry-site-footer-inner { padding-inline: 20px; }
+  .diamondistry-home-section-heading { flex-direction: column; align-items: flex-start; }
+  .diamondistry-site-footer-inner { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 720px) {
+  .diamondistry-page-shell { padding: 8px 16px 28px; }
+  .diamondistry-site-nav,
+  .diamondistry-header-account { display: none; }
+  .diamondistry-menu-toggle { display: grid; }
+  .diamondistry-site-header-inner {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+}
+@media (max-width: 640px) {
+  .diamondistry-home-benefits-grid,
+  .diamondistry-home-paintings,
+  .diamondistry-how-grid { grid-template-columns: 1fr; }
+  .diamondistry-home-title { font-size: clamp(2.6rem, 12vw, 3.6rem); }
+  .diamondistry-home-cta-inner { padding: 32px 20px; }
+  .diamondistry-home-wave { height: 64px; }
 }

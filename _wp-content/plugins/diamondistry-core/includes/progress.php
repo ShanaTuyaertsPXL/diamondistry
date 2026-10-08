@@ -62,7 +62,6 @@ function diamondistry_get_user_painting_progress( $user_id, $painting_id ) {
 			'completed'      => false,
 			'rewardClaimed'  => false,
 			'lastWorkedAt'   => null,
-			'revision'       => 0,
 		);
 	}
 
@@ -84,43 +83,7 @@ function diamondistry_get_user_painting_progress( $user_id, $painting_id ) {
 		'completed'      => ! empty( $progress['completed'] ),
 		'rewardClaimed'  => ! empty( $progress['rewardClaimed'] ),
 		'lastWorkedAt'   => diamondistry_get_progress_last_worked_at( $progress ),
-		'revision'       => isset( $progress['revision'] ) ? absint( $progress['revision'] ) : 0,
 	);
-}
-
-/*
-|--------------------------------------------------------------------------
-| Serialize progress writes for one user
-|--------------------------------------------------------------------------
-*/
-
-function diamondistry_begin_progress_write( $user_id ) {
-	global $wpdb;
-
-	$started = $wpdb->query( 'START TRANSACTION' );
-
-	if ( false === $started ) {
-		return false;
-	}
-
-	$wpdb->get_var(
-		$wpdb->prepare(
-			"SELECT ID FROM {$wpdb->users} WHERE ID = %d FOR UPDATE",
-			absint( $user_id )
-		)
-	);
-
-	return true;
-}
-
-function diamondistry_commit_progress_write( $locked = true ) {
-	global $wpdb;
-
-	if ( ! $locked ) {
-		return;
-	}
-
-	$wpdb->query( 'COMMIT' );
 }
 
 /*
@@ -292,33 +255,13 @@ function diamondistry_ajax_save_progress() {
 		$selected_color = 0;
 	}
 
-	$is_completed   = count( $completed_cells ) === $data['totalCells'];
-	$client_revision = isset( $_POST['revision'] ) ? absint( $_POST['revision'] ) : 0;
-
-	/*
-	 * Save and reset both lock the user row so a keepalive save that started
-	 * before reset cannot land afterwards and put the full grid back.
-	 */
-	$progress_locked = diamondistry_begin_progress_write( $user_id );
+	$is_completed = count( $completed_cells ) === $data['totalCells'];
 
 	$all_progress = diamondistry_get_all_user_progress( $user_id );
 	$key          = (string) $painting_id;
 	$old_progress = isset( $all_progress[ $key ] ) && is_array( $all_progress[ $key ] )
 		? $all_progress[ $key ]
 		: array();
-
-	$current_revision = isset( $old_progress['revision'] ) ? absint( $old_progress['revision'] ) : 0;
-
-	if ( $client_revision !== $current_revision ) {
-		diamondistry_commit_progress_write( $progress_locked );
-
-		wp_send_json_success(
-			array(
-				'stale'    => true,
-				'revision' => $current_revision,
-			)
-		);
-	}
 
 	$old_completed_cells = diamondistry_sanitize_completed_cell_indexes(
 		isset( $old_progress['completedCells'] ) && is_array( $old_progress['completedCells'] )
@@ -350,8 +293,6 @@ function diamondistry_ajax_save_progress() {
 		$reward_granted = true;
 	}
 
-	$new_revision = $current_revision + 1;
-
 	$all_progress[ $key ] = array(
 		'completedCells' => $completed_cells,
 		'selectedColor'  => $selected_color ?: null,
@@ -359,12 +300,9 @@ function diamondistry_ajax_save_progress() {
 		'rewardClaimed'  => $reward_claimed,
 		'lastWorkedAt'   => $last_worked_at,
 		'updatedAt'      => current_time( 'mysql', true ),
-		'revision'       => $new_revision,
 	);
 
 	update_user_meta( $user_id, DIAMONDISTRY_PROGRESS_META_KEY, $all_progress );
-
-	diamondistry_commit_progress_write( $progress_locked );
 
 	wp_send_json_success(
 		array(
@@ -372,8 +310,6 @@ function diamondistry_ajax_save_progress() {
 			'rewardGranted' => $reward_granted,
 			'reward'        => $reward_granted ? absint( $data['reward'] ) : 0,
 			'balance'       => diamondistry_get_user_balance( $user_id ),
-			'revision'      => $new_revision,
-			'stale'         => false,
 		)
 	);
 }
@@ -405,15 +341,9 @@ function diamondistry_ajax_reset_progress() {
 		wp_send_json_error( array(), 404 );
 	}
 
-	$progress_locked = diamondistry_begin_progress_write( $user_id );
-
-	$all_progress   = diamondistry_get_all_user_progress( $user_id );
-	$key            = (string) $painting_id;
-	$old_progress   = isset( $all_progress[ $key ] ) && is_array( $all_progress[ $key ] )
-		? $all_progress[ $key ]
-		: array();
-	$reward_claimed = ! empty( $old_progress['rewardClaimed'] );
-	$new_revision   = ( isset( $old_progress['revision'] ) ? absint( $old_progress['revision'] ) : 0 ) + 1;
+	$all_progress  = diamondistry_get_all_user_progress( $user_id );
+	$key           = (string) $painting_id;
+	$reward_claimed = ! empty( $all_progress[ $key ]['rewardClaimed'] );
 
 	$all_progress[ $key ] = array(
 		'completedCells' => array(),
@@ -422,17 +352,13 @@ function diamondistry_ajax_reset_progress() {
 		'rewardClaimed'  => $reward_claimed,
 		'lastWorkedAt'   => null,
 		'updatedAt'      => current_time( 'mysql', true ),
-		'revision'       => $new_revision,
 	);
 
 	update_user_meta( $user_id, DIAMONDISTRY_PROGRESS_META_KEY, $all_progress );
 
-	diamondistry_commit_progress_write( $progress_locked );
-
 	wp_send_json_success(
 		array(
-			'balance'  => diamondistry_get_user_balance( $user_id ),
-			'revision' => $new_revision,
+			'balance' => diamondistry_get_user_balance( $user_id ),
 		)
 	);
 }

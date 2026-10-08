@@ -1,0 +1,28 @@
+<!-- wp:group {"className":"diamondistry-site-header","layout":{"type":"default"}} -->
+<div class="wp-block-group diamondistry-site-header">
+	<!-- wp:group {"className":"diamondistry-site-header-inner","layout":{"type":"default"}} -->
+	<div class="wp-block-group diamondistry-site-header-inner">
+		<!-- wp:site-logo {"width":150,"shouldSyncIcon":false} /-->
+		<!-- wp:shortcode -->
+		[diamondistry_site_nav]
+		<!-- /wp:shortcode -->
+		<!-- wp:html -->
+		<div class="diamondistry-header-tools">
+		<!-- /wp:html -->
+		<!-- wp:shortcode -->
+		[diamondistry_header_account]
+		<!-- /wp:shortcode -->
+		<!-- wp:html -->
+			<button type="button" class="diamondistry-menu-toggle" aria-expanded="false" aria-controls="diamondistry-mobile-menu">
+				<span class="screen-reader-text">Open menu</span>
+				<span aria-hidden="true"></span>
+			</button>
+		</div>
+		<!-- /wp:html -->
+	</div>
+	<!-- /wp:group -->
+	<!-- wp:shortcode -->
+	[diamondistry_mobile_menu]
+	<!-- /wp:shortcode -->
+</div>
+<!-- /wp:group -->

@@ -28,10 +28,8 @@
   font-weight: 600;
 }
 
-.diamondistry-admin-field input[type="number"],
-.diamondistry-admin-field select {
-  width: 160px;
-  max-width: 100%;
+.diamondistry-admin-field input[type="number"] {
+  width: 120px;
 }
 
 /* Workspace */

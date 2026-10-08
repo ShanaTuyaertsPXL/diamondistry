@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Sunset lake and cabin">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f7b7d4"/>
+      <stop offset="38%" stop-color="#f6c9a8"/>
+      <stop offset="68%" stop-color="#e7d7ff"/>
+      <stop offset="100%" stop-color="#c9b6f6"/>
+    </linearGradient>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d7c4f8"/>
+      <stop offset="100%" stop-color="#8d78d8"/>
+    </linearGradient>
+    <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b7a4ef"/>
+      <stop offset="100%" stop-color="#6d5cc4"/>
+    </linearGradient>
+    <linearGradient id="near" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6f62c8"/>
+      <stop offset="100%" stop-color="#3d3488"/>
+    </linearGradient>
+    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f3c3d8"/>
+      <stop offset="45%" stop-color="#d9c6f4"/>
+      <stop offset="100%" stop-color="#8f7ed0"/>
+    </linearGradient>
+    <linearGradient id="snow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7fb"/>
+      <stop offset="100%" stop-color="#f0d7ea"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <ellipse cx="1180" cy="210" rx="90" ry="90" fill="#ffe3c2" opacity="0.85"/>
+  <ellipse cx="1180" cy="210" rx="150" ry="70" fill="#ffe7d2" opacity="0.35"/>
+  <path fill="url(#far)" d="M0 430 L180 250 L310 390 L470 180 L640 360 L820 150 L980 340 L1160 190 L1340 360 L1600 220 L1600 520 L0 520 Z"/>
+  <path fill="url(#snow)" d="M430 230 L470 180 L520 250 L470 236 Z M760 210 L820 150 L890 230 L820 214 Z M1100 250 L1160 190 L1230 270 L1160 250 Z"/>
+  <path fill="url(#mid)" d="M0 500 L120 360 L260 470 L390 300 L560 480 L700 330 L860 490 L1040 340 L1220 500 L1400 360 L1600 470 L1600 620 L0 620 Z"/>
+  <path fill="url(#snow)" d="M350 360 L390 300 L440 380 L392 360 Z M980 400 L1040 340 L1110 420 L1042 398 Z"/>
+  <path fill="url(#near)" d="M0 560 L90 470 L210 560 L340 430 L500 580 L0 580 Z M1080 580 L1240 450 L1380 560 L1520 470 L1600 530 L1600 640 L1080 640 Z"/>
+  <path fill="#24324f" d="M70 520 L110 390 L150 520 Z M150 540 L200 360 L250 540 Z M40 560 L90 430 L130 560 Z"/>
+  <path fill="#1b2844" d="M1260 560 L1320 400 L1380 560 Z M1360 580 L1430 420 L1500 580 Z M1460 560 L1520 450 L1570 560 Z"/>
+  <rect x="0" y="560" width="1600" height="340" fill="url(#lake)"/>
+  <path fill="#ffffff" opacity="0.28" d="M0 640 C220 610 380 690 620 650 C900 600 1100 700 1600 640 L1600 700 C1100 760 860 640 600 690 C340 740 180 650 0 690 Z"/>
+  <path fill="#6a5bb8" opacity="0.35" d="M760 590 L820 640 L890 590 L860 700 L790 700 Z"/>
+  <path fill="#3d3488" opacity="0.25" d="M1040 600 L1110 680 L1180 610 L1140 760 L1000 760 Z"/>
+  <g transform="translate(1040 470)">
+    <rect x="18" y="70" width="150" height="92" rx="6" fill="#8b5a3c"/>
+    <polygon points="0,78 96,8 192,78" fill="#6b3e32"/>
+    <rect x="70" y="108" width="34" height="54" rx="3" fill="#f6d7a2"/>
+    <rect x="36" y="96" width="26" height="22" rx="2" fill="#ffe7b0"/>
+    <rect x="124" y="96" width="26" height="22" rx="2" fill="#ffe7b0"/>
+    <rect x="86" y="28" width="16" height="36" fill="#5c4038"/>
+  </g>
+  <g fill="#2a2148">
+    <ellipse cx="180" cy="760" rx="70" ry="16" opacity="0.15"/>
+    <path d="M150 770 C150 700 210 690 210 770 Z"/>
+    <path d="M210 780 C230 690 300 700 280 790 Z" fill="#3a2d62"/>
+  </g>
+  <g>
+    <circle cx="240" cy="800" r="7" fill="#ff8fb3"/>
+    <circle cx="268" cy="812" r="5" fill="#ffe08a"/>
+    <circle cx="220" cy="818" r="4" fill="#ffffff"/>
+    <circle cx="300" cy="800" r="6" fill="#d7b4ff"/>
+    <circle cx="1320" cy="790" r="6" fill="#ff8fb3"/>
+    <circle cx="1360" cy="808" r="5" fill="#ffe08a"/>
+    <circle cx="1288" cy="812" r="4" fill="#fff"/>
+  </g>
+</svg>

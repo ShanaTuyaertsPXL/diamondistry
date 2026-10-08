@@ -1,0 +1,25 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","align":"full","className":"diamondistry-page-shell","layout":{"type":"constrained"}} -->
+<main class="wp-block-group alignfull diamondistry-page-shell">
+  <!-- wp:group {"align":"wide","layout":{"type":"constrained"}} -->
+  <div class="wp-block-group alignwide">
+    <!-- wp:query-title {"type":"archive"} /-->
+    <!-- wp:query {"queryId":1,"query":{"perPage":10,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[],"sticky":"","inherit":true}} -->
+    <div class="wp-block-query">
+      <!-- wp:post-template -->
+      <!-- wp:group {"className":"diamondistry-post-card","layout":{"type":"constrained"}} -->
+      <div class="wp-block-group diamondistry-post-card">
+        <!-- wp:post-title {"isLink":true} /-->
+        <!-- wp:post-excerpt /-->
+      </div>
+      <!-- /wp:group -->
+      <!-- /wp:post-template -->
+    </div>
+    <!-- /wp:query -->
+  </div>
+  <!-- /wp:group -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

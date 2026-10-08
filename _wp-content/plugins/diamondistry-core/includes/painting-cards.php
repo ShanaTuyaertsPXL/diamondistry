@@ -318,52 +318,6 @@ function diamondistry_render_painting_preview(
 }
 
 
-function diamondistry_get_painting_categories() {
-	$terms = get_terms(
-		array(
-			'taxonomy'   => 'painting_category',
-			'hide_empty' => false,
-		)
-	);
-
-	if ( is_wp_error( $terms ) || empty( $terms ) ) {
-		return array();
-	}
-
-	$order = array( 'animals', 'nature', 'flowers', 'places', 'food', 'seasonal' );
-
-	usort(
-		$terms,
-		function ( $a, $b ) use ( $order ) {
-			$ia = array_search( $a->slug, $order, true );
-			$ib = array_search( $b->slug, $order, true );
-			$ia = false === $ia ? 99 : $ia;
-			$ib = false === $ib ? 99 : $ib;
-			return $ia <=> $ib;
-		}
-	);
-
-	return $terms;
-}
-
-function diamondistry_get_painting_category_terms( $post_id ) {
-	$terms = get_the_terms( $post_id, 'painting_category' );
-	if ( empty( $terms ) || is_wp_error( $terms ) ) {
-		return array();
-	}
-	return $terms;
-}
-
-function diamondistry_get_painting_category_label( $post_id ) {
-	$terms = diamondistry_get_painting_category_terms( $post_id );
-	return $terms ? $terms[0]->name : '';
-}
-
-function diamondistry_get_painting_category_slugs( $post_id ) {
-	$terms = diamondistry_get_painting_category_terms( $post_id );
-	return $terms ? wp_list_pluck( $terms, 'slug' ) : array();
-}
-
 /*
 |--------------------------------------------------------------------------
 | Render card
@@ -421,23 +375,10 @@ function diamondistry_render_painting_card(
 		add_query_arg(
 			'painting',
 			$painting->post_name,
-			home_url( '/play/' )
+			home_url(
+				'/play/'
+			)
 		);
-
-	$category_label = diamondistry_get_painting_category_label( $painting->ID );
-	$category_slugs = implode( ' ', diamondistry_get_painting_category_slugs( $painting->ID ) );
-	$cover_url      = get_the_post_thumbnail_url( $painting, 'large' );
-	$is_favorite    = false;
-
-	if ( is_user_logged_in() && function_exists( 'diamondistry_get_user_favorite_ids' ) ) {
-		$is_favorite = in_array(
-			(int) $painting->ID,
-			diamondistry_get_user_favorite_ids( get_current_user_id() ),
-			true
-		);
-	}
-
-	$show_action = ( 'dashboard' === $context );
 
 	ob_start();
 

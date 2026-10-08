@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "layout": {
+      "contentSize": "100%",
+      "wideSize": "100%"
+    },
+    "color": {
+      "defaultPalette": false,
+      "palette": [
+        {"slug":"ink","name":"Ink","color":"#171b3a"},
+        {"slug":"purple","name":"Diamond Purple","color":"#6e4df6"},
+        {"slug":"pink","name":"Diamond Pink","color":"#ff6fa7"},
+        {"slug":"blue","name":"Diamond Blue","color":"#5f9df7"},
+        {"slug":"background","name":"Background","color":"#e8eaf8"},
+        {"slug":"surface","name":"Surface","color":"#ffffff"}
+      ]
+    },
+    "spacing": {"units":["px","rem","%","vw"]},
+    "typography": {"fluid": true}
+  },
+  "styles": {
+    "color": {"background":"#ffffff","text":"#3d4266"},
+    "typography": {
+      "fontFamily":"Nunito, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "lineHeight":"1.6"
+    },
+    "elements": {
+      "link": {
+        "color":{"text":"#6e4df6"},
+        "typography":{"textDecoration":"none"}
+      }
+    }
+  }
+}

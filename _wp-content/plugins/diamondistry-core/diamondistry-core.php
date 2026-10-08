@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.15.16
+ * Version: 0.13.0
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.15.16' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.13.0' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -22,8 +22,6 @@ define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 */
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/progress.php';
-
-require_once DIAMONDISTRY_CORE_PATH . 'includes/favorites.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/painting-cards.php';
 
@@ -92,7 +90,6 @@ function diamondistry_register_painting_post_type() {
 
 			'supports' => array(
 				'title',
-				'thumbnail',
 			),
 
 			'has_archive' => false,
@@ -106,50 +103,6 @@ add_action(
 	'init',
 	'diamondistry_register_painting_post_type'
 );
-
-function diamondistry_register_painting_taxonomy() {
-	register_taxonomy(
-		'painting_category',
-		array( 'ddp_painting' ),
-		array(
-			'labels'            => array(
-				'name'          => 'Categories',
-				'singular_name' => 'Category',
-				'menu_name'     => 'Categories',
-				'all_items'     => 'All categories',
-				'edit_item'     => 'Edit category',
-				'add_new_item'  => 'Add category',
-			),
-			'public'            => false,
-			'show_ui'           => true,
-			'show_in_rest'      => true,
-			'show_admin_column' => true,
-			'hierarchical'      => true,
-			'meta_box_cb'       => 'post_categories_meta_box',
-			'rewrite'           => false,
-		)
-	);
-}
-
-add_action( 'init', 'diamondistry_register_painting_taxonomy' );
-
-function diamondistry_seed_painting_categories() {
-	if ( get_option( 'diamondistry_categories_seeded' ) ) {
-		return;
-	}
-
-	$names = array( 'Animals', 'Nature', 'Flowers', 'Places', 'Food', 'Seasonal' );
-
-	foreach ( $names as $name ) {
-		if ( ! term_exists( $name, 'painting_category' ) ) {
-			wp_insert_term( $name, 'painting_category' );
-		}
-	}
-
-	update_option( 'diamondistry_categories_seeded', '1', false );
-}
-
-add_action( 'init', 'diamondistry_seed_painting_categories', 20 );
 
 /*
 |--------------------------------------------------------------------------
@@ -384,80 +337,96 @@ function diamondistry_render_playground() {
 		);
 	}
 
-	diamondistry_enqueue_play_assets( $painting );
-
-	if ( function_exists( 'diamondistry_enqueue_painting_card_assets' ) ) {
-		diamondistry_enqueue_painting_card_assets();
-	}
-
-	$category_label = function_exists( 'diamondistry_get_painting_category_label' )
-		? diamondistry_get_painting_category_label( $painting->ID )
-		: '';
+	diamondistry_enqueue_play_assets(
+		$painting
+	);
 
 	ob_start();
 	?>
 
 	<div class="diamondistry-app">
 
-		<a class="diamondistry-back" href="<?php echo esc_url( home_url( '/paintings/' ) ); ?>">← Back to Paintings</a>
-
 		<header class="diamondistry-game-header">
 
 			<div>
+
+				<p class="diamondistry-eyebrow">
+					Diamond Painting
+				</p>
+
 				<h1 id="diamondistry-title">
-					<?php echo esc_html( get_the_title( $painting ) ); ?>
+					<?php
+					echo esc_html(
+						get_the_title(
+							$painting
+						)
+					);
+					?>
 				</h1>
-				<?php if ( $category_label ) : ?>
-					<p class="diamondistry-eyebrow"><?php echo esc_html( $category_label ); ?></p>
-				<?php endif; ?>
+
 			</div>
 
-			<div class="diamondistry-progress-row">
-				<span id="diamondistry-progress-label">0%</span>
-				<div class="diamondistry-progress">
-					<div id="diamondistry-progress-bar" class="diamondistry-progress-bar"></div>
-				</div>
+			<div class="diamondistry-progress-text">
+				<span id="diamondistry-completed">0</span>
+				/
+				<span id="diamondistry-total">0</span>
+				diamonds
 			</div>
 
 		</header>
 
+		<div class="diamondistry-progress">
+
+			<div
+				id="diamondistry-progress-bar"
+				class="diamondistry-progress-bar"
+			></div>
+
+		</div>
+
 		<div class="diamondistry-workspace">
 
-			<aside class="diamondistry-colors">
-				<h2>Colors</h2>
-				<div id="diamondistry-palette" class="diamondistry-palette"></div>
-				<div id="diamondistry-message" class="diamondistry-message" aria-live="polite"></div>
-				<button type="button" id="diamondistry-reset" class="diamondistry-reset">Reset painting</button>
+			<div
+				id="diamondistry-grid"
+				class="diamondistry-grid"
+				aria-label="<?php
+					esc_attr_e(
+						'Diamond painting canvas',
+						'diamondistry-core'
+					);
+				?>"
+			></div>
+
+			<aside class="diamondistry-sidebar">
+
+				<h2>
+					Kies een diamond
+				</h2>
+
+				<div
+					id="diamondistry-palette"
+					class="diamondistry-palette"
+				></div>
+
+				<p class="diamondistry-help">
+					Kies een kleur en plaats de diamonds op de vakjes met hetzelfde symbool.
+				</p>
+
+				<div
+					id="diamondistry-message"
+					class="diamondistry-message"
+					aria-live="polite"
+				></div>
+
+				<button
+					type="button"
+					id="diamondistry-reset"
+					class="diamondistry-reset"
+				>
+					Reset painting
+				</button>
+
 			</aside>
-
-			<div class="diamondistry-board">
-				<div class="diamondistry-stage">
-					<div
-						id="diamondistry-grid"
-						class="diamondistry-grid"
-						aria-label="<?php esc_attr_e( 'Diamond painting canvas', 'diamondistry-core' ); ?>"
-					></div>
-				</div>
-
-				<aside class="diamondistry-play-tools">
-					<div class="diamondistry-reference">
-						<?php
-						$cover_url = get_the_post_thumbnail_url( $painting, 'medium' );
-						if ( $cover_url ) :
-							?>
-							<img src="<?php echo esc_url( $cover_url ); ?>" alt="">
-						<?php else : ?>
-							<?php echo diamondistry_render_painting_preview( $painting, null ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-						<?php endif; ?>
-					</div>
-					<div class="diamondistry-zoom">
-						<button type="button" id="diamondistry-zoom-in" aria-label="Zoom in">+</button>
-						<button type="button" id="diamondistry-zoom-out" aria-label="Zoom out">−</button>
-						<button type="button" id="diamondistry-loupe" aria-label="Magnifier" aria-keyshortcuts="M" aria-pressed="false" title="Magnifier (M)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14.5 14.5 19.2 19.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-						<button type="button" id="diamondistry-fullscreen" aria-label="Fullscreen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-					</div>
-				</aside>
-			</div>
 
 		</div>
 
@@ -478,44 +447,6 @@ add_shortcode(
 | Gallery Shortcode
 |--------------------------------------------------------------------------
 */
-
-function diamondistry_gallery_user_payload() {
-	$payload = array(
-		'loggedIn'  => is_user_logged_in(),
-		'progress'  => array(),
-		'balance'   => 0,
-		'favorites' => array(),
-		'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-		'nonce'     => wp_create_nonce( 'diamondistry_favorite' ),
-	);
-
-	if ( is_user_logged_in() ) {
-		$user_id                = get_current_user_id();
-		$payload['progress']    = diamondistry_get_all_user_progress( $user_id );
-		$payload['balance']     = diamondistry_get_user_balance( $user_id );
-		$payload['favorites']   = diamondistry_get_user_favorite_ids( $user_id );
-	}
-
-	return $payload;
-}
-
-function diamondistry_enqueue_gallery_script() {
-	diamondistry_enqueue_painting_card_assets();
-
-	wp_enqueue_script(
-		'diamondistry-gallery',
-		DIAMONDISTRY_CORE_URL . 'assets/js/gallery.js',
-		array(),
-		DIAMONDISTRY_CORE_VERSION,
-		true
-	);
-
-	wp_localize_script(
-		'diamondistry-gallery',
-		'DiamondistryGalleryUser',
-		diamondistry_gallery_user_payload()
-	);
-}
 
 function diamondistry_render_gallery() {
 
@@ -554,56 +485,118 @@ function diamondistry_render_gallery() {
 	}
 
 
-	$gallery_user = diamondistry_gallery_user_payload();
-	diamondistry_enqueue_gallery_script();
+	diamondistry_enqueue_painting_card_assets();
 
-	$categories = function_exists( 'diamondistry_get_painting_categories' )
-		? diamondistry_get_painting_categories()
-		: array();
+
+	wp_enqueue_script(
+		'diamondistry-gallery',
+		DIAMONDISTRY_CORE_URL . 'assets/js/gallery.js',
+		array(),
+		DIAMONDISTRY_CORE_VERSION,
+		true
+	);
+
+
+	$gallery_user =
+		array(
+			'loggedIn' =>
+				is_user_logged_in(),
+
+			'progress' =>
+				array(),
+
+			'balance' =>
+				0,
+		);
+
+
+	if (
+		is_user_logged_in()
+	) {
+
+		$user_id =
+			get_current_user_id();
+
+		$gallery_user[
+			'progress'
+		] =
+			diamondistry_get_all_user_progress(
+				$user_id
+			);
+
+		$gallery_user[
+			'balance'
+		] =
+			diamondistry_get_user_balance(
+				$user_id
+			);
+	}
+
+
+	wp_localize_script(
+		'diamondistry-gallery',
+		'DiamondistryGalleryUser',
+		$gallery_user
+	);
+
 
 	ob_start();
+
 	?>
 
-	<div class="diamondistry-gallery-page">
-		<header class="diamondistry-gallery-intro">
-			<h1>Paintings</h1>
-			<p>Discover and complete beautiful diamond paintings. Earn diamonds and grow your collection.</p>
-		</header>
+	<div class="diamondistry-gallery">
 
-		<div class="diamondistry-gallery-toolbar">
-			<label class="diamondistry-search">
-				<span class="screen-reader-text">Search paintings</span>
-				<input id="diamondistry-gallery-search" type="search" placeholder="Search paintings..." autocomplete="off">
-			</label>
-			<div class="diamondistry-filters" role="tablist" aria-label="Categories">
-				<button type="button" class="is-active" data-filter="all" role="tab" aria-selected="true">All</button>
-				<?php foreach ( $categories as $category ) : ?>
-					<button type="button" data-filter="<?php echo esc_attr( $category->slug ); ?>" role="tab" aria-selected="false">
-						<?php echo esc_html( $category->name ); ?>
-					</button>
-				<?php endforeach; ?>
-			</div>
-		</div>
+		<?php foreach (
+			$paintings as
+			$painting
+		) : ?>
 
-		<div class="diamondistry-gallery-results">
-			<p class="diamondistry-gallery-empty">No paintings match your search.</p>
-			<div class="diamondistry-gallery">
-			<?php foreach ( $paintings as $painting ) : ?>
-				<?php
-				$key      = (string) $painting->ID;
-				$progress = isset( $gallery_user['progress'][ $key ] ) ? $gallery_user['progress'][ $key ] : null;
+			<?php
 
-				echo diamondistry_render_painting_card(
-					$painting,
-					array(
-						'context'  => 'gallery',
-						'progress' => $progress,
+			$progress =
+				null;
+
+			if (
+				is_user_logged_in()
+			) {
+
+				$key =
+					(string)
+					$painting->ID;
+
+				if (
+					isset(
+						$gallery_user[
+							'progress'
+						][
+							$key
+						]
 					)
-				);
-				?>
-			<?php endforeach; ?>
-			</div>
-		</div>
+				) {
+					$progress =
+						$gallery_user[
+							'progress'
+						][
+							$key
+						];
+				}
+			}
+
+			echo diamondistry_render_painting_card(
+				$painting,
+				array(
+					'context' =>
+						'gallery',
+
+					'progress' =>
+						$progress,
+				)
+			);
+
+			?>
+
+		<?php endforeach; ?>
+
 	</div>
 
 	<?php

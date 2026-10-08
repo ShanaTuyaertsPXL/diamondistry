@@ -3,211 +3,84 @@
  * Shared painting card template.
  *
  * Available:
- * $painting
- * $data
- * $state
- * $context
- * $progress
- * $play_url
+ * $painting, $data, $state, $context, $progress, $play_url,
+ * $category_label, $category_slugs, $cover_url, $is_favorite, $show_action
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$status =
-	$state[
-		'status'
-	];
+$status     = $state['status'];
+$percentage = $state['percentage'];
 
-$percentage =
-	$state[
-		'percentage'
-	];
-
-if (
-	'completed' ===
-	$status
-) {
-
-	$action_label =
-		'View painting →';
-
-} elseif (
-	'progress' ===
-	$status
-) {
-
-	$action_label =
-		'Continue painting →';
-
+if ( 'completed' === $status ) {
+	$action_label = 'View painting →';
+} elseif ( 'progress' === $status ) {
+	$action_label = 'Continue Painting →';
 } else {
-
-	$action_label =
-		'Start painting →';
+	$action_label = 'Start painting →';
 }
-
 ?>
 
-<a
-	class="
-		diamondistry-painting-card
-		diamondistry-painting-card--<?php echo esc_attr( $context ); ?>
-		is-<?php echo esc_attr( $status ); ?>
-	"
-	href="<?php echo esc_url( $play_url ); ?>"
+<article
+	class="diamondistry-painting-card diamondistry-painting-card--<?php echo esc_attr( $context ); ?> is-<?php echo esc_attr( $status ); ?>"
 	data-painting-id="<?php echo esc_attr( $data['id'] ); ?>"
 	data-painting-post-id="<?php echo esc_attr( $painting->ID ); ?>"
 	data-total="<?php echo esc_attr( $state['total'] ); ?>"
+	data-title="<?php echo esc_attr( get_the_title( $painting ) ); ?>"
+	data-categories="<?php echo esc_attr( $category_slugs ); ?>"
 >
+	<div class="diamondistry-painting-card-preview<?php echo $cover_url ? ' has-cover' : ''; ?>">
+		<a class="diamondistry-painting-card-media" href="<?php echo esc_url( $play_url ); ?>">
+			<?php if ( $cover_url ) : ?>
+				<img class="diamondistry-painting-card-cover" src="<?php echo esc_url( $cover_url ); ?>" alt="">
+			<?php else : ?>
+				<?php echo diamondistry_render_painting_preview( $painting, $progress ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			<?php endif; ?>
+		</a>
 
-	<div class="diamondistry-painting-card-preview">
-
-		<?php
-		echo diamondistry_render_painting_preview(
-			$painting,
-			$progress
-		);
-		?>
-
-		<span
-			class="diamondistry-painting-card-badge"
-			<?php
-			echo 'new' === $status
-				? 'hidden'
-				: '';
-			?>
+		<button
+			type="button"
+			class="diamondistry-favorite<?php echo $is_favorite ? ' is-favorite' : ''; ?>"
+			aria-pressed="<?php echo $is_favorite ? 'true' : 'false'; ?>"
+			aria-label="<?php echo $is_favorite ? 'Remove from favourites' : 'Save to favourites'; ?>"
 		>
+			<span class="diamondistry-favorite-burst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+			<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+				<path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 4.6-7 9-7 9Z" fill="currentColor" stroke="currentColor" stroke-width="1.4"/>
+			</svg>
+		</button>
 
-			<?php
-
-			if (
-				'completed' ===
-				$status
-			) {
-
-				echo '✓ Completed';
-
-			} elseif (
-				'progress' ===
-				$status
-			) {
-
-				echo esc_html(
-					$percentage .
-					'%'
-				);
-
-			}
-
-			?>
-
+		<span class="diamondistry-painting-card-badge" <?php echo 'completed' === $status ? '' : 'hidden'; ?>>
+			<?php echo 'completed' === $status ? 'Completed' : ''; ?>
 		</span>
-
 	</div>
-
 
 	<div class="diamondistry-painting-card-content">
-
 		<h3>
-			<?php
-			echo esc_html(
-				get_the_title(
-					$painting
-				)
-			);
-			?>
+			<a href="<?php echo esc_url( $play_url ); ?>"><?php echo esc_html( get_the_title( $painting ) ); ?></a>
 		</h3>
 
-
-		<div class="diamondistry-painting-card-meta">
-
-			<span>
-				<?php
-				echo esc_html(
-					$data['width'] .
-					' × ' .
-					$data['height']
-				);
-				?>
-			</span>
-
-			<span>
-				<?php
-				echo esc_html(
-					$data['reward']
-				);
-				?>
-				💎
-			</span>
-
-		</div>
-
-
-		<div
-			class="diamondistry-painting-card-progress"
-			<?php
-			echo 'progress' === $status
-				? ''
-				: 'hidden';
-			?>
-		>
-
-			<div class="diamondistry-painting-card-progress-track">
-
-				<div
-					class="diamondistry-painting-card-progress-bar"
-					style="width: <?php echo esc_attr( $percentage ); ?>%;"
-				></div>
-
-			</div>
-
-			<span class="diamondistry-painting-card-progress-text">
-				<?php
-				echo esc_html(
-					$percentage .
-					'% completed'
-				);
-				?>
-			</span>
-
-		</div>
-
-
-		<?php if (
-			'completed' ===
-			$status
-		) : ?>
-
-			<div class="diamondistry-painting-card-completed">
-
-				<?php if (
-					$state[
-						'rewardClaimed'
-					]
-				) : ?>
-
-					✓ Reward claimed
-
-				<?php else : ?>
-
-					Reward available
-
-				<?php endif; ?>
-
-			</div>
-
+		<?php if ( $category_label ) : ?>
+			<p class="diamondistry-painting-card-category"><?php echo esc_html( $category_label ); ?></p>
 		<?php endif; ?>
 
+		<div class="diamondistry-painting-card-progress">
+			<div class="diamondistry-painting-card-progress-track">
+				<div class="diamondistry-painting-card-progress-bar" style="width: <?php echo esc_attr( $percentage ); ?>%;"></div>
+			</div>
+			<span class="diamondistry-painting-card-progress-text"><?php echo esc_html( $percentage ); ?>%</span>
+		</div>
 
-		<span class="diamondistry-painting-card-action">
-			<?php
-			echo esc_html(
-				$action_label
-			);
-			?>
-		</span>
+		<?php if ( 'completed' === $status ) : ?>
+			<div class="diamondistry-painting-card-completed">
+				<?php echo $state['rewardClaimed'] ? 'Reward claimed' : 'Reward available'; ?>
+			</div>
+		<?php endif; ?>
 
+		<?php if ( $show_action ) : ?>
+			<a class="diamondistry-painting-card-action" href="<?php echo esc_url( $play_url ); ?>"><?php echo esc_html( $action_label ); ?></a>
+		<?php endif; ?>
 	</div>
-
-</a>
+</article>

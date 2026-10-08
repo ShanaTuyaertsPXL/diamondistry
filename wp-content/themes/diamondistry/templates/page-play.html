@@ -1,7 +1,13 @@
-<!-- wp:group {"align":"full","layout":{"type":"default"}} -->
-<div class="wp-block-group alignfull">
-  <!-- wp:shortcode -->
-  [diamondistry_play]
-  <!-- /wp:shortcode -->
+<!-- wp:group {"tagName":"div","className":"dd-shell","layout":{"type":"default"}} -->
+<div class="wp-block-group dd-shell">
+	<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+	<!-- wp:group {"tagName":"main","className":"diamondistry-page-shell","layout":{"type":"default"}} -->
+	<main class="wp-block-group diamondistry-page-shell">
+		<!-- wp:shortcode -->
+		[diamondistry_play]
+		<!-- /wp:shortcode -->
+	</main>
+	<!-- /wp:group -->
 </div>
 <!-- /wp:group -->
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

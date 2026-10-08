@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "layout": {
+      "contentSize": "760px",
+      "wideSize": "1200px"
+    },
+    "color": {
+      "defaultPalette": false,
+      "palette": [
+        { "slug": "ink", "name": "Ink", "color": "#171717" },
+        { "slug": "muted", "name": "Muted", "color": "#6f6f6f" },
+        { "slug": "line", "name": "Line", "color": "#e8e8e8" },
+        { "slug": "surface", "name": "Surface", "color": "#f7f7f7" },
+        { "slug": "paper", "name": "Paper", "color": "#ffffff" },
+        { "slug": "success", "name": "Success", "color": "#2f7d4f" }
+      ]
+    },
+    "spacing": {
+      "units": ["px", "rem", "%", "vw"]
+    },
+    "typography": {
+      "fluid": true,
+      "fontFamilies": [
+        {
+          "slug": "system",
+          "name": "System",
+          "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
+        }
+      ]
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "#ffffff",
+      "text": "#171717"
+    },
+    "spacing": {
+      "blockGap": "1.5rem"
+    },
+    "typography": {
+      "fontFamily": "var:preset|font-family|system",
+      "lineHeight": "1.5"
+    },
+    "elements": {
+      "link": {
+        "color": { "text": "#171717" },
+        "typography": { "textDecoration": "none" }
+      },
+      "heading": {
+        "typography": {
+          "fontWeight": "700",
+          "lineHeight": "1.1"
+        }
+      }
+    }
+  }
+}

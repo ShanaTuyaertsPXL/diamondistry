@@ -292,7 +292,7 @@ function diamondistry_render_painting_editor( $post ) {
 					id="diamondistry_width"
 					name="diamondistry_width"
 					min="1"
-					max="1000"
+					max="100"
 					value="<?php echo esc_attr( $width ); ?>"
 				>
 
@@ -309,7 +309,7 @@ function diamondistry_render_painting_editor( $post ) {
 					id="diamondistry_height"
 					name="diamondistry_height"
 					min="1"
-					max="1000"
+					max="100"
 					value="<?php echo esc_attr( $height ); ?>"
 				>
 
@@ -618,7 +618,7 @@ function diamondistry_save_painting( $post_id ) {
 		max(
 			1,
 			min(
-				1000,
+				100,
 				$width
 			)
 		);
@@ -627,7 +627,7 @@ function diamondistry_save_painting( $post_id ) {
 		max(
 			1,
 			min(
-				1000,
+				100,
 				$height
 			)
 		);

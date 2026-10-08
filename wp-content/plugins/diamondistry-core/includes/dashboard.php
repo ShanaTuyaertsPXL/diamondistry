@@ -26,6 +26,18 @@ function diamondistry_enqueue_dashboard_assets() {
 		),
 		DIAMONDISTRY_CORE_VERSION
 	);
+
+	wp_enqueue_script(
+		'diamondistry-dashboard',
+		DIAMONDISTRY_CORE_URL . 'assets/js/dashboard.js',
+		array(),
+		DIAMONDISTRY_CORE_VERSION,
+		true
+	);
+
+	if ( function_exists( 'diamondistry_enqueue_gallery_script' ) ) {
+		diamondistry_enqueue_gallery_script();
+	}
 }
 
 
@@ -211,16 +223,13 @@ function diamondistry_render_dashboard() {
 			);
 
 		$updated =
-			! empty(
-				$painting_progress[
-					'updatedAt'
-				]
-			)
-				? strtotime(
-					$painting_progress[
-						'updatedAt'
-					]
-				)
+			diamondistry_get_progress_last_worked_at(
+				$painting_progress
+			);
+
+		$updated =
+			$updated
+				? $updated
 				: 0;
 
 		if (
@@ -311,17 +320,25 @@ function diamondistry_render_dashboard() {
 			$in_progress
 		);
 
-	$gallery_url =
-		home_url(
-			'/paintings/'
-		);
+	$gallery_url = home_url( '/paintings/' );
 
-	$logout_url =
-		wp_logout_url(
-			home_url(
-				'/'
-			)
+	$favorite_ids = diamondistry_get_user_favorite_ids( $user_id );
+	$favourites   = array();
+
+	foreach ( $favorite_ids as $favorite_id ) {
+		$key = (string) $favorite_id;
+		if ( ! isset( $painting_lookup[ $key ] ) ) {
+			continue;
+		}
+		$favourites[] = array(
+			'painting' => $painting_lookup[ $key ],
+			'progress' => isset( $all_progress[ $key ] ) ? $all_progress[ $key ] : null,
 		);
+	}
+
+	$total_favourites = count( $favourites );
+	$total_started    = $total_in_progress + $total_completed;
+	$first_name       = $user->first_name ? $user->first_name : $user->display_name;
 
 
 	ob_start();
@@ -330,281 +347,113 @@ function diamondistry_render_dashboard() {
 
 	<div class="diamondistry-dashboard">
 
-		<header class="diamondistry-dashboard-header">
+		<div class="diamondistry-dashboard-top">
+			<div class="diamondistry-dashboard-welcome">
+				<span class="diamondistry-dashboard-avatar"><?php echo get_avatar( $user->ID, 96 ); ?></span>
+				<div>
+					<h1>Welcome back, <?php echo esc_html( $first_name ); ?>!</h1>
+					<p>Keep creating, you're doing great!</p>
+				</div>
+			</div>
+			<div class="diamondistry-dashboard-balance">
+				<span>Your balance</span>
+				<strong>
+					<svg viewBox="0 0 20 20" width="22" height="22" aria-hidden="true"><path fill="#fff" d="M10 1.2 17.2 7.4 10 18.8 2.8 7.4Z"/></svg>
+					<?php echo esc_html( number_format_i18n( $balance ) ); ?>
+				</strong>
+			</div>
+		</div>
 
+		<div class="diamondistry-dashboard-layout">
 			<div>
-
-				<p class="diamondistry-dashboard-eyebrow">
-					My Diamondistry
-				</p>
-
-				<h1>
-					Hi <?php echo esc_html( $user->display_name ); ?> 👋
-				</h1>
-
-				<p class="diamondistry-dashboard-intro">
-					Continue your paintings, check your rewards and see what you've completed.
-				</p>
-
-			</div>
-
-
-			<div class="diamondistry-dashboard-header-actions">
-
-				<a
-					href="<?php echo esc_url( $gallery_url ); ?>"
-					class="diamondistry-dashboard-primary-button"
-				>
-					Browse paintings
-				</a>
-
-				<a
-					href="<?php echo esc_url( $logout_url ); ?>"
-					class="diamondistry-dashboard-secondary-link"
-				>
-					Log out
-				</a>
-
-			</div>
-
-		</header>
-
-
-		<section class="diamondistry-dashboard-stats">
-
-			<div class="diamondistry-dashboard-stat diamondistry-dashboard-balance">
-
-				<span class="diamondistry-dashboard-stat-icon">
-					💎
-				</span>
-
-				<div>
-
-					<strong>
-						<?php echo esc_html( $balance ); ?>
-					</strong>
-
-					<span>
-						Diamond balance
-					</span>
-
+				<div class="diamondistry-dashboard-tabs" role="tablist">
+					<button type="button" class="is-active" role="tab" aria-selected="true" data-dashboard-tab="progress">In Progress (<?php echo esc_html( $total_in_progress ); ?>)</button>
+					<button type="button" role="tab" aria-selected="false" data-dashboard-tab="completed">Completed (<?php echo esc_html( $total_completed ); ?>)</button>
+					<button type="button" role="tab" aria-selected="false" data-dashboard-tab="favourites">Favourites (<?php echo esc_html( $total_favourites ); ?>)</button>
 				</div>
 
-			</div>
-
-
-			<div class="diamondistry-dashboard-stat">
-
-				<strong>
-					<?php echo esc_html( $total_completed ); ?>
-				</strong>
-
-				<span>
-					Completed
-				</span>
-
-			</div>
-
-
-			<div class="diamondistry-dashboard-stat">
-
-				<strong>
-					<?php echo esc_html( $total_in_progress ); ?>
-				</strong>
-
-				<span>
-					In progress
-				</span>
-
-			</div>
-
-
-			<div class="diamondistry-dashboard-stat">
-
-				<strong>
-					<?php echo esc_html( $total_paintings ); ?>
-				</strong>
-
-				<span>
-					Available paintings
-				</span>
-
-			</div>
-
-		</section>
-
-
-		<section class="diamondistry-dashboard-section">
-
-			<div class="diamondistry-dashboard-section-heading">
-
-				<div>
-
-					<p class="diamondistry-dashboard-section-eyebrow">
-						Keep going
-					</p>
-
-					<h2>
-						Continue painting
-					</h2>
-
+				<div class="diamondistry-dashboard-panel" data-dashboard-panel="progress">
+					<?php if ( ! empty( $in_progress ) ) : ?>
+						<div class="diamondistry-dashboard-painting-grid">
+							<?php foreach ( $in_progress as $item ) : ?>
+								<?php
+								echo diamondistry_render_painting_card(
+									$item['painting'],
+									array(
+										'context'  => 'dashboard',
+										'progress' => $item['progress'],
+									)
+								);
+								?>
+							<?php endforeach; ?>
+						</div>
+					<?php else : ?>
+						<div class="diamondistry-dashboard-empty">
+							<h3>No paintings in progress</h3>
+							<p>Choose a painting from the gallery and start creating.</p>
+							<a href="<?php echo esc_url( $gallery_url ); ?>">Find a painting →</a>
+						</div>
+					<?php endif; ?>
 				</div>
 
-				<?php if (
-					$total_in_progress > 0
-				) : ?>
+				<div class="diamondistry-dashboard-panel" data-dashboard-panel="completed" hidden>
+					<?php if ( ! empty( $completed ) ) : ?>
+						<div class="diamondistry-dashboard-painting-grid">
+							<?php foreach ( $completed as $item ) : ?>
+								<?php
+								echo diamondistry_render_painting_card(
+									$item['painting'],
+									array(
+										'context'  => 'dashboard',
+										'progress' => $item['progress'],
+									)
+								);
+								?>
+							<?php endforeach; ?>
+						</div>
+					<?php else : ?>
+						<div class="diamondistry-dashboard-empty">
+							<h3>Your collection is waiting</h3>
+							<p>Complete your first painting and it will appear here.</p>
+						</div>
+					<?php endif; ?>
+				</div>
 
-					<span>
-						<?php echo esc_html( $total_in_progress ); ?>
-						in progress
-					</span>
-
-				<?php endif; ?>
-
+				<div class="diamondistry-dashboard-panel" data-dashboard-panel="favourites" hidden>
+					<?php if ( ! empty( $favourites ) ) : ?>
+						<div class="diamondistry-dashboard-painting-grid">
+							<?php foreach ( $favourites as $item ) : ?>
+								<?php
+								echo diamondistry_render_painting_card(
+									$item['painting'],
+									array(
+										'context'  => 'dashboard',
+										'progress' => $item['progress'],
+									)
+								);
+								?>
+							<?php endforeach; ?>
+						</div>
+					<?php else : ?>
+						<div class="diamondistry-dashboard-empty">
+							<h3>No favourites yet</h3>
+							<p>Tap the heart on a painting to keep it here.</p>
+							<a href="<?php echo esc_url( $gallery_url ); ?>">Browse paintings →</a>
+						</div>
+					<?php endif; ?>
+				</div>
 			</div>
 
-
-			<?php if (
-				! empty(
-					$in_progress
-				)
-			) : ?>
-
-				<div class="diamondistry-dashboard-painting-grid">
-
-					<?php foreach (
-						$in_progress as
-						$item
-					) : ?>
-
-						<?php
-						echo diamondistry_render_painting_card(
-							$item['painting'],
-							array(
-								'context' =>
-									'dashboard',
-
-								'progress' =>
-									$item['progress'],
-							)
-						);
-						?>
-
-					<?php endforeach; ?>
-
-				</div>
-
-			<?php else : ?>
-
-				<div class="diamondistry-dashboard-empty">
-
-					<div>
-						✨
-					</div>
-
-					<h3>
-						No paintings in progress
-					</h3>
-
-					<p>
-						Choose a painting from the gallery and start creating.
-					</p>
-
-					<a
-						href="<?php echo esc_url( $gallery_url ); ?>"
-					>
-						Find a painting →
-					</a>
-
-				</div>
-
-			<?php endif; ?>
-
-		</section>
-
-
-		<section class="diamondistry-dashboard-section">
-
-			<div class="diamondistry-dashboard-section-heading">
-
-				<div>
-
-					<p class="diamondistry-dashboard-section-eyebrow">
-						Your collection
-					</p>
-
-					<h2>
-						Completed paintings
-					</h2>
-
-				</div>
-
-				<?php if (
-					$total_completed > 0
-				) : ?>
-
-					<span>
-						<?php echo esc_html( $total_completed ); ?>
-						completed
-					</span>
-
-				<?php endif; ?>
-
-			</div>
-
-
-			<?php if (
-				! empty(
-					$completed
-				)
-			) : ?>
-
-				<div class="diamondistry-dashboard-painting-grid">
-
-					<?php foreach (
-						$completed as
-						$item
-					) : ?>
-
-						<?php
-						echo diamondistry_render_painting_card(
-							$item['painting'],
-							array(
-								'context' =>
-									'dashboard',
-
-								'progress' =>
-									$item['progress'],
-							)
-						);
-						?>
-
-					<?php endforeach; ?>
-
-				</div>
-
-			<?php else : ?>
-
-				<div class="diamondistry-dashboard-empty">
-
-					<div>
-						💎
-					</div>
-
-					<h3>
-						Your collection is waiting
-					</h3>
-
-					<p>
-						Complete your first painting and it will appear here.
-					</p>
-
-				</div>
-
-			<?php endif; ?>
-
-		</section>
-
+			<aside class="diamondistry-dashboard-stats">
+				<h2>Your Stats</h2>
+				<ul>
+					<li><span>Paintings started</span><strong><?php echo esc_html( $total_started ); ?></strong></li>
+					<li><span>Paintings completed</span><strong><?php echo esc_html( $total_completed ); ?></strong></li>
+					<li><span>Diamonds earned</span><strong><?php echo esc_html( number_format_i18n( $balance ) ); ?></strong></li>
+					<li><span>Favourite paintings</span><strong><?php echo esc_html( $total_favourites ); ?></strong></li>
+				</ul>
+			</aside>
+		</div>
 	</div>
 
 	<?php

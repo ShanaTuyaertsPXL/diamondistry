@@ -1,242 +1,394 @@
+.diamondistry-gallery-page { padding: 8px 10px 6px; }
+.diamondistry-gallery-intro h1 {
+  margin: 0;
+  color: #12142b;
+  font-family: var(--dd-serif, Fraunces, Georgia, serif);
+  font-size: 2.15rem;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.diamondistry-gallery-intro p {
+  max-width: none;
+  margin: 6px 0 0;
+  color: #8b909f;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.diamondistry-gallery-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  margin: 14px 0 16px;
+}
+.diamondistry-search {
+  position: relative;
+  flex: 1 1 280px;
+  max-width: 460px;
+  min-width: 200px;
+}
+.diamondistry-search input {
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 14px 0 36px;
+  border: 1px solid #e4e2ec;
+  border-radius: 999px;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='none' stroke='%23a0a6b4' stroke-width='1.8' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 13px 50%;
+  background-size: 15px;
+  color: #3a3f58;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: none;
+}
+.diamondistry-search input::placeholder { color: #a3a8b8; }
+.diamondistry-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0 0 0 auto;
+}
+.diamondistry-filters button {
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f3f8;
+  color: #6a7086;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.diamondistry-filters button.is-active {
+  background: #6d4cf6;
+  color: #fff;
+}
+.diamondistry-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+}
+.diamondistry-gallery-results {
+  position: relative;
+  min-height: 48px;
+}
+.diamondistry-gallery-empty {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  margin: 0;
+  color: #8b90a8;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.diamondistry-gallery-empty.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
 .diamondistry-painting-card {
-  display: block;
-
+  position: relative;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-
-  border: 1px solid #e5e5e5;
-  border-radius: 18px;
-
+  border: 1px solid #f0eef6;
+  border-radius: 22px;
   background: #fff;
-
-  color: #222;
-
-  text-decoration: none;
-
-  box-shadow: 0 8px 28px rgb(0 0 0 / 0.04);
-
-  transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease,
-    border-color 0.16s ease;
+  color: #1c2144;
+  box-shadow: 0 10px 28px rgb(62 52 130 / 0.06);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
 }
-
-.diamondistry-painting-card:hover {
-  transform: translateY(-3px);
-
-  border-color: #ccc;
-
-  box-shadow: 0 16px 40px rgb(0 0 0 / 0.08);
+.diamondistry-painting-card[hidden] { display: none; }
+.diamondistry-painting-card--gallery {
+  transition: opacity 0.32s ease, transform 0.32s ease, box-shadow 0.28s ease, border-color 0.28s ease;
 }
-
-/* -------------------------------------------------------
-   Preview wrapper
-------------------------------------------------------- */
-
+.diamondistry-gallery.is-booting .diamondistry-painting-card--gallery,
+.diamondistry-painting-card--gallery.is-entering,
+.diamondistry-painting-card--gallery.is-leaving {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .diamondistry-painting-card:hover {
+    transform: translateY(-5px);
+    border-color: #e4dff6;
+    box-shadow: 0 18px 40px rgb(80 62 160 / 0.14);
+  }
+  .diamondistry-painting-card:hover .diamondistry-painting-card-cover,
+  .diamondistry-painting-card:hover .diamondistry-card-preview-grid {
+    transform: scale(1.045);
+  }
+  .diamondistry-gallery.is-booting .diamondistry-painting-card--gallery:hover,
+  .diamondistry-painting-card--gallery.is-entering:hover,
+  .diamondistry-painting-card--gallery.is-leaving:hover {
+    transform: translateY(8px);
+    border-color: #f0eef6;
+    box-shadow: 0 10px 28px rgb(62 52 130 / 0.06);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .diamondistry-painting-card,
+  .diamondistry-painting-card--gallery,
+  .diamondistry-painting-card-cover,
+  .diamondistry-card-preview-grid { transition: none; }
+  .diamondistry-painting-card:hover,
+  .diamondistry-painting-card:hover .diamondistry-painting-card-cover,
+  .diamondistry-painting-card:hover .diamondistry-card-preview-grid { transform: none; }
+  .diamondistry-favorite.is-pop svg,
+  .diamondistry-favorite.is-pop::after,
+  .diamondistry-favorite.is-pop .diamondistry-favorite-burst i,
+  .diamondistry-favorite.is-pop-off svg { animation: none; }
+  .diamondistry-gallery.is-booting .diamondistry-painting-card--gallery,
+  .diamondistry-painting-card--gallery.is-entering,
+  .diamondistry-painting-card--gallery.is-leaving {
+    opacity: 1;
+    transform: none;
+  }
+}
 .diamondistry-painting-card-preview {
   position: relative;
-
+  aspect-ratio: 4 / 3;
+  background: #f6f4fb;
+}
+.diamondistry-painting-card-media {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-
-  aspect-ratio: 16 / 10;
-
-  padding: 26px;
-
-  overflow: hidden;
-
-  background: linear-gradient(135deg, #fafafa, #f2f2f2);
+  text-decoration: none;
 }
-
-/* -------------------------------------------------------
-   Painting preview
-------------------------------------------------------- */
-
+.diamondistry-painting-card-preview.has-cover .diamondistry-painting-card-media { display: block; }
+.diamondistry-painting-card-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
 .diamondistry-card-preview-grid {
   display: grid;
-
   grid-template-columns: repeat(var(--painting-width), 1fr);
-
-  width: min(72%, 240px);
-
+  width: min(78%, 220px);
+  transition: transform 0.45s ease;
   aspect-ratio: var(--painting-width) / var(--painting-height);
-
   overflow: hidden;
-
-  border-radius: 9px;
-
+  border-radius: 10px;
   background: #ddd;
-
   box-shadow: 0 12px 28px rgb(0 0 0 / 0.12);
-
-  transition: transform 0.18s ease;
 }
-
-.diamondistry-painting-card:hover .diamondistry-card-preview-grid {
-  transform: scale(1.025);
-}
-
 .diamondistry-card-preview-cell {
   display: block;
-
   min-width: 0;
   min-height: 0;
-
   aspect-ratio: 1;
-
   background: var(--cell-color);
 }
-
-/* -------------------------------------------------------
-   In-progress gimmick
-------------------------------------------------------- */
-
-.diamondistry-card-preview-grid.is-progress .diamondistry-card-preview-cell {
-  background: #dedede;
-}
-
-.diamondistry-card-preview-grid.is-progress
-  .diamondistry-card-preview-cell.is-filled {
-  background: var(--cell-color);
-}
-
-/*
- * New and completed paintings show the complete artwork.
- */
-
+.diamondistry-card-preview-grid.is-progress .diamondistry-card-preview-cell { background: #dedede; }
+.diamondistry-card-preview-grid.is-progress .diamondistry-card-preview-cell.is-filled,
 .diamondistry-card-preview-grid.is-new .diamondistry-card-preview-cell,
-.diamondistry-card-preview-grid.is-completed .diamondistry-card-preview-cell {
-  background: var(--cell-color);
+.diamondistry-card-preview-grid.is-completed .diamondistry-card-preview-cell { background: var(--cell-color); }
+
+.diamondistry-favorite {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #c5c8d6;
+  box-shadow: 0 6px 16px rgb(40 30 80 / 0.12);
+  cursor: pointer;
 }
-
-/* -------------------------------------------------------
-   Badge
-------------------------------------------------------- */
-
+.diamondistry-favorite svg { position: relative; z-index: 1; }
+.diamondistry-favorite.is-favorite { color: #ff6f9f; }
+.diamondistry-favorite-burst {
+  position: absolute;
+  inset: -14px;
+  pointer-events: none;
+}
+.diamondistry-favorite-burst i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 7px;
+  border-radius: 2px;
+  background: #ff6f9f;
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(var(--a)) translateY(-12px);
+}
+.diamondistry-favorite-burst i:nth-child(odd) { background: #ffb3cc; height: 5px; }
+.diamondistry-favorite-burst i:nth-child(1) { --a: 0deg; }
+.diamondistry-favorite-burst i:nth-child(2) { --a: 45deg; }
+.diamondistry-favorite-burst i:nth-child(3) { --a: 90deg; }
+.diamondistry-favorite-burst i:nth-child(4) { --a: 135deg; }
+.diamondistry-favorite-burst i:nth-child(5) { --a: 180deg; }
+.diamondistry-favorite-burst i:nth-child(6) { --a: 225deg; }
+.diamondistry-favorite-burst i:nth-child(7) { --a: 270deg; }
+.diamondistry-favorite-burst i:nth-child(8) { --a: 315deg; }
+.diamondistry-favorite.is-pop svg {
+  animation: dd-fav-pop 0.48s cubic-bezier(0.2, 1.6, 0.36, 1);
+}
+.diamondistry-favorite.is-pop::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border: 2px solid #ff8ab3;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: dd-fav-ring 0.5s ease-out forwards;
+}
+.diamondistry-favorite.is-pop .diamondistry-favorite-burst i {
+  animation: dd-fav-ray 0.5s ease-out forwards;
+}
+.diamondistry-favorite.is-pop-off svg {
+  animation: dd-fav-pop-off 0.28s ease;
+}
+@keyframes dd-fav-pop {
+  0% { transform: scale(0.72); }
+  42% { transform: scale(1.38); }
+  100% { transform: scale(1); }
+}
+@keyframes dd-fav-pop-off {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.82); }
+  100% { transform: scale(1); }
+}
+@keyframes dd-fav-ring {
+  0% { opacity: 0.85; transform: scale(0.55); }
+  100% { opacity: 0; transform: scale(1.65); }
+}
+@keyframes dd-fav-ray {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-8px) scaleY(0.4); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-20px) scaleY(1); }
+}
 .diamondistry-painting-card-badge {
   position: absolute;
-
-  top: 14px;
-  right: 14px;
-
+  top: 10px;
+  left: 10px;
   z-index: 2;
-
-  padding: 6px 9px;
-
-  border-radius: 999px;
-
-  background: rgb(255 255 255 / 0.94);
-
-  color: #444;
-
-  font-size: 0.72rem;
-  font-weight: 800;
-
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.08);
-}
-
-.diamondistry-painting-card.is-completed .diamondistry-painting-card-badge {
-  color: #2f7d4f;
-}
-
-/* -------------------------------------------------------
-   Content
-------------------------------------------------------- */
-
-.diamondistry-painting-card-content {
-  padding: 21px;
-}
-
-.diamondistry-painting-card h3 {
-  margin: 0 0 12px;
-
-  color: #222;
-
-  font-size: 1.25rem;
-  line-height: 1.25;
-}
-
-.diamondistry-painting-card-meta {
-  display: flex;
-  justify-content: space-between;
-
-  gap: 16px;
-
-  padding-top: 13px;
-
-  border-top: 1px solid #eee;
-
-  color: #666;
-
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
-/* -------------------------------------------------------
-   Progress
-------------------------------------------------------- */
-
-.diamondistry-painting-card-progress {
-  margin-top: 17px;
-}
-
-.diamondistry-painting-card-progress-track {
-  width: 100%;
-  height: 6px;
-
+  max-width: calc(100% - 58px);
+  padding: 5px 10px;
   overflow: hidden;
-
   border-radius: 999px;
-
-  background: #ededed;
+  background: #3cba7a;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-
-.diamondistry-painting-card-progress-bar {
-  height: 100%;
-
-  border-radius: inherit;
-
-  background: #222;
-}
-
-.diamondistry-painting-card-progress-text {
-  display: block;
-
-  margin-top: 6px;
-
-  color: #777;
-
-  font-size: 0.73rem;
-  font-weight: 600;
-}
-
-/* -------------------------------------------------------
-   Completed
-------------------------------------------------------- */
-
-.diamondistry-painting-card-completed {
-  margin-top: 17px;
-
-  color: #2f7d4f;
-
-  font-size: 0.78rem;
+.diamondistry-painting-card-badge[hidden] { display: none; }
+.diamondistry-painting-card-content { padding: 14px 14px 16px; }
+.diamondistry-painting-card h3 { margin: 0; font-size: 1rem; line-height: 1.3; }
+.diamondistry-painting-card h3 a { color: inherit; text-decoration: none; }
+.diamondistry-painting-card-category {
+  margin: 3px 0 0;
+  color: #8b90a8;
+  font-size: 0.8rem;
   font-weight: 700;
 }
-
-/* -------------------------------------------------------
-   Action
-------------------------------------------------------- */
-
-.diamondistry-painting-card-action {
-  display: inline-block;
-
-  margin-top: 18px;
-
-  color: #222;
-
-  font-size: 0.88rem;
+.diamondistry-painting-card-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.diamondistry-painting-card-progress-track {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eeeaf5;
+}
+.diamondistry-painting-card-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: #7b61ff;
+}
+.diamondistry-painting-card.is-completed .diamondistry-painting-card-progress-bar { background: #3cba7a; }
+.diamondistry-painting-card-progress-text {
+  min-width: 34px;
+  color: #8b90a8;
+  font-size: 0.78rem;
   font-weight: 800;
+  text-align: right;
+}
+.diamondistry-painting-card-completed {
+  margin-top: 8px;
+  color: #2f7d4f;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.diamondistry-painting-card-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-top: 14px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #6e4df6;
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-decoration: none;
 }
 
-.diamondistry-painting-card.is-completed .diamondistry-painting-card-action {
-  color: #2f7d4f;
+@media (max-width: 1100px) {
+  .diamondistry-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 800px) {
+  .diamondistry-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .diamondistry-gallery-page { padding-inline: 0; }
+  .diamondistry-gallery-intro p { white-space: normal; }
+  .diamondistry-gallery-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .diamondistry-search {
+    flex-basis: auto;
+    max-width: none;
+    min-width: 0;
+  }
+  .diamondistry-filters {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    margin-left: 0;
+  }
+}
+@media (max-width: 720px) {
+  .diamondistry-gallery { grid-template-columns: 1fr; gap: 14px; }
+  .diamondistry-gallery-intro h1 { font-size: 2rem; }
+  .diamondistry-painting-card-content { padding: 14px 16px 16px; }
+  .diamondistry-painting-card h3 { font-size: 1.2rem; line-height: 1.25; }
+  .diamondistry-card-preview-grid { width: min(70%, 240px); }
+  .diamondistry-painting-card-badge { max-width: none; }
 }

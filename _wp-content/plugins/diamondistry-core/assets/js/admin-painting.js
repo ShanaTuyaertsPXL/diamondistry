@@ -839,11 +839,11 @@ document.addEventListener("DOMContentLoaded", () => {
   */
 
   function resizeGrid() {
-    const newWidth = Math.max(1, Math.min(1000, Number(widthInput.value) || 1));
+    const newWidth = Math.max(1, Math.min(100, Number(widthInput.value) || 1));
 
     const newHeight = Math.max(
       1,
-      Math.min(1000, Number(heightInput.value) || 1),
+      Math.min(100, Number(heightInput.value) || 1),
     );
 
     if (newWidth === currentWidth && newHeight === currentHeight) {

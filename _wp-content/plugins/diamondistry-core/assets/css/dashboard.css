@@ -1,0 +1,366 @@
+.diamondistry-dashboard {
+  width: 100%;
+  max-width: 1180px;
+
+  margin: 60px auto;
+  padding: 0 28px 70px;
+
+  box-sizing: border-box;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  color: #222;
+}
+
+.diamondistry-dashboard *,
+.diamondistry-dashboard *::before,
+.diamondistry-dashboard *::after {
+  box-sizing: border-box;
+}
+
+/* -------------------------------------------------------
+   Header
+------------------------------------------------------- */
+
+.diamondistry-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+
+  gap: 32px;
+
+  margin-bottom: 34px;
+}
+
+.diamondistry-dashboard-eyebrow,
+.diamondistry-dashboard-section-eyebrow {
+  margin: 0 0 6px;
+
+  color: #777;
+
+  font-size: 0.78rem;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.diamondistry-dashboard-header h1 {
+  margin: 0;
+
+  font-size: clamp(2.2rem, 5vw, 4rem);
+
+  line-height: 1.05;
+}
+
+.diamondistry-dashboard-intro {
+  max-width: 620px;
+
+  margin: 14px 0 0;
+
+  color: #666;
+
+  line-height: 1.6;
+}
+
+.diamondistry-dashboard-header-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  flex: 0 0 auto;
+}
+
+.diamondistry-dashboard-primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 44px;
+
+  padding: 10px 18px;
+
+  border-radius: 10px;
+
+  background: #222;
+
+  color: #fff !important;
+
+  font-weight: 700;
+
+  text-decoration: none !important;
+}
+
+.diamondistry-dashboard-secondary-link {
+  color: #666 !important;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  text-decoration: none !important;
+}
+
+/* -------------------------------------------------------
+   Stats
+------------------------------------------------------- */
+
+.diamondistry-dashboard-stats {
+  display: grid;
+
+  grid-template-columns:
+    1.4fr
+    repeat(3, 1fr);
+
+  gap: 14px;
+
+  margin-bottom: 54px;
+}
+
+.diamondistry-dashboard-stat {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  min-height: 105px;
+
+  padding: 20px;
+
+  border: 1px solid #e6e6e6;
+  border-radius: 16px;
+
+  background: #fff;
+
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.03);
+}
+
+.diamondistry-dashboard-stat > strong,
+.diamondistry-dashboard-stat div strong {
+  display: block;
+
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.diamondistry-dashboard-stat > span,
+.diamondistry-dashboard-stat div span {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #777;
+
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.diamondistry-dashboard-stat-icon {
+  display: grid !important;
+  place-items: center;
+
+  width: 48px;
+  height: 48px;
+
+  flex: 0 0 48px;
+
+  margin: 0 !important;
+
+  border-radius: 14px;
+
+  background: #f4f4f4;
+
+  font-size: 1.4rem !important;
+}
+
+/* -------------------------------------------------------
+   Sections
+------------------------------------------------------- */
+
+.diamondistry-dashboard-section {
+  margin-top: 52px;
+}
+
+.diamondistry-dashboard-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+}
+
+.diamondistry-dashboard-section-heading h2 {
+  margin: 0;
+
+  font-size: 1.65rem;
+}
+
+.diamondistry-dashboard-section-heading > span {
+  color: #777;
+
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.diamondistry-dashboard-painting-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 20px;
+}
+
+/* -------------------------------------------------------
+   Empty state
+------------------------------------------------------- */
+
+.diamondistry-dashboard-empty {
+  padding: 42px 24px;
+
+  border: 1px dashed #d9d9d9;
+  border-radius: 18px;
+
+  background: #fafafa;
+
+  text-align: center;
+}
+
+.diamondistry-dashboard-empty > div {
+  margin-bottom: 12px;
+
+  font-size: 1.7rem;
+}
+
+.diamondistry-dashboard-empty h3 {
+  margin: 0;
+
+  font-size: 1.1rem;
+}
+
+.diamondistry-dashboard-empty p {
+  margin: 8px 0 0;
+
+  color: #777;
+}
+
+.diamondistry-dashboard-empty a {
+  display: inline-block;
+
+  margin-top: 16px;
+
+  color: #222 !important;
+
+  font-weight: 700;
+
+  text-decoration: none !important;
+}
+
+/* -------------------------------------------------------
+   Logged out
+------------------------------------------------------- */
+
+.diamondistry-dashboard-login {
+  max-width: 560px;
+
+  margin: 100px auto;
+
+  padding: 48px 34px;
+
+  border: 1px solid #e5e5e5;
+  border-radius: 22px;
+
+  background: #fff;
+
+  text-align: center;
+
+  box-shadow: 0 14px 44px rgb(0 0 0 / 0.05);
+}
+
+.diamondistry-dashboard-login-icon {
+  margin-bottom: 14px;
+
+  font-size: 2.2rem;
+}
+
+.diamondistry-dashboard-login h1 {
+  margin: 0;
+
+  font-size: 2rem;
+}
+
+.diamondistry-dashboard-login p {
+  max-width: 430px;
+
+  margin: 14px auto 24px;
+
+  color: #777;
+
+  line-height: 1.6;
+}
+
+/* -------------------------------------------------------
+   Responsive
+------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .diamondistry-dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .diamondistry-dashboard-painting-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .diamondistry-dashboard {
+    margin-top: 34px;
+
+    padding: 0 18px 50px;
+  }
+
+  .diamondistry-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .diamondistry-dashboard-header-actions {
+    width: 100%;
+  }
+
+  .diamondistry-dashboard-primary-button {
+    flex: 1;
+  }
+
+  .diamondistry-dashboard-stats {
+    grid-template-columns:
+      1fr
+      1fr;
+  }
+
+  .diamondistry-dashboard-painting-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .diamondistry-dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .diamondistry-dashboard-section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .diamondistry-dashboard-header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .diamondistry-dashboard-primary-button {
+    width: 100%;
+  }
+}

@@ -1,15 +1,12 @@
-<!-- wp:group {"tagName":"main","style":{"spacing":{"padding":{"top":"48px","right":"24px","bottom":"48px","left":"24px"}}},"layout":{"type":"constrained"}} -->
-<main
-  class="wp-block-group"
-  style="
-    padding-top: 48px;
-    padding-right: 24px;
-    padding-bottom: 48px;
-    padding-left: 24px;
-  "
->
-  <!-- wp:post-title {"level":1} /-->
-
-  <!-- wp:post-content {"layout":{"type":"constrained"}} /-->
-</main>
+<!-- wp:group {"tagName":"div","className":"dd-shell","layout":{"type":"default"}} -->
+<div class="wp-block-group dd-shell">
+	<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+	<!-- wp:group {"tagName":"main","className":"diamondistry-page-shell","layout":{"type":"default"}} -->
+	<main class="wp-block-group diamondistry-page-shell">
+		<!-- wp:post-title {"level":1} /-->
+		<!-- wp:post-content {"layout":{"type":"default"}} /-->
+	</main>
+	<!-- /wp:group -->
+</div>
 <!-- /wp:group -->
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

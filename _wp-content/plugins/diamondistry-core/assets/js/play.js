@@ -2,14 +2,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("diamondistry-grid");
   const palette = document.getElementById("diamondistry-palette");
   const progressBar = document.getElementById("diamondistry-progress-bar");
-  const progressLabel = document.getElementById("diamondistry-progress-label");
+  const completedElement = document.getElementById("diamondistry-completed");
+  const totalElement = document.getElementById("diamondistry-total");
   const titleElement = document.getElementById("diamondistry-title");
   const message = document.getElementById("diamondistry-message");
   const resetButton = document.getElementById("diamondistry-reset");
-  const zoomInButton = document.getElementById("diamondistry-zoom-in");
-  const zoomOutButton = document.getElementById("diamondistry-zoom-out");
-  const fullscreenButton = document.getElementById("diamondistry-fullscreen");
-  const workspace = document.querySelector(".diamondistry-workspace");
 
   if (!grid || !palette || !message) {
     return;
@@ -101,11 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let isPainting = false;
 
   let saveTimer = null;
-  let saveEpoch = 0;
-  let progressDirty = false;
-  let loadedRevision = Number(userState.progress?.revision || 0);
-  let completionNoted = false;
-  let completionReward = null;
 
   const totalsByColor = {};
   const completedByColor = {};
@@ -121,47 +113,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.title = `${painting.title} – Diamondistry`;
 
-  const cellSteps = [12, 16, 20, 24, 28, 32, 36, 40, 48, 56];
-  let zoomLevel = 0;
-
-  function fittedCellSize() {
-    const fullscreen = workspace.classList.contains("is-expanded");
-    const targetWidth = fullscreen
-      ? Math.max(280, window.innerWidth - 680)
-      : Math.min(560, Math.max(340, window.innerWidth - 520));
-    const targetHeight = fullscreen
-      ? Math.max(280, window.innerHeight - 200)
-      : Math.min(window.innerHeight * 0.68, 640);
-    const byWidth = Math.floor((targetWidth - 22) / painting.width);
-    const byHeight = Math.floor((targetHeight - 22) / painting.height);
-    return Math.max(18, Math.min(40, byWidth, byHeight));
+  if (totalElement) {
+    totalElement.textContent = totalDiamonds;
   }
-
-  function nearestZoom(size) {
-    let best = 0;
-    cellSteps.forEach((step, index) => {
-      if (Math.abs(step - size) < Math.abs(cellSteps[best] - size)) {
-        best = index;
-      }
-    });
-    return best;
-  }
-
-  function applyZoom() {
-    const size = cellSteps[zoomLevel];
-    grid.style.setProperty("--dd-cell", `${size}px`);
-    grid.style.gridTemplateColumns = `repeat(${painting.width}, ${size}px)`;
-    if (zoomInButton) {
-      zoomInButton.disabled = zoomLevel >= cellSteps.length - 1;
-    }
-    if (zoomOutButton) {
-      zoomOutButton.disabled = zoomLevel <= 0;
-    }
-
-    syncLoupeMetrics();
-  }
-
-  zoomLevel = nearestZoom(fittedCellSize());
 
   /*
   |--------------------------------------------------------------------------
@@ -198,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function createGrid() {
     grid.innerHTML = "";
 
-    applyZoom();
+    grid.style.gridTemplateColumns = `repeat(${painting.width}, 1fr)`;
 
     painting.pattern.forEach((colorId, index) => {
       const color = getColor(colorId);
@@ -375,8 +329,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       message.textContent = `Verkeerde diamond — kies ${color.symbol} ${color.name}.`;
 
-      syncLoupeCell(cell.dataset.index);
-
       return;
     }
 
@@ -387,15 +339,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateProgress();
     updatePaletteCounts();
-    syncLoupeCell(cell.dataset.index);
 
     /*
      * Bij volledige painting meteen opslaan,
      * zodat reward direct kan worden toegekend.
      */
     if (completed === totalDiamonds) {
-      openCompletion();
-
       persistProgress({
         immediate: true,
       });
@@ -421,10 +370,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateProgress() {
     const percentage =
       totalDiamonds > 0 ? (completed / totalDiamonds) * 100 : 0;
-    const rounded = Math.round(percentage);
 
-    if (progressLabel) {
-      progressLabel.textContent = `${rounded}%`;
+    if (completedElement) {
+      completedElement.textContent = completed;
     }
 
     if (progressBar) {
@@ -488,7 +436,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     localStorage.setItem(storageKey, JSON.stringify(progress));
-    progressDirty = false;
   }
 
   function readLocalProgress() {
@@ -525,21 +472,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return null;
     }
 
-    const epoch = saveEpoch;
-    const revision = loadedRevision;
-    const cells = getCompletedIndexes();
-    const color = selectedColor || 0;
-
-    progressDirty = false;
-
     const body = new URLSearchParams();
 
     body.set("action", "diamondistry_save_progress");
     body.set("nonce", userState.nonce);
     body.set("paintingId", String(painting.postId));
-    body.set("selectedColor", String(color));
-    body.set("completedCells", JSON.stringify(cells));
-    body.set("revision", String(revision));
+    body.set("selectedColor", String(selectedColor || 0));
+    body.set("completedCells", JSON.stringify(getCompletedIndexes()));
 
     try {
       const response = await fetch(userState.ajaxUrl, {
@@ -562,28 +501,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await response.json();
 
-      if (epoch !== saveEpoch) {
-        return null;
-      }
-
       if (!result.success) {
         console.error("Diamondistry progress save failed:", result);
-        progressDirty = true;
         return null;
-      }
-
-      if (result.data?.stale) {
-        loadedRevision = Number(result.data.revision ?? loadedRevision);
-
-        if (progressDirty) {
-          return saveServerProgress();
-        }
-
-        return null;
-      }
-
-      if (Number.isFinite(Number(result.data?.revision))) {
-        loadedRevision = Number(result.data.revision);
       }
 
       /*
@@ -599,11 +519,6 @@ document.addEventListener("DOMContentLoaded", () => {
           `✨ ${painting.title} voltooid! ` +
           `+${result.data.reward} 💎 · ` +
           `Balance: ${userState.balance} 💎`;
-
-        setCompletionReward(
-          Number(result.data.reward || 0),
-          userState.balance,
-        );
       } else if (completed === totalDiamonds) {
         message.textContent = `✨ ${painting.title} voltooid!`;
       }
@@ -612,17 +527,11 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Diamondistry progress request failed:", error);
 
-      if (epoch === saveEpoch) {
-        progressDirty = true;
-      }
-
       return null;
     }
   }
 
   function persistProgress({ immediate = false } = {}) {
-    progressDirty = true;
-
     if (!userState.loggedIn) {
       saveLocalProgress();
       return;
@@ -717,28 +626,17 @@ document.addEventListener("DOMContentLoaded", () => {
      */
     if (userState.loggedIn) {
       const serverProgress = userState.progress;
-      const serverRevision = Number(serverProgress?.revision || 0);
 
-      loadedRevision = serverRevision;
-
-      /*
-       * revision > 0 means the account already has a record, including a
-       * reset painting. That record wins over leftover localStorage.
-       */
       const serverHasHistory =
-        serverRevision > 0 ||
-        (serverProgress &&
-          ((Array.isArray(serverProgress.completedCells) &&
-            serverProgress.completedCells.length > 0) ||
-            serverProgress.completed ||
-            serverProgress.rewardClaimed ||
-            serverProgress.selectedColor));
+        serverProgress &&
+        ((Array.isArray(serverProgress.completedCells) &&
+          serverProgress.completedCells.length > 0) ||
+          serverProgress.completed ||
+          serverProgress.rewardClaimed ||
+          serverProgress.selectedColor);
 
       if (serverHasHistory) {
-        localStorage.removeItem(storageKey);
-        progressDirty = false;
-
-        applyProgress(serverProgress || { completedCells: [] });
+        applyProgress(serverProgress);
 
         if (completed > 0 && completed < totalDiamonds) {
           const percentage = Math.round((completed / totalDiamonds) * 100);
@@ -836,10 +734,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateProgress();
     updatePaletteCounts();
-    syncLoupeGrid();
-    closeCompletion();
-    completionNoted = false;
-    completionReward = null;
   }
 
   async function resetServerProgress() {
@@ -873,14 +767,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    saveEpoch += 1;
-    progressDirty = false;
-
-    if (saveTimer) {
-      clearTimeout(saveTimer);
-      saveTimer = null;
-    }
-
     if (userState.loggedIn) {
       try {
         const result = await resetServerProgress();
@@ -891,13 +777,9 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        if (Number.isFinite(Number(result.data?.revision))) {
-          loadedRevision = Number(result.data.revision);
-        }
-
         localStorage.removeItem(storageKey);
+
         resetInterface();
-        progressDirty = false;
 
         message.textContent = "Painting opnieuw gestart.";
 
@@ -912,137 +794,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     localStorage.removeItem(storageKey);
+
     resetInterface();
-    progressDirty = false;
 
     message.textContent = "Painting opnieuw gestart.";
   }
-
-  /*
-  |--------------------------------------------------------------------------
-  | Completion message
-  |--------------------------------------------------------------------------
-  */
-
-  const completion = document.createElement("div");
-  const completionCard = document.createElement("div");
-  const completionTitle = document.createElement("h2");
-  const completionRewardText = document.createElement("p");
-  const completionClose = document.createElement("button");
-
-  completion.className = "diamondistry-complete";
-  completion.setAttribute("role", "dialog");
-  completion.setAttribute("aria-modal", "true");
-  completion.setAttribute("aria-hidden", "true");
-  completion.inert = true;
-
-  completionCard.className = "diamondistry-complete-card";
-
-  const completionMark = document.createElement("div");
-  completionMark.className = "diamondistry-complete-mark";
-  completionMark.setAttribute("aria-hidden", "true");
-  completionMark.textContent = "💎";
-
-  const completionKicker = document.createElement("p");
-  completionKicker.className = "diamondistry-complete-kicker";
-  completionKicker.textContent = "Voltooid";
-
-  completionTitle.id = "diamondistry-complete-title";
-  completionTitle.textContent = painting.title;
-  completion.setAttribute("aria-labelledby", completionTitle.id);
-
-  const completionBody = document.createElement("p");
-  completionBody.className = "diamondistry-complete-text";
-  completionBody.textContent = "Alle diamonds zitten op hun plek.";
-
-  completionRewardText.className = "diamondistry-complete-reward";
-  completionRewardText.hidden = true;
-
-  const completionActions = document.createElement("div");
-  completionActions.className = "diamondistry-complete-actions";
-
-  completionClose.type = "button";
-  completionClose.className = "diamondistry-complete-close";
-  completionClose.textContent = "Sluiten";
-
-  const completionBack = document.createElement("a");
-  const paintingsLink = document.querySelector(".diamondistry-back");
-  completionBack.className = "diamondistry-complete-back";
-  completionBack.href = paintingsLink ? paintingsLink.href : "/paintings/";
-  completionBack.textContent = "Terug naar paintings";
-
-  completionActions.append(completionClose, completionBack);
-
-  completionCard.append(
-    completionMark,
-    completionKicker,
-    completionTitle,
-    completionBody,
-    completionRewardText,
-    completionActions,
-  );
-  completion.append(completionCard);
-  document.body.append(completion);
-
-  function renderCompletionReward() {
-    if (!completionReward) {
-      completionRewardText.hidden = true;
-      completionRewardText.textContent = "";
-      return;
-    }
-
-    completionRewardText.hidden = false;
-    completionRewardText.textContent =
-      `+${completionReward.amount} 💎 toegevoegd · Balance ${completionReward.balance} 💎`;
-  }
-
-  function openCompletion() {
-    if (completionNoted) {
-      return;
-    }
-
-    completionNoted = true;
-    completionTitle.textContent = painting.title;
-    renderCompletionReward();
-    completion.classList.add("is-open", "suppress-focus");
-    completion.setAttribute("aria-hidden", "false");
-    completion.inert = false;
-    completionClose.focus({ preventScroll: true, focusVisible: false });
-  }
-
-  function closeCompletion() {
-    completion.classList.remove("is-open");
-    completion.setAttribute("aria-hidden", "true");
-    completion.inert = true;
-  }
-
-  function setCompletionReward(amount, balance) {
-    completionReward = {
-      amount,
-      balance,
-    };
-    renderCompletionReward();
-  }
-
-  completion.addEventListener("keydown", () => {
-    completion.classList.remove("suppress-focus");
-  });
-
-  completionClose.addEventListener("click", closeCompletion);
-
-  completion.addEventListener("click", (event) => {
-    if (event.target === completion) {
-      closeCompletion();
-    }
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && completion.classList.contains("is-open")) {
-      event.preventDefault();
-      event.stopPropagation();
-      closeCompletion();
-    }
-  });
 
   /*
   |--------------------------------------------------------------------------
@@ -1111,10 +867,6 @@ document.addEventListener("DOMContentLoaded", () => {
    * wordt afgesloten of verlaten.
    */
   window.addEventListener("pagehide", () => {
-    if (!progressDirty) {
-      return;
-    }
-
     if (saveTimer) {
       clearTimeout(saveTimer);
 
@@ -1130,255 +882,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (resetButton) {
     resetButton.addEventListener("click", resetPainting);
-  }
-
-  const loupeButton = document.getElementById("diamondistry-loupe");
-  const stage = grid.closest(".diamondistry-stage");
-  const loupe = document.createElement("div");
-  const loupeView = document.createElement("div");
-  const loupeGrid = document.createElement("div");
-  const loupeLens = 188;
-  const loupeScale = 2.2;
-  let loupeOn = false;
-
-  loupe.className = "diamondistry-loupe";
-  loupe.hidden = true;
-  loupe.setAttribute("aria-hidden", "true");
-  loupeView.className = "diamondistry-loupe-view";
-  loupeGrid.className = "diamondistry-grid diamondistry-loupe-grid";
-  loupeView.appendChild(loupeGrid);
-  loupe.appendChild(loupeView);
-  document.body.appendChild(loupe);
-
-  function syncLoupeMetrics() {
-    loupeGrid.style.gridTemplateColumns = grid.style.gridTemplateColumns;
-    const size = grid.style.getPropertyValue("--dd-cell");
-    if (size) {
-      loupeGrid.style.setProperty("--dd-cell", size);
-    }
-  }
-
-  function syncLoupeGrid() {
-    if (!loupeOn) {
-      return;
-    }
-
-    loupeGrid.replaceChildren(
-      ...[...grid.children].map((cell) => {
-        const copy = cell.cloneNode(true);
-        copy.tabIndex = -1;
-        return copy;
-      }),
-    );
-    syncLoupeMetrics();
-  }
-
-  function syncLoupeCell(index) {
-    if (!loupeOn) {
-      return;
-    }
-
-    const source = grid.querySelector(
-      `.diamondistry-cell[data-index="${index}"]`,
-    );
-    const copy = loupeGrid.querySelector(
-      `.diamondistry-cell[data-index="${index}"]`,
-    );
-
-    if (!source || !copy) {
-      syncLoupeGrid();
-      return;
-    }
-
-    copy.className = source.className;
-    copy.dataset.completed = source.dataset.completed;
-    copy.textContent = source.textContent;
-    copy.setAttribute("aria-label", source.getAttribute("aria-label") || "");
-
-    const diamondColor = source.style.getPropertyValue("--diamond-color");
-    if (diamondColor) {
-      copy.style.setProperty("--diamond-color", diamondColor);
-    } else {
-      copy.style.removeProperty("--diamond-color");
-    }
-  }
-
-  function moveLoupe(event) {
-    if (!loupeOn) {
-      return;
-    }
-
-    const rect = grid.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const inside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
-
-    loupe.hidden = !inside;
-
-    if (!inside) {
-      return;
-    }
-
-    const lift = event.pointerType === "touch" ? loupeLens / 2 + 28 : 0;
-    const frame = 3;
-    loupe.style.transform = `translate(${event.clientX - loupeLens / 2 - frame}px, ${event.clientY - loupeLens / 2 - frame - lift}px)`;
-    loupeGrid.style.transform = `translate(${loupeLens / 2 - x * loupeScale}px, ${loupeLens / 2 - y * loupeScale}px) scale(${loupeScale})`;
-  }
-
-  function setLoupe(enabled) {
-    loupeOn = enabled;
-    if (stage) {
-      stage.classList.toggle("is-loupe", enabled);
-    }
-    if (loupeButton) {
-      loupeButton.setAttribute("aria-pressed", enabled ? "true" : "false");
-    }
-    if (!enabled) {
-      loupe.hidden = true;
-      return;
-    }
-    syncLoupeGrid();
-  }
-
-  if (loupeButton) {
-    loupeButton.addEventListener("click", () => {
-      setLoupe(!loupeOn);
-    });
-  }
-
-  document.addEventListener("keydown", (event) => {
-    if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) {
-      return;
-    }
-    if (event.key !== "m" && event.key !== "M") {
-      return;
-    }
-    const tag = event.target?.tagName;
-    if (
-      tag === "INPUT" ||
-      tag === "TEXTAREA" ||
-      event.target?.isContentEditable
-    ) {
-      return;
-    }
-    event.preventDefault();
-    setLoupe(!loupeOn);
-  });
-
-  grid.addEventListener("pointermove", moveLoupe);
-  grid.addEventListener("pointerdown", moveLoupe);
-  grid.addEventListener("pointerleave", () => {
-    loupe.hidden = true;
-  });
-
-  if (zoomInButton) {
-    zoomInButton.addEventListener("click", () => {
-      zoomLevel = Math.min(cellSteps.length - 1, zoomLevel + 1);
-      applyZoom();
-    });
-  }
-
-  if (zoomOutButton) {
-    zoomOutButton.addEventListener("click", () => {
-      zoomLevel = Math.max(0, zoomLevel - 1);
-      applyZoom();
-    });
-  }
-
-  let workspaceExpanded = false;
-  let workspaceAnimating = false;
-  let workspacePlaceholder = null;
-  const fullscreenFade = document.createElement("div");
-
-  fullscreenFade.className = "diamondistry-fullscreen-fade";
-  fullscreenFade.setAttribute("aria-hidden", "true");
-  document.body.appendChild(fullscreenFade);
-
-  function wait(ms) {
-    return new Promise((resolve) => {
-      window.setTimeout(resolve, ms);
-    });
-  }
-
-  function fadeThrough(applyChange) {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (reduced) {
-      applyChange();
-      return Promise.resolve();
-    }
-
-    fullscreenFade.classList.add("is-visible");
-
-    return wait(340).then(() => {
-      applyChange();
-
-      return new Promise((resolve) => {
-        requestAnimationFrame(() => {
-          fullscreenFade.classList.remove("is-visible");
-          wait(360).then(resolve);
-        });
-      });
-    });
-  }
-
-  function setWorkspaceExpanded(next) {
-    if (!workspace || workspaceAnimating || next === workspaceExpanded) {
-      return;
-    }
-
-    workspaceAnimating = true;
-    loupe.hidden = true;
-
-    fadeThrough(() => {
-      if (next) {
-        const first = workspace.getBoundingClientRect();
-        workspacePlaceholder = document.createElement("div");
-        workspacePlaceholder.className = "diamondistry-workspace-placeholder";
-        workspacePlaceholder.style.height = `${first.height}px`;
-        workspacePlaceholder.setAttribute("aria-hidden", "true");
-        workspace.before(workspacePlaceholder);
-        workspace.classList.add("is-expanded");
-        document.documentElement.classList.add("diamondistry-workspace-open");
-      } else {
-        workspace.classList.remove("is-expanded");
-        document.documentElement.classList.remove("diamondistry-workspace-open");
-        if (workspacePlaceholder) {
-          workspacePlaceholder.remove();
-          workspacePlaceholder = null;
-        }
-      }
-
-      workspaceExpanded = next;
-      fullscreenButton.setAttribute("aria-pressed", next ? "true" : "false");
-      fullscreenButton.setAttribute(
-        "aria-label",
-        next ? "Exit fullscreen" : "Fullscreen",
-      );
-      zoomLevel = nearestZoom(fittedCellSize());
-      applyZoom();
-    }).then(() => {
-      workspaceAnimating = false;
-    });
-  }
-
-  if (fullscreenButton && workspace) {
-    fullscreenButton.addEventListener("click", () => {
-      setWorkspaceExpanded(!workspaceExpanded);
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (
-        event.key !== "Escape" ||
-        !workspaceExpanded ||
-        workspaceAnimating ||
-        completion.classList.contains("is-open")
-      ) {
-        return;
-      }
-      event.preventDefault();
-      setWorkspaceExpanded(false);
-    });
   }
 
   /*
