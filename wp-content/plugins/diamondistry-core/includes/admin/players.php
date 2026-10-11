@@ -1377,7 +1377,7 @@ function diamondistry_render_player_detail(
 
 					?>
 
-					<tr<?php echo 'live' !== $availability ? ' style="opacity:.55;"' : ''; ?>>
+					<tr<?php echo 'live' !== $availability ? ' class="dd-row-unavailable"' : ''; ?>>
 
 						<td>
 							<strong>
@@ -1602,6 +1602,7 @@ function diamondistry_render_player_detail(
 									<button
 										type="submit"
 										class="button button-small"
+										<?php disabled( $completed_cells <= 0 && ! $reward_claimed ); ?>
 										onclick="return confirm('Reset progress and reward? Progress goes to 0 and any claimed reward is removed from the balance.');"
 									>
 										Reset both
@@ -1626,6 +1627,21 @@ function diamondistry_render_player_detail(
 	<?php do_action( 'diamondistry_player_detail_after_paintings', $user_id ); ?>
 
 	<hr>
+
+	<?php
+	// Only offer a reset when there is something to reset.
+	$has_any_progress = false;
+	$has_any_reward   = diamondistry_get_user_balance( $user_id ) > 0;
+	foreach ( diamondistry_get_all_user_progress( $user_id ) as $row_progress ) {
+		if ( is_array( $row_progress ) ) {
+			$has_any_progress = $has_any_progress || ! empty( $row_progress['completedCells'] );
+			$has_any_reward   = $has_any_reward || ! empty( $row_progress['rewardClaimed'] );
+		}
+	}
+	?>
+	<style>
+		.dd-row-unavailable td:not(:last-child) { opacity: 0.55; }
+	</style>
 
 	<h2>
 		Danger zone
@@ -1668,6 +1684,7 @@ function diamondistry_render_player_detail(
 		<button
 			type="submit"
 			class="button"
+			<?php disabled( ! $has_any_progress ); ?>
 			onclick="return confirm('Reset ALL painting progress? Rewards and diamond balance stay unchanged.');"
 		>
 			Reset all progress
@@ -1703,6 +1720,7 @@ function diamondistry_render_player_detail(
 		<button
 			type="submit"
 			class="button"
+			<?php disabled( ! $has_any_reward ); ?>
 			onclick="return confirm('Reset ALL reward claims and set the diamond balance to 0?');"
 		>
 			Reset all rewards + balance

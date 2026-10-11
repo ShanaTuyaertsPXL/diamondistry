@@ -289,14 +289,14 @@ function diamondistry_render_player_unlocks( $user_id ) {
 	$payments = diamondistry_get_unlock_payments( $user_id );
 	$progress = diamondistry_get_all_user_progress( $user_id );
 
-	$form = function ( $action, $painting_id, $label, $class = 'button' ) use ( $user_id ) {
+	$form = function ( $action, $painting_id, $label, $class = 'button', $enabled = true ) use ( $user_id ) {
 		?>
 		<form method="post" style="display:inline-block;">
 			<?php wp_nonce_field( 'diamondistry_player_admin_action', 'diamondistry_player_nonce' ); ?>
 			<input type="hidden" name="diamondistry_player_action" value="<?php echo esc_attr( $action ); ?>">
 			<input type="hidden" name="user_id" value="<?php echo esc_attr( $user_id ); ?>">
 			<input type="hidden" name="painting_id" value="<?php echo esc_attr( $painting_id ); ?>">
-			<button type="submit" class="<?php echo esc_attr( $class ); ?>"><?php echo esc_html( $label ); ?></button>
+			<button type="submit" class="<?php echo esc_attr( $class ); ?>" <?php disabled( ! $enabled ); ?>><?php echo esc_html( $label ); ?></button>
 		</form>
 		<?php
 	};
@@ -348,7 +348,7 @@ function diamondistry_render_player_unlocks( $user_id ) {
 			</tbody>
 		</table>
 		<p>
-			<?php $form( 'reset_unlocks', 0, 'Reset all unlocks' ); ?>
+			<?php $form( 'reset_unlocks', 0, 'Reset all unlocks', 'button', ! empty( $unlocked ) ); ?>
 		</p>
 	<?php endif; ?>
 	<?php
