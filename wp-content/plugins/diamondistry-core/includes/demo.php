@@ -30,20 +30,30 @@ function diamondistry_render_demo_login_hint() {
 	);
 }
 
-// The account forms are not the only way in: the REST API also lets a user edit
-// or delete themselves (and add application passwords). Block that for the demo.
+// The account forms are not the only way in: the REST API (routes match
+// case-insensitively, so no path check) also lets a user edit or delete
+// themselves. Take away the capability itself for the demo user.
 add_filter(
-	'rest_pre_dispatch',
-	function ( $result, $server, $request ) {
+	'map_meta_cap',
+	function ( $caps, $cap, $user_id, $args ) {
 		if (
-			'GET' !== $request->get_method()
-			&& 0 === strpos( $request->get_route(), '/wp/v2/users' )
-			&& diamondistry_is_demo_user()
+			in_array( $cap, array( 'edit_user', 'delete_user', 'promote_user' ), true )
+			&& isset( $args[0] ) && (int) $args[0] === (int) $user_id
+			&& diamondistry_is_demo_user( $user_id )
 		) {
-			return new WP_Error( 'diamondistry_demo_locked', 'Settings are locked on the shared demo account.', array( 'status' => 403 ) );
+			return array( 'do_not_allow' );
 		}
-		return $result;
+		return $caps;
 	},
 	10,
-	3
+	4
+);
+
+add_filter(
+	'wp_is_application_passwords_available_for_user',
+	function ( $available, $user ) {
+		return $available && ! diamondistry_is_demo_user( $user->ID );
+	},
+	10,
+	2
 );
