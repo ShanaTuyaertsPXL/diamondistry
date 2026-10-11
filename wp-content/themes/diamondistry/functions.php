@@ -367,7 +367,7 @@ function diamondistry_theme_render_footer() {
 			<?php endforeach; ?>
 		</div>
 		<div class="dd-footer__bottom">
-			<p>© <?php echo esc_html( gmdate( 'Y' ) . ' ' . get_bloginfo( 'name' ) ); ?><?php if ( get_privacy_policy_url() ) : ?> · <a href="<?php echo esc_url( get_privacy_policy_url() ); ?>">Privacy policy</a><?php endif; ?></p>
+			<p class="dd-footer__legal"><span>© <?php echo esc_html( gmdate( 'Y' ) . ' ' . get_bloginfo( 'name' ) ); ?></span><?php if ( get_privacy_policy_url() ) : ?><a href="<?php echo esc_url( get_privacy_policy_url() ); ?>">Privacy policy</a><?php endif; ?></p>
 			<p>Made with <span class="dd-gem" role="img" aria-label="diamonds"></span> for slow, happy moments.</p>
 		</div>
 	</div>
