@@ -179,8 +179,14 @@ add_filter(
 */
 
 function diamondistry_get_redirect_target( $fallback ) {
-	$raw = isset( $_REQUEST['redirect_to'] ) ? wp_unslash( $_REQUEST['redirect_to'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated below.
-	return wp_validate_redirect( (string) $raw, $fallback );
+	$raw = isset( $_REQUEST['redirect_to'] ) ? trim( (string) wp_unslash( $_REQUEST['redirect_to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated below.
+
+	// wp_validate_redirect() passes an empty string through, and wp_redirect('') silently does nothing.
+	if ( '' === $raw ) {
+		return $fallback;
+	}
+
+	return wp_validate_redirect( $raw, $fallback );
 }
 
 /** Messages for the current request, keyed by form. */
@@ -239,6 +245,20 @@ function diamondistry_post_password( $key ) {
 */
 
 function diamondistry_handle_account_forms() {
+	if ( is_page( array( 'login', 'register' ) ) ) {
+		// Never leak auth URLs (reset links, redirect targets) to other origins.
+		header( 'Referrer-Policy: no-referrer' );
+	}
+
+	// Reset link from the email: move the key into a cookie and drop it from the URL.
+	if ( is_page( 'login' ) && isset( $_GET['action'], $_GET['key'], $_GET['login'] ) && 'rp' === $_GET['action'] ) { // phpcs:ignore WordPress.Security.NonceVerification
+		$login = sanitize_user( wp_unslash( $_GET['login'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		$key   = sanitize_text_field( wp_unslash( $_GET['key'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		diamondistry_set_reset_cookie( $login . ':' . $key );
+		wp_safe_redirect( diamondistry_page_url( 'login', array( 'action' => 'rp' ) ) );
+		exit;
+	}
+
 	// Logged in players have no business on login/register.
 	if ( is_user_logged_in() && is_page( array( 'login', 'register' ) ) ) {
 		wp_safe_redirect( diamondistry_get_redirect_target( diamondistry_page_url( 'account' ) ) );
@@ -379,11 +399,37 @@ function diamondistry_handle_lostpassword() {
 	exit;
 }
 
-function diamondistry_get_reset_user() {
-	$key   = isset( $_REQUEST['key'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-	$login = isset( $_REQUEST['login'] ) ? sanitize_user( wp_unslash( $_REQUEST['login'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+define( 'DIAMONDISTRY_RESET_COOKIE', 'dd-resetpass' );
 
-	return check_password_reset_key( $key, $login );
+function diamondistry_reset_cookie_path() {
+	return (string) wp_parse_url( diamondistry_page_url( 'login' ), PHP_URL_PATH );
+}
+
+function diamondistry_set_reset_cookie( $value ) {
+	setcookie(
+		DIAMONDISTRY_RESET_COOKIE,
+		$value,
+		array(
+			'expires'  => $value ? 0 : time() - YEAR_IN_SECONDS,
+			'path'     => diamondistry_reset_cookie_path(),
+			'secure'   => is_ssl(),
+			'httponly' => true,
+			'samesite' => 'Lax',
+		)
+	);
+}
+
+/** The reset key lives in an httponly cookie (like core wp-login.php), never in the visible URL. */
+function diamondistry_get_reset_user() {
+	$raw = isset( $_COOKIE[ DIAMONDISTRY_RESET_COOKIE ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ DIAMONDISTRY_RESET_COOKIE ] ) ) : '';
+
+	if ( false === strpos( $raw, ':' ) ) {
+		return new WP_Error( 'invalid_key' );
+	}
+
+	list( $login, $key ) = explode( ':', $raw, 2 );
+
+	return check_password_reset_key( $key, sanitize_user( $login ) );
 }
 
 function diamondistry_handle_resetpass() {
@@ -407,6 +453,7 @@ function diamondistry_handle_resetpass() {
 	}
 
 	reset_password( $user, $password );
+	diamondistry_set_reset_cookie( '' );
 
 	wp_safe_redirect( diamondistry_page_url( 'login', array( 'password' => 'reset' ) ) );
 	exit;
