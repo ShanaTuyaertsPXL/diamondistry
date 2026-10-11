@@ -216,7 +216,10 @@ function diamondistry_award_finished_challenges() {
 
 		$prizes = diamondistry_challenge_prizes();
 		foreach ( array_slice( diamondistry_get_challenge_results( $painting_id, $window['key'] ), 0, count( $prizes ) ) as $place => $result ) {
+			// Same per-user lock as saves and unlocks, so a payout never races a balance change.
+			$locked = diamondistry_begin_progress_write( $result[0] );
 			diamondistry_add_user_diamonds( $result[0], $prizes[ $place ] );
+			diamondistry_commit_progress_write( $locked );
 		}
 	}
 }

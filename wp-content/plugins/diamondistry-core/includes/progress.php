@@ -110,6 +110,13 @@ function diamondistry_begin_progress_write( $user_id ) {
 		)
 	);
 
+	/*
+	 * The user's meta was usually cached earlier in this request (auth cookie,
+	 * nonce check). Read it fresh now that we hold the lock, or a parallel
+	 * request that committed while we waited gets overwritten with stale data.
+	 */
+	wp_cache_delete( absint( $user_id ), 'user_meta' );
+
 	return true;
 }
 
@@ -228,7 +235,10 @@ function diamondistry_get_user_balance( $user_id ) {
 	);
 }
 
+/** Call inside diamondistry_begin_progress_write() when other writes can race. */
 function diamondistry_add_user_diamonds( $user_id, $amount ) {
+	wp_cache_delete( absint( $user_id ), 'user_meta' );
+
 	$amount  = max( 0, absint( $amount ) );
 	$current = diamondistry_get_user_balance( $user_id );
 	$new     = $current + $amount;

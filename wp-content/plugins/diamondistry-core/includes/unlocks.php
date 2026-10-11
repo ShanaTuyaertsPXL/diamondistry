@@ -71,6 +71,11 @@ function diamondistry_user_can_play( $user_id, $painting ) {
 		return true;
 	}
 
+	// A priced challenge painting was free only during its week: starting it then must not keep it free.
+	if ( get_post_meta( $painting_id, '_diamondistry_challenge_start', true ) ) {
+		return false;
+	}
+
 	$progress = diamondistry_get_all_user_progress( $user_id );
 	return ! empty( $progress[ (string) $painting_id ]['completedCells'] );
 }
@@ -105,9 +110,8 @@ function diamondistry_ajax_unlock_painting() {
 		wp_send_json_error( array( 'message' => 'Painting not available.' ), 404 );
 	}
 
-	// Lock the user row: two quick clicks must not charge twice.
+	// Lock the user row (also refreshes the meta cache): two quick clicks must not charge twice.
 	$locked = diamondistry_begin_progress_write( $user_id );
-	wp_cache_delete( $user_id, 'user_meta' );
 
 	if ( diamondistry_user_can_play( $user_id, $painting ) ) {
 		diamondistry_commit_progress_write( $locked );
