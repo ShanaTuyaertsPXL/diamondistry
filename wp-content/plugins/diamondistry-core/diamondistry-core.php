@@ -33,6 +33,8 @@ require_once DIAMONDISTRY_CORE_PATH . 'includes/account.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/faq.php';
 
+require_once DIAMONDISTRY_CORE_PATH . 'includes/unlocks.php';
+
 require_once DIAMONDISTRY_CORE_PATH . 'includes/admin/painting-editor.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/admin/players.php';
@@ -405,6 +407,10 @@ function diamondistry_render_playground() {
 
 	if ( function_exists( 'diamondistry_enqueue_painting_card_assets' ) ) {
 		diamondistry_enqueue_painting_card_assets();
+	}
+
+	if ( ! diamondistry_user_can_play( get_current_user_id(), $painting ) ) {
+		return diamondistry_compact_html( diamondistry_render_locked_painting( $painting ) );
 	}
 
 	diamondistry_enqueue_play_assets( $painting );
