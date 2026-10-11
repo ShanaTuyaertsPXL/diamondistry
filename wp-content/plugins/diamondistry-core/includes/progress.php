@@ -355,6 +355,17 @@ function diamondistry_ajax_save_progress() {
 	}
 
 	$new_revision = $current_revision + 1;
+	$now          = time();
+
+	// Timing for the weekly challenge: first diamond to last diamond.
+	$started_at = ! empty( $old_progress['startedAt'] ) && ! empty( $old_completed_cells ) ? absint( $old_progress['startedAt'] ) : 0;
+	if ( ! $started_at && ! empty( $completed_cells ) ) {
+		$started_at = $now;
+	}
+	$completed_at = $was_completed && ! empty( $old_progress['completedAt'] ) ? absint( $old_progress['completedAt'] ) : 0;
+	if ( $is_completed && ! $was_completed ) {
+		$completed_at = $now;
+	}
 
 	$all_progress[ $key ] = array(
 		'completedCells' => $completed_cells,
@@ -362,11 +373,18 @@ function diamondistry_ajax_save_progress() {
 		'completed'      => $is_completed,
 		'rewardClaimed'  => $reward_claimed,
 		'lastWorkedAt'   => $last_worked_at,
+		'startedAt'      => $started_at ?: null,
+		'completedAt'    => $completed_at ?: null,
 		'updatedAt'      => current_time( 'mysql', true ),
 		'revision'       => $new_revision,
 	);
 
 	update_user_meta( $user_id, DIAMONDISTRY_PROGRESS_META_KEY, $all_progress );
+
+	$challenge = null;
+	if ( $is_completed && ! $was_completed && function_exists( 'diamondistry_record_challenge_result' ) ) {
+		$challenge = diamondistry_record_challenge_result( $user_id, $painting_id, $started_at, $completed_at );
+	}
 
 	diamondistry_commit_progress_write( $progress_locked );
 
@@ -378,6 +396,10 @@ function diamondistry_ajax_save_progress() {
 			'balance'       => diamondistry_get_user_balance( $user_id ),
 			'revision'      => $new_revision,
 			'stale'         => false,
+			'challenge'     => $challenge ? array(
+				'time' => diamondistry_format_duration( $challenge['seconds'] ),
+				'rank' => $challenge['rank'],
+			) : null,
 		)
 	);
 }

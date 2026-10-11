@@ -106,6 +106,11 @@ function diamondistry_theme_nav_items( $include_home = false ) {
 			'url'   => home_url( '/paintings/' ),
 		),
 		array(
+			'key'   => 'challenge',
+			'label' => 'Challenge',
+			'url'   => home_url( '/challenge/' ),
+		),
+		array(
 			'key'   => 'how',
 			'label' => 'How it works',
 			'url'   => home_url( '/how-it-works/' ),
@@ -142,6 +147,7 @@ function diamondistry_theme_nav_items( $include_home = false ) {
 function diamondistry_theme_nav_is_current( $key ) {
 	$pages = array(
 		'paintings' => array( 'paintings', 'play' ),
+		'challenge' => array( 'challenge' ),
 		'how'       => array( 'how-it-works' ),
 		'about'     => array( 'about' ),
 		'dashboard' => array( 'dashboard' ),
@@ -175,6 +181,7 @@ function diamondistry_theme_nav_icon( $key ) {
 		'home'      => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/></svg>',
 		'paintings' => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m8 15 2.5-3 2 2.2L15 11l3 4"/></svg>',
 		'dashboard' => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="4" rx="1.5"/><rect x="13" y="10" width="7" height="10" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/></svg>',
+		'challenge' => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
 		'about'     => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 20 9l-8 12L4 9Z"/><path d="M4 9h16"/></svg>',
 		'how'       => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>',
 	);

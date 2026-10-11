@@ -73,6 +73,15 @@
   font-weight: 700;
 }
 
+.diamondistry-meta li.is-challenge {
+  background: #fff4dc;
+}
+
+.diamondistry-meta li.is-challenge a {
+  color: #8a5a00;
+  text-decoration: none;
+}
+
 .diamondistry-meta li.is-reward {
   background: var(--dd-pink-soft, #fff0f6);
   color: #c42d63;

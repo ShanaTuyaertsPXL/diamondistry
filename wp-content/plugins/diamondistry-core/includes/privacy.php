@@ -18,6 +18,7 @@ function diamondistry_privacy_meta_keys() {
 		DIAMONDISTRY_UNLOCK_PAID_META_KEY,
 		DIAMONDISTRY_AVATAR_META_KEY,
 		DIAMONDISTRY_TAGLINE_META_KEY,
+		DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY,
 	);
 }
 
@@ -190,6 +191,36 @@ function diamondistry_privacy_exporter( $email ) {
 		);
 	}
 
+	global $wpdb;
+	$times = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->prepare(
+			"SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE meta_key LIKE %s",
+			$wpdb->esc_like( '_diamondistry_ch_' ) . '%' . $wpdb->esc_like( '_' . $user->ID )
+		)
+	);
+	foreach ( $times as $time ) {
+		$week   = substr( $time->meta_key, strlen( '_diamondistry_ch_' ), 8 );
+		$data[] = array(
+			'group_id'    => 'diamondistry-challenge',
+			'group_label' => 'Diamondistry weekly challenge times',
+			'item_id'     => 'diamondistry-challenge-' . $time->post_id . '-' . $week,
+			'data'        => array(
+				array(
+					'name'  => 'Painting',
+					'value' => $title( $time->post_id ),
+				),
+				array(
+					'name'  => 'Week starting',
+					'value' => preg_replace( '/^(\d{4})(\d{2})(\d{2})$/', '$1-$2-$3', $week ),
+				),
+				array(
+					'name'  => 'Finishing time (seconds)',
+					'value' => (int) $time->meta_value,
+				),
+			),
+		);
+	}
+
 	return array(
 		'data' => $data,
 		'done' => true,
@@ -219,6 +250,7 @@ function diamondistry_privacy_eraser( $email ) {
 
 	if ( $user ) {
 		diamondistry_delete_user_avatar( $user->ID );
+		diamondistry_delete_challenge_results( $user->ID );
 		foreach ( diamondistry_privacy_meta_keys() as $key ) {
 			$removed = delete_user_meta( $user->ID, $key ) || $removed;
 		}

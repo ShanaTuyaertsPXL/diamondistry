@@ -673,6 +673,11 @@ document.addEventListener("DOMContentLoaded", () => {
        */
       localStorage.removeItem(storageKey);
 
+      if (result.data?.challenge) {
+        completionBody.textContent =
+          `Weekly challenge time: ${result.data.challenge.time} · #${result.data.challenge.rank} this week.`;
+      }
+
       if (result.data?.rewardGranted) {
         userState.balance = Number(result.data.balance || 0);
 

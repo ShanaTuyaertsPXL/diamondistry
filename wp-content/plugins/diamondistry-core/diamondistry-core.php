@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.20.0
+ * Version: 0.21.0
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.20.0' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.21.0' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -34,6 +34,8 @@ require_once DIAMONDISTRY_CORE_PATH . 'includes/account.php';
 require_once DIAMONDISTRY_CORE_PATH . 'includes/faq.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/unlocks.php';
+
+require_once DIAMONDISTRY_CORE_PATH . 'includes/challenge.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/privacy.php';
 
@@ -473,6 +475,9 @@ function diamondistry_render_playground() {
 						<li><?php echo esc_html( $data['width'] . ' × ' . $data['height'] ); ?> diamonds</li>
 						<li><?php echo esc_html( count( $data['palette'] ) ); ?> colours</li>
 						<li class="is-reward"><?php echo esc_html( number_format_i18n( $data['reward'] ) ); ?> 💎 reward</li>
+						<?php if ( function_exists( 'diamondistry_is_current_challenge' ) && diamondistry_is_current_challenge( $painting->ID ) ) : ?>
+							<li class="is-challenge"><a href="<?php echo esc_url( home_url( '/challenge/' ) ); ?>">🏆 Weekly challenge</a></li>
+						<?php endif; ?>
 					</ul>
 				<?php endif; ?>
 			</div>

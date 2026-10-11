@@ -329,6 +329,16 @@
 }
 /* Progress always sits at the bottom so cards line up with or without a category. */
 .diamondistry-painting-card-progress { margin-top: auto; padding-top: 12px; }
+.diamondistry-painting-card-challenge {
+  align-self: flex-start;
+  margin: 8px 0 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff4dc;
+  color: #8a5a00;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
 .diamondistry-painting-card h3 { margin: 0; font-size: 1rem; line-height: 1.3; }
 .diamondistry-painting-card h3 a { color: inherit; text-decoration: none; }
 .diamondistry-painting-card-category {

@@ -221,7 +221,8 @@ function diamondistry_render_painting_editor( $post ) {
 		true
 	);
 
-	$unlock_cost = absint( get_post_meta( $post->ID, '_diamondistry_unlock_cost', true ) );
+	$unlock_cost     = absint( get_post_meta( $post->ID, '_diamondistry_unlock_cost', true ) );
+	$challenge_start = (string) get_post_meta( $post->ID, '_diamondistry_challenge_start', true );
 
 	$shape = get_post_meta(
 		$post->ID,
@@ -366,6 +367,23 @@ function diamondistry_render_painting_editor( $post ) {
 					aria-describedby="diamondistry_unlock_cost_hint"
 				>
 				<p class="description" id="diamondistry_unlock_cost_hint">Diamonds a player spends to unlock it. 0 = free.</p>
+
+			</div>
+
+			<div class="diamondistry-admin-field">
+
+				<label for="diamondistry_challenge_start">
+					Weekly challenge
+				</label>
+
+				<input
+					type="date"
+					id="diamondistry_challenge_start"
+					name="diamondistry_challenge_start"
+					value="<?php echo esc_attr( $challenge_start ); ?>"
+					aria-describedby="diamondistry_challenge_start_hint"
+				>
+				<p class="description" id="diamondistry_challenge_start_hint">Week starting on this date (7 days). Free for everyone that week. Leave empty if not a challenge.</p>
 
 			</div>
 
@@ -706,6 +724,13 @@ function diamondistry_save_painting( $post_id ) {
 		'_diamondistry_unlock_cost',
 		isset( $_POST['diamondistry_unlock_cost'] ) ? absint( $_POST['diamondistry_unlock_cost'] ) : 0
 	);
+
+	$challenge_start = isset( $_POST['diamondistry_challenge_start'] ) ? sanitize_text_field( wp_unslash( $_POST['diamondistry_challenge_start'] ) ) : '';
+	if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $challenge_start ) ) {
+		update_post_meta( $post_id, '_diamondistry_challenge_start', $challenge_start );
+	} else {
+		delete_post_meta( $post_id, '_diamondistry_challenge_start' );
+	}
 
 	$shape = isset( $_POST['diamondistry_shape'] ) ? sanitize_key( wp_unslash( $_POST['diamondistry_shape'] ) ) : 'square';
 

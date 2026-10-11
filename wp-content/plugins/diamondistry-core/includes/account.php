@@ -23,11 +23,13 @@ function diamondistry_account_pages() {
 		'login'        => 'Log in',
 		'register'     => 'Create account',
 		'account'      => 'My account',
+		'challenge'    => 'Weekly challenge',
 	);
 }
 
 function diamondistry_ensure_account_pages() {
-	if ( '1' === get_option( 'diamondistry_pages_seeded' ) ) {
+	// Bump when a page is added: only missing pages are created.
+	if ( '2' === get_option( 'diamondistry_pages_seeded' ) ) {
 		return;
 	}
 
@@ -46,7 +48,7 @@ function diamondistry_ensure_account_pages() {
 		);
 	}
 
-	update_option( 'diamondistry_pages_seeded', '1', false );
+	update_option( 'diamondistry_pages_seeded', '2', false );
 }
 
 add_action( 'init', 'diamondistry_ensure_account_pages', 30 );
@@ -506,6 +508,10 @@ function diamondistry_handle_profile() {
 		DIAMONDISTRY_TAGLINE_META_KEY,
 		mb_substr( diamondistry_post_field( 'tagline' ), 0, DIAMONDISTRY_TAGLINE_MAX )
 	);
+
+	if ( defined( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY' ) ) {
+		update_user_meta( $user->ID, DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY, empty( $_POST['leaderboard_hidden'] ) ? 0 : 1 ); // phpcs:ignore WordPress.Security.NonceVerification -- checked in dispatcher.
+	}
 
 	$updated = empty( $_POST['dd_avatar_remove'] ) ? 'profile' : 'photo-removed'; // phpcs:ignore WordPress.Security.NonceVerification -- checked in dispatcher.
 	wp_safe_redirect( diamondistry_page_url( 'account', array( 'updated' => $updated ) ) );
@@ -1151,6 +1157,9 @@ function diamondistry_render_account() {
 						)
 					);
 					?>
+					<?php if ( defined( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY' ) ) : ?>
+						<label class="dd-check"><input type="checkbox" name="leaderboard_hidden" value="1" <?php checked( (bool) get_user_meta( $user->ID, DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY, true ) ); ?>> Hide my name and photo on leaderboards</label>
+					<?php endif; ?>
 					<button class="dd-button dd-button-primary" type="submit">Save profile</button>
 				</form>
 			</section>

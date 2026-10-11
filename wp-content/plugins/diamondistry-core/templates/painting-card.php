@@ -79,6 +79,10 @@ if ( $is_locked ) {
 			<p class="diamondistry-painting-card-category"><?php echo esc_html( $category_label ); ?></p>
 		<?php endif; ?>
 
+		<?php if ( function_exists( 'diamondistry_is_current_challenge' ) && diamondistry_is_current_challenge( $painting->ID ) ) : ?>
+			<p class="diamondistry-painting-card-challenge">🏆 Weekly challenge</p>
+		<?php endif; ?>
+
 		<div class="diamondistry-painting-card-progress">
 			<div class="diamondistry-painting-card-progress-track">
 				<div class="diamondistry-painting-card-progress-bar" style="width: <?php echo esc_attr( $percentage ); ?>%;"></div>

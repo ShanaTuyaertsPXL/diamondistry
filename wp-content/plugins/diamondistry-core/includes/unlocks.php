@@ -58,6 +58,11 @@ function diamondistry_user_can_play( $user_id, $painting ) {
 		return true;
 	}
 
+	// The weekly challenge painting is free for everyone during its week.
+	if ( function_exists( 'diamondistry_is_current_challenge' ) && diamondistry_is_current_challenge( $painting_id ) ) {
+		return true;
+	}
+
 	if ( ! $user_id ) {
 		return false;
 	}
