@@ -160,6 +160,17 @@ function diamondistry_theme_social_meta() {
 }
 add_action( 'wp_head', 'diamondistry_theme_social_meta', 5 );
 
+// Block templates print their own <title> next to the one Yoast prints: keep Yoast's.
+add_action(
+	'wp_head',
+	function () {
+		if ( defined( 'WPSEO_VERSION' ) ) {
+			remove_action( 'wp_head', '_block_template_render_title_tag', 1 );
+		}
+	},
+	0
+);
+
 /*
  * With Yoast: the play page shows a different painting per ?painting=, which
  * Yoast cannot know, so give it the painting's title, description and URL.
@@ -171,7 +182,7 @@ add_filter(
 	'wpseo_title',
 	function ( $title ) {
 		$painting = diamondistry_theme_play_painting();
-		return $painting ? get_the_title( $painting ) . ' - Play this diamond painting | Diamondistry' : $title;
+		return $painting ? sprintf( 'Play %s, a diamond painting | Diamondistry', get_the_title( $painting ) ) : $title;
 	}
 );
 add_filter( 'wpseo_opengraph_title', fn( $title ) => diamondistry_theme_play_painting() ? wp_get_document_title() : $title );
@@ -187,6 +198,25 @@ foreach ( array( 'wpseo_canonical', 'wpseo_opengraph_url' ) as $diamondistry_fil
 		}
 	);
 }
+
+/** Each painting has its own play URL (and title and description): list them in Yoast's page sitemap. */
+add_filter(
+	'wpseo_sitemap_page_content',
+	function ( $xml ) {
+		$play = get_page_by_path( 'play' );
+		if ( ! $play ) {
+			return $xml;
+		}
+		foreach ( get_posts( array( 'post_type' => 'ddp_painting', 'post_status' => 'publish', 'posts_per_page' => -1 ) ) as $painting ) {
+			$xml .= sprintf(
+				"<url><loc>%s</loc><lastmod>%s</lastmod></url>\n",
+				esc_url( add_query_arg( 'painting', $painting->post_name, get_permalink( $play ) ) ),
+				esc_html( get_post_modified_time( 'c', true, $painting ) )
+			);
+		}
+		return $xml;
+	}
+);
 
 /** Account pages are personal: keep them out of search results. */
 add_filter(
