@@ -97,3 +97,10 @@
   color: var(--dd-muted);
   text-align: center;
 }
+
+// Login and register stay flat: no glow on focused fields, no shadow under the buttons.
+.dd-auth .dd-field__input:focus,
+.dd-auth .dd-button,
+.dd-auth .dd-button:hover {
+  box-shadow: none;
+}
