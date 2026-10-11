@@ -35,9 +35,11 @@ if ( $is_locked ) {
 	data-total="<?php echo esc_attr( $state['total'] ); ?>"
 	data-title="<?php echo esc_attr( get_the_title( $painting ) ); ?>"
 	data-categories="<?php echo esc_attr( $category_slugs ); ?>"
+	data-price="<?php echo $unlock_cost && ! ( function_exists( 'diamondistry_is_current_challenge' ) && diamondistry_is_current_challenge( $painting->ID ) ) ? 'premium' : 'free'; ?>"
 >
 	<div class="diamondistry-painting-card-preview<?php echo $cover_url ? ' has-cover' : ''; ?>">
-		<a class="diamondistry-painting-card-media" href="<?php echo esc_url( $play_url ); ?>">
+		<?php // Same target as the title link, which carries the name, so keep it out of the tab order and screen readers. ?>
+		<a class="diamondistry-painting-card-media" href="<?php echo esc_url( $play_url ); ?>" tabindex="-1" aria-hidden="true">
 			<?php if ( $cover_url ) : ?>
 				<img class="diamondistry-painting-card-cover" src="<?php echo esc_url( $cover_url ); ?>" alt="">
 			<?php else : ?>
@@ -59,9 +61,10 @@ if ( $is_locked ) {
 
 		<?php if ( $is_locked ) : ?>
 			<span class="diamondistry-painting-card-lock">
-				<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-				<?php echo esc_html( number_format_i18n( $unlock_cost ) ); ?> 💎
-				<span class="screen-reader-text">to unlock</span>
+				<svg class="diamondistry-painting-card-lock-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>
+				<span class="diamondistry-painting-card-lock-price"><?php echo esc_html( number_format_i18n( $unlock_cost ) ); ?></span>
+				<span class="dd-gem" aria-hidden="true"></span>
+				<span class="screen-reader-text">diamonds to unlock</span>
 			</span>
 		<?php endif; ?>
 
@@ -79,6 +82,10 @@ if ( $is_locked ) {
 			<p class="diamondistry-painting-card-category"><?php echo esc_html( $category_label ); ?></p>
 		<?php endif; ?>
 
+		<?php if ( function_exists( 'diamondistry_is_current_challenge' ) && diamondistry_is_current_challenge( $painting->ID ) ) : ?>
+			<p class="diamondistry-painting-card-challenge">🏆 Weekly challenge</p>
+		<?php endif; ?>
+
 		<div class="diamondistry-painting-card-progress">
 			<div class="diamondistry-painting-card-progress-track">
 				<div class="diamondistry-painting-card-progress-bar" style="width: <?php echo esc_attr( $percentage ); ?>%;"></div>
@@ -93,7 +100,12 @@ if ( $is_locked ) {
 		<?php endif; ?>
 
 		<?php if ( $show_action ) : ?>
-			<a class="diamondistry-painting-card-action" href="<?php echo esc_url( $play_url ); ?>"><span class="diamondistry-painting-card-action-label"><?php echo esc_html( $action_label ); ?></span> <span class="diamondistry-painting-card-action-arrow" aria-hidden="true">→</span></a>
+			<div class="diamondistry-painting-card-actions">
+				<a class="diamondistry-painting-card-action" href="<?php echo esc_url( $play_url ); ?>"><span class="diamondistry-painting-card-action-label"><?php echo esc_html( $action_label ); ?></span> <span class="diamondistry-painting-card-action-arrow" aria-hidden="true">→</span></a>
+				<?php if ( 'completed' === $status ) : ?>
+					<a class="diamondistry-painting-card-download" href="<?php echo esc_url( $play_url . '#download' ); ?>">Download</a>
+				<?php endif; ?>
+			</div>
 		<?php endif; ?>
 	</div>
 </article>

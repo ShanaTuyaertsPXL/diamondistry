@@ -564,10 +564,104 @@
     bootPreviews(document);
   }
 
+  /*
+   * Finished painting as a branded poster for download: the board in faceted
+   * drills, with logo, title and date underneath. Returns a <canvas>.
+   */
+  function renderPoster(data, options) {
+    const opts = options || {};
+    const cols = Number(data.width) || 1;
+    const rows = Number(data.height) || 1;
+    const shape = data.shape === "round" ? "round" : "square";
+    const palette = Array.isArray(data.palette)
+      ? Object.fromEntries(data.palette.map((color) => [Number(color.id), color.hex]))
+      : data.palette || {};
+
+    const cell = Math.max(12, Math.min(48, Math.floor(1600 / Math.max(cols, rows))));
+    const boardPad = Math.round(cell * 0.6);
+    const boardW = cols * cell + boardPad * 2;
+    const boardH = rows * cell + boardPad * 2;
+    const margin = 96;
+    const footer = 150;
+    const width = Math.max(boardW + margin * 2, 900);
+    const height = boardH + margin * 2 + footer;
+
+    // Rendered at 2x so even small paintings print sharp; drawStone follows the transform.
+    const scale = 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+    const bg = ctx.createLinearGradient(0, 0, width, height);
+    bg.addColorStop(0, "#ffffff");
+    bg.addColorStop(1, "#f3effd");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    // Board tray with a soft shadow.
+    const boardX = Math.round((width - boardW) / 2);
+    const boardY = margin;
+    ctx.save();
+    ctx.shadowColor = "rgba(40, 30, 80, 0.16)";
+    ctx.shadowBlur = 40;
+    ctx.shadowOffsetY = 16;
+    roundRect(ctx, boardX, boardY, boardW, boardH, 28);
+    ctx.fillStyle = "#e4e2ec";
+    ctx.fill();
+    ctx.restore();
+
+    const drill = cell * 0.9;
+    const inset = (cell - drill) / 2;
+    const radius = Math.min(3, drill * 0.1);
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const hex = palette[Number(data.pattern[row * cols + col])] || "#eeeeee";
+        drawStone(ctx, boardX + boardPad + col * cell + inset, boardY + boardPad + row * cell + inset, drill, shape, radius, hex);
+      }
+    }
+
+    // Footer: logo left, small purple eyebrow + title right; logo and title share one baseline.
+    const footerMid = boardY + boardH + margin * 0.6 + 36;
+    const baseline = footerMid + 30;
+    const left = Math.max(margin, boardX);
+    const right = width - left;
+    if (opts.logo && opts.logo.naturalWidth) {
+      const logoH = 64;
+      const logoW = (opts.logo.naturalWidth / opts.logo.naturalHeight) * logoH;
+      // +20: the logo file has padding under its wordmark; this puts the wordmark on the title's baseline.
+      ctx.drawImage(opts.logo, left, baseline - logoH + 20, logoW, logoH);
+    } else {
+      ctx.fillStyle = "#1c2144";
+      ctx.font = "800 40px Nunito, Arial, sans-serif";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(opts.siteName || "Diamondistry", left, baseline);
+    }
+
+    ctx.textAlign = "right";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#6e4df6";
+    ctx.font = "800 15px Nunito, Arial, sans-serif";
+    if ("letterSpacing" in ctx) {
+      ctx.letterSpacing = "2px";
+    }
+    ctx.fillText(String(opts.subtitle || "").toUpperCase(), right, footerMid - 12);
+    if ("letterSpacing" in ctx) {
+      ctx.letterSpacing = "0px";
+    }
+    ctx.fillStyle = "#1c2144";
+    ctx.font = "600 36px Fraunces, Georgia, serif";
+    ctx.fillText(opts.title || "", right, baseline);
+
+    return canvas;
+  }
+
   global.DiamondistryGrid = {
     createViewport,
     paintPreview,
     previewData,
     bootPreviews,
+    renderPoster,
   };
 })(window);

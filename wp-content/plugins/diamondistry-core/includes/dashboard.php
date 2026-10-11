@@ -78,7 +78,7 @@ function diamondistry_render_dashboard() {
 			<div class="diamondistry-dashboard-login">
 
 				<div class="diamondistry-dashboard-login-icon">
-					💎
+					<?php echo diamondistry_gem(); ?>
 				</div>
 
 				<h1>
@@ -347,7 +347,7 @@ function diamondistry_render_dashboard() {
 
 	<div class="diamondistry-dashboard">
 
-		<div class="diamondistry-dashboard-top">
+		<div class="diamondistry-dashboard-top" data-animate="stagger">
 			<div class="diamondistry-dashboard-welcome">
 				<span class="diamondistry-dashboard-avatar"><?php echo get_avatar( $user->ID, 96 ); ?></span>
 				<div>
@@ -364,7 +364,7 @@ function diamondistry_render_dashboard() {
 			</div>
 		</div>
 
-		<div class="diamondistry-dashboard-layout">
+		<div class="diamondistry-dashboard-layout" data-animate="fade-up">
 			<div>
 				<div class="diamondistry-dashboard-tabs" role="tablist">
 					<button type="button" class="is-active" role="tab" aria-selected="true" data-dashboard-tab="progress">In progress <span class="diamondistry-dashboard-tab-count"><?php echo esc_html( $total_in_progress ); ?></span></button>

@@ -251,6 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const search = document.getElementById("diamondistry-gallery-search");
   const filters = document.querySelectorAll(".diamondistry-filters [data-filter]");
+  const priceButtons = document.querySelectorAll(".diamondistry-price-toggle [data-price]");
   const empty = document.querySelector(".diamondistry-gallery-empty");
   const galleryCards = document.querySelectorAll(".diamondistry-painting-card--gallery");
 
@@ -259,89 +260,171 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let activeFilter = "all";
+  let activePrice = "all";
   const gallery = document.querySelector(".diamondistry-gallery");
   const motionOk = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (gallery && motionOk) {
-    gallery.classList.add("is-booting");
-    galleryCards.forEach((card, index) => {
-      card.style.transitionDelay = `${Math.min(index, 10) * 45}ms`;
-    });
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => gallery.classList.remove("is-booting"));
-    });
+  // Cards fade up as they scroll into view, like the site's other reveals; a row staggers in.
+  // The theme hides unshown cards before first paint (html.dd-anim), so the first row animates too.
+  if (gallery && motionOk && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries
+          .filter((entry) => entry.isIntersecting)
+          .forEach((entry, i) => {
+            const card = entry.target;
+            observer.unobserve(card);
+            card.style.transitionDelay = `${Math.min(i, 6) * 90}ms`;
+            card.classList.add("is-revealing", "is-shown");
+            window.setTimeout(() => {
+              card.classList.remove("is-revealing");
+              card.style.transitionDelay = "";
+            }, 1500);
+          });
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.1 },
+    );
+    galleryCards.forEach((card) => observer.observe(card));
+  } else {
+    galleryCards.forEach((card) => card.classList.add("is-shown"));
   }
 
-  function revealCard(card) {
-    if (card._hideFinish) {
-      card.removeEventListener("transitionend", card._hideFinish);
-      card._hideFinish = null;
-    }
-    card.hidden = false;
-    card.classList.remove("is-leaving");
-    if (!motionOk) {
-      card.classList.remove("is-entering");
-      return;
-    }
-    card.classList.add("is-entering");
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => card.classList.remove("is-entering"));
-    });
-  }
+  /*
+   * Filtering animates with FLIP: leaving cards are taken out of the grid at once
+   * and fade out where they stood, staying cards glide to their new cell and new
+   * cards fade in, so nothing snaps into place. Running animations are measured
+   * where they are, so quick successive clicks continue smoothly.
+   */
+  const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+  const leaving = new Set();
 
-  function hideCard(card) {
-    if (card.hidden || card.classList.contains("is-leaving")) {
-      return;
-    }
-    if (!motionOk) {
-      card.hidden = true;
-      return;
-    }
-    card.classList.add("is-leaving");
-    const finish = (event) => {
-      if (event.propertyName !== "opacity") {
-        return;
-      }
-      card.hidden = true;
-      card.classList.remove("is-leaving");
-      card.removeEventListener("transitionend", finish);
-      card._hideFinish = null;
-    };
-    card._hideFinish = finish;
-    card.addEventListener("transitionend", finish);
+  function clearLeaving(card) {
+    leaving.delete(card);
+    card.getAnimations().forEach((animation) => animation.cancel());
+    ["position", "top", "left", "width", "height", "zIndex", "pointerEvents"].forEach((prop) => {
+      card.style[prop] = "";
+    });
   }
 
   function applyFilters() {
     const query = (search?.value || "").trim().toLowerCase();
     let visible = 0;
 
+    const matches = new Map();
     galleryCards.forEach((card) => {
-      card.style.transitionDelay = "0ms";
+      card.classList.add("is-shown"); // the user is filtering: no pending scroll reveal anymore
       const title = (card.dataset.title || "").toLowerCase();
       const categories = (card.dataset.categories || "").split(/\s+/).filter(Boolean);
-      const matchesQuery = !query || title.includes(query);
-      const matchesCategory = activeFilter === "all" || categories.includes(activeFilter);
-      const show = matchesQuery && matchesCategory;
-
+      const show =
+        (!query || title.includes(query)) &&
+        (activeFilter === "all" || categories.includes(activeFilter)) &&
+        (activePrice === "all" || card.dataset.price === activePrice);
+      matches.set(card, show);
       if (show) {
         visible += 1;
-        if (card.hidden || card.classList.contains("is-leaving")) {
-          card.classList.remove("is-leaving");
-          revealCard(card);
-        }
-      } else {
-        hideCard(card);
       }
     });
 
     if (empty) {
       empty.classList.toggle("is-visible", visible === 0);
     }
+
+    if (!motionOk || !gallery) {
+      galleryCards.forEach((card) => {
+        clearLeaving(card);
+        card.hidden = !matches.get(card);
+      });
+      return;
+    }
+
+    // First: where every card is on screen right now, mid-animation included.
+    const box = gallery.getBoundingClientRect();
+    const first = new Map();
+    galleryCards.forEach((card) => {
+      if (!card.hidden) {
+        const r = card.getBoundingClientRect();
+        first.set(card, { x: r.left - box.left, y: r.top - box.top, w: r.width, h: r.height, o: parseFloat(getComputedStyle(card).opacity) });
+      }
+    });
+
+    // Apply the new layout.
+    const entering = [];
+    galleryCards.forEach((card) => {
+      const wasVisible = first.has(card) && !leaving.has(card);
+      clearLeaving(card);
+      if (matches.get(card)) {
+        if (!wasVisible) {
+          entering.push(card);
+        }
+        card.hidden = false;
+      } else if (wasVisible || first.has(card)) {
+        // Out of the grid at once, fading where it stood.
+        const f = first.get(card);
+        leaving.add(card);
+        Object.assign(card.style, {
+          position: "absolute",
+          top: `${f.y}px`,
+          left: `${f.x}px`,
+          width: `${f.w}px`,
+          height: `${f.h}px`,
+          zIndex: "0",
+          pointerEvents: "none",
+        });
+      } else {
+        card.hidden = true;
+      }
+    });
+
+    // Last + invert + play.
+    galleryCards.forEach((card) => {
+      if (leaving.has(card)) {
+        const fade = card.animate(
+          [{ opacity: first.get(card).o, transform: "scale(1)" }, { opacity: 0, transform: "scale(0.94)" }],
+          { duration: 220, easing: "ease", fill: "forwards" },
+        );
+        fade.onfinish = () => {
+          clearLeaving(card);
+          card.hidden = true;
+        };
+        return;
+      }
+      if (card.hidden) {
+        return;
+      }
+      if (entering.includes(card)) {
+        card.animate(
+          [{ opacity: 0, transform: "scale(0.94)" }, { opacity: 1, transform: "scale(1)" }],
+          { duration: 420, delay: 120, easing: EASE, fill: "backwards" },
+        );
+        return;
+      }
+      const f = first.get(card);
+      const r = card.getBoundingClientRect();
+      const dx = f.x - (r.left - box.left);
+      const dy = f.y - (r.top - box.top);
+      if (dx || dy) {
+        card.animate(
+          [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "translate(0, 0)" }],
+          { duration: 480, easing: EASE },
+        );
+      }
+    });
   }
 
   if (search) {
     search.addEventListener("input", applyFilters);
   }
+
+  priceButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      activePrice = button.dataset.price || "all";
+      priceButtons.forEach((item) => {
+        item.classList.toggle("is-active", item === button);
+        item.setAttribute("aria-pressed", item === button ? "true" : "false");
+      });
+      applyFilters();
+    });
+  });
 
   filters.forEach((button) => {
     button.addEventListener("click", () => {

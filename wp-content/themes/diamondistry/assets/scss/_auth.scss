@@ -1,3 +1,5 @@
+@use 'base';
+
 /* -------------------------------------------------------
    Auth (login, register)
 ------------------------------------------------------- */
@@ -57,10 +59,16 @@
   font-weight: 700;
 }
 .dd-auth__perks li::before {
-  content: "💎";
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
   margin-right: 10px;
+  vertical-align: -0.14em;
+  background: base.$dd-gem center / contain no-repeat;
 }
 .dd-auth__main {
+  position: relative;
   display: grid;
   place-items: center;
   padding: 40px var(--dd-gutter) 56px;
@@ -85,8 +93,67 @@
 .dd-auth__card > .dd-notice {
   margin: 20px 0 16px;
 }
+.dd-demo-hint {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--dd-purple-soft);
+  color: var(--dd-text);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.dd-demo-hint p {
+  margin: 0;
+}
+.dd-demo-hint__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dd-demo-hint code {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--dd-purple-dark);
+  font-size: 0.85rem;
+}
+.dd-demo-hint .dd-text-button {
+  padding: 0;
+  color: var(--dd-purple);
+}
+.dd-demo-hint .dd-text-button:hover {
+  color: var(--dd-purple-dark);
+}
 .dd-auth__switch {
   margin: 24px 0 0;
   color: var(--dd-muted);
   text-align: center;
+}
+// Pinned to the bottom of the form column, level with the bottom of the image.
+.dd-auth__legal {
+  position: absolute;
+  right: 0;
+  bottom: 16px;
+  left: 0;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1;
+  text-align: center;
+}
+.dd-auth__legal a {
+  color: var(--dd-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.dd-auth__legal a:hover {
+  color: var(--dd-purple);
+}
+
+// Login and register stay flat: no shadow under the buttons.
+.dd-auth .dd-button,
+.dd-auth .dd-button:hover {
+  box-shadow: none;
 }

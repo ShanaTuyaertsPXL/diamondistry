@@ -334,7 +334,7 @@ function diamondistry_get_painting_categories() {
 	$terms = get_terms(
 		array(
 			'taxonomy'   => 'painting_category',
-			'hide_empty' => false,
+			'hide_empty' => true, // a filter without paintings would show an empty grid
 		)
 	);
 

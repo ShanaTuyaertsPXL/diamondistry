@@ -109,6 +109,30 @@
   font-size: 0.92rem;
   line-height: 1.6;
 }
+.dd-account > .dd-notice {
+  margin: 0;
+}
+// Demo account: the forms are inert, so show them as locked.
+.dd-account__grid.is-locked {
+  opacity: 0.55;
+  user-select: none;
+}
 .dd-panel > .dd-notice {
   margin-bottom: 16px;
+}
+
+.dd-panel--danger {
+  border-color: #f6d6df;
+}
+.dd-panel--danger .dd-form {
+  max-width: 420px;
+}
+.dd-button--danger {
+  border: 1px solid #f2b8c8;
+  background: #fff;
+  color: #b4234a;
+}
+.dd-button--danger:hover {
+  background: #fff0f3;
+  color: #9d1c3f;
 }

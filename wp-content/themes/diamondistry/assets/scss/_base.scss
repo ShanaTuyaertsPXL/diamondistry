@@ -87,6 +87,7 @@ input {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    transition-delay: 0s !important;
   }
 }
 
@@ -124,4 +125,15 @@ input {
 /* wp:html + wp:shortcode splits leave empty <p> wrappers behind. */
 .dd-shell p:empty {
   display: none;
+}
+
+// Brand diamond icon (matches the logo), used instead of the 💎 emoji so it looks the same on every OS.
+$dd-gem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%238fdfff' d='M7 4 8.5 9H2.2z'/%3E%3Cpath fill='%23d4f3ff' d='M7 4h5L8.5 9z'/%3E%3Cpath fill='%23fff' d='M12 4 15.5 9h-7z'/%3E%3Cpath fill='%23d9d2ff' d='M12 4h5L15.5 9z'/%3E%3Cpath fill='%23b3a3ff' d='M17 4 21.8 9h-6.3z'/%3E%3Cpath fill='%236fd0ff' d='M2.2 9h3.1L12 20.6z'/%3E%3Cpath fill='%23a9e6ff' d='M5.3 9h3.2L12 20.6z'/%3E%3Cpath fill='%23e6f0ff' d='M8.5 9H12v11.6z'/%3E%3Cpath fill='%23cfc6ff' d='M12 9h3.5L12 20.6z'/%3E%3Cpath fill='%23a796ff' d='M15.5 9h3.2L12 20.6z'/%3E%3Cpath fill='%238a73fb' d='M18.7 9h3.1L12 20.6z'/%3E%3Cpath fill='none' stroke='%234433ee' stroke-width='1.5' stroke-linejoin='round' d='M7 4h10l4.8 5L12 20.6 2.2 9z'/%3E%3C/svg%3E");
+
+.dd-gem {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.14em;
+  background: $dd-gem center / contain no-repeat;
 }

@@ -65,3 +65,15 @@
 .dd-footer__bottom p {
   margin: 0;
 }
+.dd-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+.dd-footer__bottom a {
+  color: inherit;
+  text-decoration: none;
+}
+.dd-footer__bottom a:hover {
+  color: var(--dd-purple);
+}

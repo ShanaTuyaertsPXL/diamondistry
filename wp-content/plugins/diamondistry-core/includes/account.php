@@ -23,11 +23,13 @@ function diamondistry_account_pages() {
 		'login'        => 'Log in',
 		'register'     => 'Create account',
 		'account'      => 'My account',
+		'challenge'    => 'Weekly challenge',
 	);
 }
 
 function diamondistry_ensure_account_pages() {
-	if ( '1' === get_option( 'diamondistry_pages_seeded' ) ) {
+	// Bump when a page is added: only missing pages are created.
+	if ( '2' === get_option( 'diamondistry_pages_seeded' ) ) {
 		return;
 	}
 
@@ -46,7 +48,7 @@ function diamondistry_ensure_account_pages() {
 		);
 	}
 
-	update_option( 'diamondistry_pages_seeded', '1', false );
+	update_option( 'diamondistry_pages_seeded', '2', false );
 }
 
 add_action( 'init', 'diamondistry_ensure_account_pages', 30 );
@@ -226,7 +228,8 @@ function diamondistry_render_form_messages( $form ) {
 
 /** Strip whitespace between tags so wpautop cannot inject <p>/<br> into shortcode output. */
 function diamondistry_compact_html( $html ) {
-	return trim( preg_replace( '/>\s+</', '><', $html ) );
+	// Newlines inside tags (multi-line attributes) also make wpautop add <p>, so fold them too.
+	return trim( preg_replace( array( '/\s*\n\s*/', '/>\s+</' ), array( ' ', '><' ), $html ) );
 }
 
 function diamondistry_post_field( $key ) {
@@ -288,6 +291,7 @@ function diamondistry_handle_account_forms() {
 		'resetpass'    => 'diamondistry_handle_resetpass',
 		'profile'      => 'diamondistry_handle_profile',
 		'password'     => 'diamondistry_handle_password',
+		'delete'       => 'diamondistry_handle_delete_account',
 	);
 
 	if ( ! isset( $handlers[ $form ] ) ) {
@@ -295,7 +299,13 @@ function diamondistry_handle_account_forms() {
 	}
 
 	// Profile forms are only valid for a logged in user.
-	if ( in_array( $form, array( 'profile', 'password' ), true ) && ! is_user_logged_in() ) {
+	if ( in_array( $form, array( 'profile', 'password', 'delete' ), true ) && ! is_user_logged_in() ) {
+		return;
+	}
+
+	// The shared demo account keeps its settings, so the next visitor can still log in.
+	if ( in_array( $form, array( 'profile', 'password', 'delete' ), true ) && diamondistry_is_demo_user() ) {
+		diamondistry_form_error( $form, 'Settings are locked on the shared demo account.' );
 		return;
 	}
 
@@ -506,6 +516,10 @@ function diamondistry_handle_profile() {
 		mb_substr( diamondistry_post_field( 'tagline' ), 0, DIAMONDISTRY_TAGLINE_MAX )
 	);
 
+	if ( defined( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY' ) ) {
+		update_user_meta( $user->ID, DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY, empty( $_POST['leaderboard_hidden'] ) ? 0 : 1 ); // phpcs:ignore WordPress.Security.NonceVerification -- checked in dispatcher.
+	}
+
 	$updated = empty( $_POST['dd_avatar_remove'] ) ? 'profile' : 'photo-removed'; // phpcs:ignore WordPress.Security.NonceVerification -- checked in dispatcher.
 	wp_safe_redirect( diamondistry_page_url( 'account', array( 'updated' => $updated ) ) );
 	exit;
@@ -657,6 +671,72 @@ function diamondistry_filter_avatar_data( $args, $id_or_email ) {
 
 add_filter( 'pre_get_avatar_data', 'diamondistry_filter_avatar_data', 10, 2 );
 
+/**
+ * No Gravatar: anyone without an uploaded photo gets an inline SVG with their
+ * initials, so no email hash ever leaves the site (privacy).
+ */
+function diamondistry_initials_avatar( $avatar, $id_or_email, $args ) {
+	$user = false;
+
+	if ( is_numeric( $id_or_email ) ) {
+		$user = get_user_by( 'id', (int) $id_or_email );
+	} elseif ( $id_or_email instanceof WP_User ) {
+		$user = $id_or_email;
+	} elseif ( $id_or_email instanceof WP_Post ) {
+		$user = get_user_by( 'id', (int) $id_or_email->post_author );
+	} elseif ( $id_or_email instanceof WP_Comment ) {
+		$user = $id_or_email->user_id ? get_user_by( 'id', (int) $id_or_email->user_id ) : false;
+	} elseif ( is_string( $id_or_email ) && is_email( $id_or_email ) ) {
+		$user = get_user_by( 'email', $id_or_email );
+	}
+
+	// Uploaded photo: let WordPress build the normal <img> via pre_get_avatar_data.
+	if ( $user && get_user_meta( $user->ID, DIAMONDISTRY_AVATAR_META_KEY, true ) ) {
+		return $avatar;
+	}
+
+	$name     = $user ? $user->display_name : '';
+	$words    = preg_split( '/\s+/u', trim( (string) preg_replace( '/[^\p{L}\p{N}\s]/u', '', $name ) ) );
+	$initials = '';
+	foreach ( array_slice( array_filter( $words ), 0, 2 ) as $word ) {
+		$initials .= mb_strtoupper( mb_substr( $word, 0, 1 ) );
+	}
+
+	$palettes = array(
+		array( '#8f74ff', '#6e4df6' ),
+		array( '#ff8fb8', '#ff5f93' ),
+		array( '#7fb6ff', '#5f9df7' ),
+		array( '#5fd39b', '#3cba7a' ),
+		array( '#ffb877', '#f08a3c' ),
+	);
+	$colors = $palettes[ ( $user ? $user->ID : 0 ) % count( $palettes ) ];
+	$size   = (int) $args['size'];
+
+	$svg = sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%1$s"/><stop offset="1" stop-color="%2$s"/></linearGradient></defs><rect width="64" height="64" fill="url(#g)"/>%3$s</svg>',
+		$colors[0],
+		$colors[1],
+		'' === $initials
+			// No letters to show: a white brand diamond instead.
+			? '<g transform="translate(16 15) scale(1.333)" fill="#fff"><path d="M7 3.5h10L22 9H2z"/><path fill-opacity=".8" d="M2 9h10v12z"/><path fill-opacity=".6" d="M12 9h10L12 21z"/></g>'
+			: sprintf(
+				'<text x="32" y="32" dy=".35em" text-anchor="middle" font-family="Nunito, Arial, sans-serif" font-weight="800" font-size="%d" fill="#fff">%s</text>',
+				mb_strlen( $initials ) > 1 ? 24 : 28,
+				htmlspecialchars( $initials, ENT_XML1 )
+			)
+	);
+
+	return sprintf(
+		'<img alt="%1$s" src="%2$s" class="%3$s" width="%4$d" height="%4$d" decoding="async">',
+		esc_attr( $args['alt'] ),
+		esc_attr( 'data:image/svg+xml;charset=utf-8,' . rawurlencode( $svg ) ),
+		esc_attr( trim( 'avatar avatar-' . $size . ' photo ' . ( is_array( $args['class'] ) ? implode( ' ', $args['class'] ) : (string) $args['class'] ) ) ),
+		$size
+	);
+}
+
+add_filter( 'pre_get_avatar', 'diamondistry_initials_avatar', 10, 3 );
+
 // Deleting a user also removes their uploaded photo.
 add_action( 'delete_user', 'diamondistry_delete_user_avatar' );
 
@@ -741,6 +821,8 @@ function diamondistry_render_login() {
 		$notice = '<div class="dd-notice dd-notice--success" role="status">If an account matches, a reset link is on its way to your inbox.</div>';
 	} elseif ( isset( $_GET['password'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 		$notice = '<div class="dd-notice dd-notice--success" role="status">Your password has been changed. You can log in now.</div>';
+	} elseif ( isset( $_GET['account'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		$notice = '<div class="dd-notice dd-notice--success" role="status">Your account and all its data have been deleted.</div>';
 	}
 
 	ob_start();
@@ -749,6 +831,7 @@ function diamondistry_render_login() {
 		<h1 class="dd-auth__title">Welcome back</h1>
 		<p class="dd-auth__lead">Log in to continue your paintings and collect your diamonds.</p>
 		<?php echo $notice; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static markup. ?>
+		<?php echo diamondistry_render_demo_login_hint(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
 		<?php echo diamondistry_form_open( 'login', '<input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '">' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<?php
 			echo diamondistry_field( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -775,6 +858,7 @@ function diamondistry_render_login() {
 			<button class="dd-button dd-button-primary dd-button--block" type="submit">Log in</button>
 		</form>
 		<p class="dd-auth__switch">New here? <a class="dd-link" href="<?php echo esc_url( wp_registration_url() ); ?>">Create an account</a></p>
+		<?php echo diamondistry_auth_privacy_link(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
 	</div>
 	<?php
 	return ob_get_clean();
@@ -807,6 +891,7 @@ function diamondistry_render_lostpassword() {
 			<button class="dd-button dd-button-primary dd-button--block" type="submit">Send reset link</button>
 		</form>
 		<p class="dd-auth__switch"><a class="dd-link" href="<?php echo esc_url( wp_login_url() ); ?>">← Back to log in</a></p>
+		<?php echo diamondistry_auth_privacy_link(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
 	</div>
 	<?php
 	return ob_get_clean();
@@ -900,10 +985,14 @@ function diamondistry_render_register() {
 					<label for="dd-website">Website</label>
 					<input id="dd-website" name="website" type="text" tabindex="-1" autocomplete="off">
 				</div>
+				<?php if ( get_privacy_policy_url() ) : ?>
+					<p class="dd-field__hint">By creating an account you agree to our <a class="dd-link" href="<?php echo esc_url( get_privacy_policy_url() ); ?>">privacy policy</a>.</p>
+				<?php endif; ?>
 				<button class="dd-button dd-button-primary dd-button--block" type="submit">Create account</button>
 			</form>
 		<?php endif; ?>
 		<p class="dd-auth__switch">Already have an account? <a class="dd-link" href="<?php echo esc_url( wp_login_url() ); ?>">Log in</a></p>
+		<?php echo diamondistry_auth_privacy_link(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
 	</div>
 	<?php
 	return ob_get_clean();
@@ -970,7 +1059,7 @@ function diamondistry_render_account() {
 	ob_start();
 	?>
 	<div class="dd-account">
-		<header class="dd-account__head">
+		<header class="dd-account__head" data-animate="fade-up">
 			<span class="dd-account__avatar"><?php echo get_avatar( $user->ID, 160 ); ?></span>
 			<div class="dd-account__who">
 				<p class="dd-eyebrow">My account</p>
@@ -983,7 +1072,7 @@ function diamondistry_render_account() {
 			</div>
 		</header>
 
-		<ul class="dd-account__stats">
+		<ul class="dd-account__stats" data-animate="stagger">
 			<?php foreach ( $stats as $stat ) : ?>
 				<li class="dd-stat <?php echo esc_attr( $stat[2] ); ?>">
 					<strong class="dd-stat__value"><?php echo esc_html( $stat[1] ); ?></strong>
@@ -992,7 +1081,11 @@ function diamondistry_render_account() {
 			<?php endforeach; ?>
 		</ul>
 
-		<div class="dd-account__grid">
+		<?php if ( diamondistry_is_demo_user() ) : ?>
+			<div class="dd-notice dd-notice--info" role="status">This is the shared demo account: play as much as you like, but its settings are locked.</div>
+		<?php endif; ?>
+
+		<div data-animate="fade-up" class="dd-account__grid<?php echo diamondistry_is_demo_user() ? ' is-locked" inert' : '"'; ?>>
 			<section class="dd-panel" aria-labelledby="dd-profile-title">
 				<h2 class="dd-panel__title" id="dd-profile-title">Profile</h2>
 				<p class="dd-panel__lead">Your photo, name and the line shown on your dashboard.</p>
@@ -1082,7 +1175,10 @@ function diamondistry_render_account() {
 						)
 					);
 					?>
-					<button class="dd-button dd-button-primary" type="submit">Save profile</button>
+					<?php if ( defined( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY' ) ) : ?>
+						<div class="dd-form__row"><label class="dd-check"><input type="checkbox" name="leaderboard_hidden" value="1" <?php checked( (bool) get_user_meta( $user->ID, DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY, true ) ); ?>> Hide my name and photo on leaderboards</label></div>
+					<?php endif; ?>
+					<button class="dd-button dd-button-primary" type="submit">Save profile <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M7 3v5h8V3"/><rect x="7" y="13" width="10" height="8" rx="1"/></svg></button>
 				</form>
 			</section>
 
@@ -1123,9 +1219,11 @@ function diamondistry_render_account() {
 				</form>
 			</section>
 		</div>
+
+		<?php echo function_exists( 'diamondistry_render_delete_account_panel' ) ? diamondistry_render_delete_account_panel() : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</div>
 	<?php
-	return ob_get_clean();
+	return diamondistry_compact_html( ob_get_clean() );
 }
 
 add_shortcode(
@@ -1134,3 +1232,9 @@ add_shortcode(
 		return diamondistry_compact_html( diamondistry_render_account() );
 	}
 );
+
+/** Small privacy link under the login, register and password forms, once the page is published. */
+function diamondistry_auth_privacy_link() {
+	$url = get_privacy_policy_url();
+	return $url ? '<p class="dd-auth__legal"><a href="' . esc_url( $url ) . '">Privacy policy</a></p>' : '';
+}

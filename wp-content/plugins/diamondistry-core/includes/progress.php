@@ -110,6 +110,13 @@ function diamondistry_begin_progress_write( $user_id ) {
 		)
 	);
 
+	/*
+	 * The user's meta was usually cached earlier in this request (auth cookie,
+	 * nonce check). Read it fresh now that we hold the lock, or a parallel
+	 * request that committed while we waited gets overwritten with stale data.
+	 */
+	wp_cache_delete( absint( $user_id ), 'user_meta' );
+
 	return true;
 }
 
@@ -228,7 +235,10 @@ function diamondistry_get_user_balance( $user_id ) {
 	);
 }
 
+/** Call inside diamondistry_begin_progress_write() when other writes can race. */
 function diamondistry_add_user_diamonds( $user_id, $amount ) {
+	wp_cache_delete( absint( $user_id ), 'user_meta' );
+
 	$amount  = max( 0, absint( $amount ) );
 	$current = diamondistry_get_user_balance( $user_id );
 	$new     = $current + $amount;
@@ -348,13 +358,44 @@ function diamondistry_ajax_save_progress() {
 	 * remains at 100%. Resetting progress first allows the reward to be earned
 	 * again on a later genuine completion.
 	 */
-	if ( $is_completed && ! $was_completed && ! $reward_claimed ) {
+
+	$new_revision = $current_revision + 1;
+	$now          = time();
+
+	// Timing for the weekly challenge: first diamond to last diamond.
+	$started_at = ! empty( $old_progress['startedAt'] ) && ! empty( $old_completed_cells ) ? absint( $old_progress['startedAt'] ) : 0;
+	if ( ! $started_at && ! empty( $completed_cells ) ) {
+		$started_at = $now;
+	}
+	$completed_at = $was_completed && ! empty( $old_progress['completedAt'] ) ? absint( $old_progress['completedAt'] ) : 0;
+	if ( $is_completed && ! $was_completed ) {
+		$completed_at = $now;
+	}
+
+	// Anti-cheat: flag the attempt when one save adds more diamonds than a human could.
+	$last_save_at = ! empty( $old_progress['lastSaveAt'] ) ? absint( $old_progress['lastSaveAt'] ) : $now;
+	$added_cells  = count( array_diff( $completed_cells, $old_completed_cells ) );
+	$implausible  = ! empty( $old_completed_cells ) && ! empty( $old_progress['implausible'] );
+	$first_save   = empty( $old_completed_cells ) || empty( $old_progress['lastSaveAt'] );
+	if ( function_exists( 'diamondistry_challenge_save_is_plausible' ) && ! diamondistry_challenge_save_is_plausible( $added_cells, $now - $last_save_at, $first_save ) ) {
+		$implausible = true;
+	}
+
+	/*
+	 * Diamonds buy unlocks, so the reward also needs a humanly plausible finish
+	 * (no bursts, and at least the minimum time per diamond). Bulk-transferred
+	 * guest progress therefore completes without a reward, as the guest note says.
+	 */
+	$fair_finish = ! $implausible && (
+		! defined( 'DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL' ) ||
+		( $completed_at - $started_at ) >= $data['totalCells'] * DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL
+	);
+
+	if ( $is_completed && ! $was_completed && ! $reward_claimed && $fair_finish ) {
 		diamondistry_add_user_diamonds( $user_id, $data['reward'] );
 		$reward_claimed = true;
 		$reward_granted = true;
 	}
-
-	$new_revision = $current_revision + 1;
 
 	$all_progress[ $key ] = array(
 		'completedCells' => $completed_cells,
@@ -362,11 +403,20 @@ function diamondistry_ajax_save_progress() {
 		'completed'      => $is_completed,
 		'rewardClaimed'  => $reward_claimed,
 		'lastWorkedAt'   => $last_worked_at,
+		'startedAt'      => $started_at ?: null,
+		'completedAt'    => $completed_at ?: null,
+		'lastSaveAt'     => $now,
+		'implausible'    => $implausible,
 		'updatedAt'      => current_time( 'mysql', true ),
 		'revision'       => $new_revision,
 	);
 
 	update_user_meta( $user_id, DIAMONDISTRY_PROGRESS_META_KEY, $all_progress );
+
+	$challenge = null;
+	if ( $is_completed && ! $was_completed && function_exists( 'diamondistry_record_challenge_result' ) ) {
+		$challenge = diamondistry_record_challenge_result( $user_id, $painting_id, $started_at, $completed_at, $data['totalCells'], ! $implausible );
+	}
 
 	diamondistry_commit_progress_write( $progress_locked );
 
@@ -378,6 +428,10 @@ function diamondistry_ajax_save_progress() {
 			'balance'       => diamondistry_get_user_balance( $user_id ),
 			'revision'      => $new_revision,
 			'stale'         => false,
+			'challenge'     => $challenge ? array(
+				'time' => diamondistry_format_duration( $challenge['seconds'] ),
+				'rank' => $challenge['rank'],
+			) : null,
 		)
 	);
 }

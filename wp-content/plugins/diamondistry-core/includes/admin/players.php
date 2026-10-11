@@ -36,6 +36,17 @@ add_action(
 |--------------------------------------------------------------------------
 */
 
+/** Progress can outlive its painting (trashed or deleted); only live ones count for players. */
+function diamondistry_painting_availability( $painting_id ) {
+	$post = get_post( absint( $painting_id ) );
+
+	if ( ! $post || 'ddp_painting' !== $post->post_type ) {
+		return 'deleted';
+	}
+
+	return 'trash' === $post->post_status ? 'trash' : ( 'publish' === $post->post_status ? 'live' : 'hidden' );
+}
+
 function diamondistry_get_player_progress_summary( $user_id ) {
 
 	$progress =
@@ -52,10 +63,11 @@ function diamondistry_get_player_progress_summary( $user_id ) {
 	$last_activity =
 		null;
 
-	foreach (
-		$progress as
-		$painting_progress
-	) {
+	foreach ( $progress as $summary_painting_id => $painting_progress ) {
+		if ( 'live' !== diamondistry_painting_availability( $summary_painting_id ) ) {
+			continue;
+		}
+
 
 		if (
 			! is_array(
@@ -801,9 +813,6 @@ function diamondistry_render_players_notice() {
 			'balance-updated' =>
 				'Diamond balance updated.',
 
-			'painting-unlocked' =>
-				'Painting unlocked for this player. No diamonds were charged.',
-
 			'painting-locked' =>
 				'Painting locked again. Any diamonds the player paid for it were refunded.',
 
@@ -1356,9 +1365,16 @@ function diamondistry_render_player_detail(
 							]
 						);
 
+					$availability = diamondistry_painting_availability( $painting_id );
+					$availability_labels = array(
+						'trash'   => 'In trash',
+						'deleted' => 'Deleted',
+						'hidden'  => 'Not published',
+					);
+
 					?>
 
-					<tr>
+					<tr<?php echo 'live' !== $availability ? ' class="dd-row-unavailable"' : ''; ?>>
 
 						<td>
 							<strong>
@@ -1370,6 +1386,9 @@ function diamondistry_render_player_detail(
 								);
 								?>
 							</strong>
+							<?php if ( isset( $availability_labels[ $availability ] ) ) : ?>
+								<br><span class="description"><?php echo esc_html( $availability_labels[ $availability ] ); ?>: not shown to the player, not counted.</span>
+							<?php endif; ?>
 						</td>
 
 						<td>
@@ -1580,6 +1599,7 @@ function diamondistry_render_player_detail(
 									<button
 										type="submit"
 										class="button button-small"
+										<?php disabled( $completed_cells <= 0 && ! $reward_claimed ); ?>
 										onclick="return confirm('Reset progress and reward? Progress goes to 0 and any claimed reward is removed from the balance.');"
 									>
 										Reset both
@@ -1604,6 +1624,21 @@ function diamondistry_render_player_detail(
 	<?php do_action( 'diamondistry_player_detail_after_paintings', $user_id ); ?>
 
 	<hr>
+
+	<?php
+	// Only offer a reset when there is something to reset.
+	$has_any_progress = false;
+	$has_any_reward   = diamondistry_get_user_balance( $user_id ) > 0;
+	foreach ( diamondistry_get_all_user_progress( $user_id ) as $row_progress ) {
+		if ( is_array( $row_progress ) ) {
+			$has_any_progress = $has_any_progress || ! empty( $row_progress['completedCells'] );
+			$has_any_reward   = $has_any_reward || ! empty( $row_progress['rewardClaimed'] );
+		}
+	}
+	?>
+	<style>
+		.dd-row-unavailable td:not(:last-child) { opacity: 0.55; }
+	</style>
 
 	<h2>
 		Danger zone
@@ -1646,6 +1681,7 @@ function diamondistry_render_player_detail(
 		<button
 			type="submit"
 			class="button"
+			<?php disabled( ! $has_any_progress ); ?>
 			onclick="return confirm('Reset ALL painting progress? Rewards and diamond balance stay unchanged.');"
 		>
 			Reset all progress
@@ -1681,6 +1717,7 @@ function diamondistry_render_player_detail(
 		<button
 			type="submit"
 			class="button"
+			<?php disabled( ! $has_any_reward ); ?>
 			onclick="return confirm('Reset ALL reward claims and set the diamond balance to 0?');"
 		>
 			Reset all rewards + balance

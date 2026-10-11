@@ -117,6 +117,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Account: preview the chosen profile photo before saving.
+  // Login page: fill in the shared demo account.
+  const demoFill = document.querySelector("[data-demo-fill]");
+  if (demoFill) {
+    demoFill.addEventListener("click", () => {
+      const form = demoFill.closest(".dd-auth__card").querySelector("form");
+      form.elements.log.value = demoFill.dataset.login;
+      form.elements.pwd.value = demoFill.dataset.password;
+      form.querySelector('[type="submit"]').focus();
+    });
+  }
+
   const avatarInput = document.querySelector(".dd-avatar-field__input");
   if (avatarInput) {
     avatarInput.addEventListener("change", () => {
@@ -169,24 +180,40 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const closeButton = menu.querySelector(".diamondistry-menu-close");
+  const toggleLabel = toggle.querySelector(".screen-reader-text");
+  let closeTimer = 0;
 
+  // The menu stays `hidden` while closed; is-open drives the slide and fade.
   function setOpen(open) {
-    menu.hidden = !open;
+    clearTimeout(closeTimer);
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    if (toggleLabel) {
+      toggleLabel.textContent = open ? "Close menu" : "Menu";
+    }
     document.documentElement.classList.toggle("is-menu-open", open);
+
+    if (open) {
+      menu.hidden = false;
+      menu.getBoundingClientRect(); // commit the closed state so the slide-in runs
+      menu.classList.add("is-open");
+    } else {
+      menu.classList.remove("is-open");
+      // Matches the panel transition; reduced motion has none, so this is a timer, not transitionend.
+      closeTimer = setTimeout(() => {
+        menu.hidden = true;
+      }, reduceMotion ? 0 : 420);
+    }
+
     if (lenis) {
       open ? lenis.stop() : lenis.start();
     }
   }
 
-  toggle.addEventListener("click", () => {
-    setOpen(menu.hidden);
-  });
+  const isOpen = () => menu.classList.contains("is-open");
 
-  if (closeButton) {
-    closeButton.addEventListener("click", () => setOpen(false));
-  }
+  toggle.addEventListener("click", () => {
+    setOpen(!isOpen());
+  });
 
   menu.addEventListener("click", (event) => {
     if (event.target === menu) {
@@ -194,8 +221,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Tabbing past the last link closes the menu instead of moving behind it.
+  menu.addEventListener("focusout", (event) => {
+    if (isOpen() && event.relatedTarget && !menu.contains(event.relatedTarget) && event.relatedTarget !== toggle) {
+      setOpen(false);
+    }
+  });
+
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !menu.hidden) {
+    if (event.key === "Escape" && isOpen()) {
       setOpen(false);
       toggle.focus();
     }

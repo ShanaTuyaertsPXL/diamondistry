@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const expectedCells = painting.width * painting.height;
 
   if (painting.pattern.length !== expectedCells) {
-    message.textContent = `Ongeldig patroon: verwacht ${expectedCells} vakjes, maar vond ${painting.pattern.length}.`;
+    message.textContent = `Invalid pattern: expected ${expectedCells} cells, found ${painting.pattern.length}.`;
     return;
   }
 
@@ -129,6 +129,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const cellSteps = [12, 16, 20, 24, 28, 32, 36, 40, 48, 56];
   let zoomLevel = 0;
+
+  // Writes text safely, swapping each 💎 for the brand diamond icon (.dd-gem).
+  function setTextWithGems(el, text) {
+    el.replaceChildren(
+      ...text.split("💎").flatMap((part, i) => {
+        if (i === 0) return [part];
+        const gem = document.createElement("span");
+        gem.className = "dd-gem";
+        gem.setAttribute("role", "img");
+        gem.setAttribute("aria-label", "diamonds");
+        return [gem, part];
+      })
+    );
+  }
 
   function fittedCellSize() {
     const fullscreen = workspace.classList.contains("is-expanded");
@@ -430,6 +444,46 @@ document.addEventListener("DOMContentLoaded", () => {
   |--------------------------------------------------------------------------
   */
 
+  /*
+  |--------------------------------------------------------------------------
+  | Download (finished paintings only)
+  |--------------------------------------------------------------------------
+  */
+
+  const downloadButton = document.getElementById("diamondistry-download");
+  let autoDownloaded = false;
+
+  function downloadPainting() {
+    if (!window.DiamondistryDownload) {
+      return;
+    }
+    window.DiamondistryDownload.save(
+      {
+        width: painting.width,
+        height: painting.height,
+        shape: painting.shape,
+        palette: painting.palette,
+        pattern: painting.pattern,
+      },
+      painting.title,
+    );
+  }
+
+  function setDownloadReady(ready) {
+    if (downloadButton) {
+      downloadButton.hidden = !ready;
+    }
+    // Dashboard "Download" links land here with #download.
+    if (ready && !autoDownloaded && window.location.hash === "#download") {
+      autoDownloaded = true;
+      downloadPainting();
+    }
+  }
+
+  if (downloadButton) {
+    downloadButton.addEventListener("click", downloadPainting);
+  }
+
   function updateProgress() {
     const percentage =
       totalDiamonds > 0 ? (completed / totalDiamonds) * 100 : 0;
@@ -442,6 +496,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (progressBar) {
       progressBar.style.width = `${percentage}%`;
     }
+
+    setDownloadReady(totalDiamonds > 0 && completed === totalDiamonds);
 
     if (completed === totalDiamonds) {
       message.textContent = `✨ ${painting.title} completed!`;
@@ -532,7 +588,34 @@ document.addEventListener("DOMContentLoaded", () => {
   |--------------------------------------------------------------------------
   */
 
-  async function saveServerProgress() {
+  /*
+   * One save at a time. Two overlapping saves carry the same revision, so the
+   * second one comes back "stale" and its diamonds were silently lost when the
+   * player stopped clicking. Now a save that arrives mid-flight is queued and
+   * sent afterwards with the latest state and revision.
+   */
+  let saveInFlight = null;
+  let saveQueued = false;
+
+  function saveServerProgress() {
+    if (saveInFlight) {
+      saveQueued = true;
+      return saveInFlight;
+    }
+
+    saveInFlight = sendServerProgress().finally(() => {
+      saveInFlight = null;
+
+      if (saveQueued) {
+        saveQueued = false;
+        saveServerProgress();
+      }
+    });
+
+    return saveInFlight;
+  }
+
+  async function sendServerProgress() {
     if (!userState.loggedIn || !userState.ajaxUrl || !userState.nonce) {
       return null;
     }
@@ -588,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadedRevision = Number(result.data.revision ?? loadedRevision);
 
         if (progressDirty) {
-          return saveServerProgress();
+          return sendServerProgress();
         }
 
         return null;
@@ -604,13 +687,29 @@ document.addEventListener("DOMContentLoaded", () => {
        */
       localStorage.removeItem(storageKey);
 
+      if (result.data?.challenge) {
+        completionBody.textContent =
+          `Weekly challenge time: ${result.data.challenge.time} · #${result.data.challenge.rank} this week.`;
+      }
+
       if (result.data?.rewardGranted) {
         userState.balance = Number(result.data.balance || 0);
 
-        message.textContent =
+        // Keep the header balance (desktop + mobile menu) in sync without a reload.
+        document.querySelectorAll(".diamondistry-header-balance-value").forEach((el) => {
+          if (el.querySelector(".dd-gem")) {
+            setTextWithGems(el, `· ${userState.balance.toLocaleString()} 💎`);
+          } else {
+            el.textContent = userState.balance.toLocaleString();
+          }
+        });
+
+        setTextWithGems(
+          message,
           `✨ ${painting.title} completed! ` +
           `+${result.data.reward} 💎 · ` +
-          `Balance: ${userState.balance} 💎`;
+          `Balance: ${userState.balance} 💎`
+        );
 
         setCompletionReward(
           Number(result.data.reward || 0),
@@ -936,7 +1035,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const completionMark = document.createElement("div");
   completionMark.className = "diamondistry-complete-mark";
   completionMark.setAttribute("aria-hidden", "true");
-  completionMark.textContent = "💎";
+  setTextWithGems(completionMark, "💎");
 
   const completionKicker = document.createElement("p");
   completionKicker.className = "diamondistry-complete-kicker";
@@ -966,7 +1065,13 @@ document.addEventListener("DOMContentLoaded", () => {
   completionBack.href = paintingsLink ? paintingsLink.href : "/paintings/";
   completionBack.textContent = "Back to paintings";
 
-  completionActions.append(completionClose, completionBack);
+  const completionDownload = document.createElement("button");
+  completionDownload.type = "button";
+  completionDownload.className = "diamondistry-complete-back";
+  completionDownload.textContent = "Download painting";
+  completionDownload.addEventListener("click", downloadPainting);
+
+  completionActions.append(completionClose, completionDownload, completionBack);
 
   completionCard.append(
     completionMark,
@@ -987,8 +1092,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     completionRewardText.hidden = false;
-    completionRewardText.textContent =
-      `+${completionReward.amount} 💎 added · Balance ${completionReward.balance} 💎`;
+    setTextWithGems(
+      completionRewardText,
+      `+${completionReward.amount} 💎 added · Balance ${completionReward.balance} 💎`
+    );
   }
 
   function openCompletion() {

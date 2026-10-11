@@ -23,6 +23,25 @@ function diamondistry_theme_setup() {
 }
 add_action( 'after_setup_theme', 'diamondistry_theme_setup' );
 
+/**
+ * Privacy: don't load emoji images from s.w.org (WordPress.org, US). Browsers
+ * render emoji natively, so nothing changes visually.
+ */
+function diamondistry_theme_disable_emoji() {
+	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+	remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+	remove_action( 'wp_print_styles', 'print_emoji_styles' );
+	remove_action( 'admin_print_styles', 'print_emoji_styles' );
+	remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
+	remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
+	remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
+	remove_action( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+	remove_action( 'admin_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+}
+add_action( 'init', 'diamondistry_theme_disable_emoji' );
+// wp-admin registers its emoji hooks after init (admin-filters.php), so unhook again there.
+add_action( 'admin_init', 'diamondistry_theme_disable_emoji' );
+
 function diamondistry_theme_enqueue_assets() {
 	$theme = wp_get_theme();
 	wp_enqueue_style(
@@ -67,6 +86,150 @@ function diamondistry_theme_reveal_flag() {
 }
 add_action( 'wp_head', 'diamondistry_theme_reveal_flag', 1 );
 
+/*
+|--------------------------------------------------------------------------
+| Meta description, Open Graph and Twitter tags (no SEO plugin)
+|--------------------------------------------------------------------------
+*/
+
+function diamondistry_theme_meta_description() {
+	if ( is_front_page() ) {
+		return 'Diamondistry is a calm diamond painting game. Place every diamond, earn rewards and build your collection of pixel-art paintings.';
+	}
+
+	if ( is_page( 'play' ) && function_exists( 'diamondistry_get_requested_painting' ) ) {
+		$painting = diamondistry_get_requested_painting();
+		$data     = $painting && function_exists( 'diamondistry_get_painting_data' ) ? diamondistry_get_painting_data( $painting ) : null;
+		if ( $data ) {
+			return sprintf( 'Fill in %s, a %d × %d diamond painting with %d colours, one diamond at a time.', get_the_title( $painting ), $data['width'], $data['height'], count( $data['palette'] ) );
+		}
+	}
+
+	$pages = array(
+		'paintings'      => 'Browse diamond paintings to play: animals, flowers, places and more. Some are free, others you unlock with the diamonds you earn.',
+		'challenge'      => 'One painting a week. Place every diamond as fast as you can and climb the leaderboard for bonus diamonds.',
+		'how-it-works'   => 'How Diamondistry works: pick a painting, match colours to symbols and place every diamond to earn rewards.',
+		'about'          => 'About Diamondistry, a calm diamond painting game for slow, happy moments.',
+		'privacy-policy' => 'What Diamondistry collects when you play, why, and what you can do about it.',
+		'login'          => 'Log in to Diamondistry to continue your paintings, or try the shared demo account.',
+		'register'       => 'Create a Diamondistry account to save your progress, earn diamonds and build your collection.',
+	);
+	foreach ( $pages as $slug => $text ) {
+		if ( is_page( $slug ) ) {
+			return $text;
+		}
+	}
+
+	return '';
+}
+
+function diamondistry_theme_social_meta() {
+	// Yoast SEO prints these itself; only the play page needs help (see below).
+	if ( is_404() || defined( 'WPSEO_VERSION' ) ) {
+		return;
+	}
+
+	$description = diamondistry_theme_meta_description();
+	$url         = is_front_page() ? home_url( '/' ) : get_permalink();
+	$painting    = is_page( 'play' ) && function_exists( 'diamondistry_get_requested_painting' ) ? diamondistry_get_requested_painting() : null;
+	if ( $painting ) {
+		$url = add_query_arg( 'painting', $painting->post_name, $url );
+	}
+	$tags        = array(
+		'og:type'      => 'website',
+		'og:site_name' => get_bloginfo( 'name' ),
+		'og:title'     => wp_get_document_title(),
+		'og:url'       => $url,
+		'og:image'     => get_theme_file_uri( 'assets/og-image.jpg' ),
+		'twitter:card' => 'summary_large_image',
+	);
+	if ( $description ) {
+		printf( '<meta name="description" content="%s">' . "\n", esc_attr( $description ) );
+		$tags['og:description'] = $description;
+	}
+
+	foreach ( $tags as $property => $content ) {
+		printf(
+			'<meta %1$s="%2$s" content="%3$s">' . "\n",
+			0 === strpos( $property, 'og:' ) ? 'property' : 'name',
+			esc_attr( $property ),
+			esc_attr( $content )
+		);
+	}
+	echo '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">' . "\n";
+}
+add_action( 'wp_head', 'diamondistry_theme_social_meta', 5 );
+
+// Block templates print their own <title> next to the one Yoast prints: keep Yoast's.
+add_action(
+	'wp_head',
+	function () {
+		if ( defined( 'WPSEO_VERSION' ) ) {
+			remove_action( 'wp_head', '_block_template_render_title_tag', 1 );
+		}
+	},
+	0
+);
+
+/*
+ * With Yoast: the play page shows a different painting per ?painting=, which
+ * Yoast cannot know, so give it the painting's title, description and URL.
+ */
+function diamondistry_theme_play_painting() {
+	return is_page( 'play' ) && function_exists( 'diamondistry_get_requested_painting' ) ? diamondistry_get_requested_painting() : null;
+}
+add_filter(
+	'wpseo_title',
+	function ( $title ) {
+		$painting = diamondistry_theme_play_painting();
+		return $painting ? sprintf( 'Play %s, a diamond painting | Diamondistry', get_the_title( $painting ) ) : $title;
+	}
+);
+add_filter( 'wpseo_opengraph_title', fn( $title ) => diamondistry_theme_play_painting() ? wp_get_document_title() : $title );
+foreach ( array( 'wpseo_metadesc', 'wpseo_opengraph_desc' ) as $diamondistry_filter ) {
+	add_filter( $diamondistry_filter, fn( $desc ) => diamondistry_theme_play_painting() ? diamondistry_theme_meta_description() : $desc );
+}
+foreach ( array( 'wpseo_canonical', 'wpseo_opengraph_url' ) as $diamondistry_filter ) {
+	add_filter(
+		$diamondistry_filter,
+		function ( $url ) {
+			$painting = diamondistry_theme_play_painting();
+			return $painting ? add_query_arg( 'painting', $painting->post_name, get_permalink() ) : $url;
+		}
+	);
+}
+
+/** Each painting has its own play URL (and title and description): list them in Yoast's page sitemap. */
+add_filter(
+	'wpseo_sitemap_page_content',
+	function ( $xml ) {
+		$play = get_page_by_path( 'play' );
+		if ( ! $play ) {
+			return $xml;
+		}
+		foreach ( get_posts( array( 'post_type' => 'ddp_painting', 'post_status' => 'publish', 'posts_per_page' => -1 ) ) as $painting ) {
+			$xml .= sprintf(
+				"<url><loc>%s</loc><lastmod>%s</lastmod></url>\n",
+				esc_url( add_query_arg( 'painting', $painting->post_name, get_permalink( $play ) ) ),
+				esc_html( get_post_modified_time( 'c', true, $painting ) )
+			);
+		}
+		return $xml;
+	}
+);
+
+/** Account pages are personal: keep them out of search results. */
+add_filter(
+	'wp_robots',
+	function ( $robots ) {
+		if ( is_page( array( 'login', 'register', 'account', 'dashboard' ) ) ) {
+			$robots['noindex'] = true;
+			$robots['follow']  = true;
+		}
+		return $robots;
+	}
+);
+
 function diamondistry_theme_body_class( $classes ) {
 	if ( is_page( array( 'paintings', 'dashboard', 'play', 'account' ) ) ) {
 		$classes[] = 'diamondistry-app-screen';
@@ -79,7 +242,8 @@ function diamondistry_theme_body_class( $classes ) {
 add_filter( 'body_class', 'diamondistry_theme_body_class' );
 
 function diamondistry_theme_compact_html( $html ) {
-	return trim( preg_replace( '/>\s+</', '><', $html ) );
+	// Newlines inside tags (multi-line attributes) also make wpautop add <p>, so fold them too.
+	return trim( preg_replace( array( '/\s*\n\s*/', '/>\s+</' ), array( ' ', '><' ), $html ) );
 }
 
 function diamondistry_theme_nav_items( $include_home = false ) {
@@ -88,6 +252,11 @@ function diamondistry_theme_nav_items( $include_home = false ) {
 			'key'   => 'paintings',
 			'label' => 'Paintings',
 			'url'   => home_url( '/paintings/' ),
+		),
+		array(
+			'key'   => 'challenge',
+			'label' => 'Challenge',
+			'url'   => home_url( '/challenge/' ),
 		),
 		array(
 			'key'   => 'how',
@@ -126,6 +295,7 @@ function diamondistry_theme_nav_items( $include_home = false ) {
 function diamondistry_theme_nav_is_current( $key ) {
 	$pages = array(
 		'paintings' => array( 'paintings', 'play' ),
+		'challenge' => array( 'challenge' ),
 		'how'       => array( 'how-it-works' ),
 		'about'     => array( 'about' ),
 		'dashboard' => array( 'dashboard' ),
@@ -159,6 +329,7 @@ function diamondistry_theme_nav_icon( $key ) {
 		'home'      => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/></svg>',
 		'paintings' => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m8 15 2.5-3 2 2.2L15 11l3 4"/></svg>',
 		'dashboard' => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="4" rx="1.5"/><rect x="13" y="10" width="7" height="10" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/></svg>',
+		'challenge' => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
 		'about'     => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 20 9l-8 12L4 9Z"/><path d="M4 9h16"/></svg>',
 		'how'       => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>',
 	);
@@ -199,10 +370,9 @@ function diamondistry_theme_render_mobile_menu() {
 	ob_start();
 	?>
 	<div id="diamondistry-mobile-menu" class="diamondistry-mobile-menu" hidden>
-		<div class="diamondistry-mobile-panel" data-lenis-prevent role="dialog" aria-modal="true" aria-label="Menu">
+		<div class="diamondistry-mobile-panel" data-lenis-prevent role="dialog" aria-label="Menu">
 			<div class="diamondistry-mobile-panel-head">
 				<?php echo diamondistry_theme_render_logo(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
-				<button type="button" class="diamondistry-menu-close" aria-label="Close menu">×</button>
 			</div>
 			<nav class="diamondistry-mobile-links" aria-label="Mobile">
 				<?php foreach ( diamondistry_theme_nav_items( true ) as $item ) : ?>
@@ -220,7 +390,7 @@ function diamondistry_theme_render_mobile_menu() {
 					<a class="diamondistry-mobile-user" href="<?php echo esc_url( home_url( '/account/' ) ); ?>">
 						<span class="diamondistry-header-avatar"><?php echo get_avatar( $user->ID, 64 ); ?></span>
 						My account
-						<span class="diamondistry-header-balance-value">· <?php echo esc_html( number_format_i18n( $balance ) ); ?> 💎</span>
+						<span class="diamondistry-header-balance-value">· <?php echo esc_html( number_format_i18n( $balance ) ); ?> <span class="dd-gem" aria-hidden="true"></span></span>
 					</a>
 					<a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">
 						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 7V5a2 2 0 0 1 2-2h7v18h-7a2 2 0 0 1-2-2v-2"/><path d="M15 12H3m0 0 3-3m-3 3 3 3"/></svg>
@@ -287,7 +457,7 @@ function diamondistry_theme_render_header_account() {
 	?>
 	<div class="diamondistry-header-account">
 		<a class="diamondistry-header-balance" href="<?php echo esc_url( $dashboard_url ); ?>" aria-label="<?php echo esc_attr( sprintf( '%s diamonds, view my paintings', number_format_i18n( $balance ) ) ); ?>">
-			<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path fill="#6ea2ff" d="M10 1.2 17.2 7.4 10 18.8 2.8 7.4Z"/><path fill="#d7cbff" d="M10 1.2 13.4 7.4 10 18.8 6.6 7.4Z"/></svg>
+			<span class="dd-gem" aria-hidden="true"></span>
 			<span class="diamondistry-header-balance-value"><?php echo esc_html( number_format_i18n( $balance ) ); ?></span>
 		</a>
 		<a class="diamondistry-header-avatar<?php echo is_page( 'account' ) ? ' is-current' : ''; ?>" href="<?php echo esc_url( home_url( '/account/' ) ); ?>" aria-label="My account">
@@ -342,8 +512,8 @@ function diamondistry_theme_render_footer() {
 			<?php endforeach; ?>
 		</div>
 		<div class="dd-footer__bottom">
-			<p>© <?php echo esc_html( gmdate( 'Y' ) . ' ' . get_bloginfo( 'name' ) ); ?></p>
-			<p>Made with 💎 for slow, happy moments.</p>
+			<p class="dd-footer__legal"><span>© <?php echo esc_html( gmdate( 'Y' ) . ' ' . get_bloginfo( 'name' ) ); ?></span><?php if ( get_privacy_policy_url() ) : ?><a href="<?php echo esc_url( get_privacy_policy_url() ); ?>">Privacy policy</a><?php endif; ?></p>
+			<p>A fictional portfolio project by Shana Tuyaerts, made with <span class="dd-gem" role="img" aria-label="diamonds"></span></p>
 		</div>
 	</div>
 	<?php
@@ -397,7 +567,7 @@ function diamondistry_theme_render_hero_art() {
 					<h3><?php echo esc_html( get_the_title( $painting ) ); ?></h3>
 					<span>Featured painting</span>
 				</div>
-				<strong><?php echo esc_html( $data['reward'] ); ?> 💎</strong>
+				<strong><?php echo esc_html( $data['reward'] ); ?> <span class="dd-gem" role="img" aria-label="diamonds"></span></strong>
 			</div>
 		</div>
 	</a>
