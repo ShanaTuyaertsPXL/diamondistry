@@ -29,3 +29,21 @@ function diamondistry_render_demo_login_hint() {
 		esc_attr( DIAMONDISTRY_DEMO_PASSWORD )
 	);
 }
+
+// The account forms are not the only way in: the REST API also lets a user edit
+// or delete themselves (and add application passwords). Block that for the demo.
+add_filter(
+	'rest_pre_dispatch',
+	function ( $result, $server, $request ) {
+		if (
+			'GET' !== $request->get_method()
+			&& 0 === strpos( $request->get_route(), '/wp/v2/users' )
+			&& diamondistry_is_demo_user()
+		) {
+			return new WP_Error( 'diamondistry_demo_locked', 'Settings are locked on the shared demo account.', array( 'status' => 403 ) );
+		}
+		return $result;
+	},
+	10,
+	3
+);
