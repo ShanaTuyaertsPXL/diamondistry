@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.19.2
+ * Version: 0.19.3
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.19.2' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.19.3' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -511,6 +511,20 @@ function diamondistry_render_playground() {
 add_shortcode(
 	'diamondistry_play',
 	'diamondistry_render_playground'
+);
+
+/** Play page: the tab title is the painting, also for locked paintings and when JS is off. */
+add_filter(
+	'document_title_parts',
+	function ( $parts ) {
+		if ( is_page( 'play' ) ) {
+			$painting = diamondistry_get_requested_painting();
+			if ( $painting ) {
+				$parts['title'] = get_the_title( $painting );
+			}
+		}
+		return $parts;
+	}
 );
 
 /*
