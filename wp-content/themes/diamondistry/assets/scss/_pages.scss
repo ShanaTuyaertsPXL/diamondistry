@@ -296,3 +296,45 @@
 .dd-section:has(> .dd-container > .dd-cta) {
   padding-block: clamp(24px, 3vw, 40px);
 }
+
+.dd-hero--compact {
+  padding-block: clamp(48px, 7vw, 80px) clamp(32px, 5vw, 56px);
+}
+
+// Long-form text (privacy policy).
+.dd-prose {
+  color: #4a5073;
+  line-height: 1.75;
+}
+.dd-prose h2 {
+  margin: 2.2em 0 0.5em;
+  color: var(--dd-ink);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+.dd-prose h2:first-child {
+  margin-top: 0;
+}
+.dd-prose p,
+.dd-prose ul {
+  margin: 0 0 1em;
+}
+.dd-prose ul {
+  padding-left: 1.2em;
+}
+.dd-prose li + li {
+  margin-top: 0.4em;
+}
+.dd-prose a {
+  color: var(--dd-purple);
+  font-weight: 700;
+}
+
+// Details the site owner still has to fill in; impossible to miss.
+.dd-placeholder {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #fff2b3;
+  color: #6b5200;
+  font-weight: 700;
+}

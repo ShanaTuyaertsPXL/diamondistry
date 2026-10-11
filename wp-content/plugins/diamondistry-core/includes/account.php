@@ -966,6 +966,9 @@ function diamondistry_render_register() {
 					<label for="dd-website">Website</label>
 					<input id="dd-website" name="website" type="text" tabindex="-1" autocomplete="off">
 				</div>
+				<?php if ( get_privacy_policy_url() ) : ?>
+					<p class="dd-field__hint">By creating an account you agree to our <a class="dd-link" href="<?php echo esc_url( get_privacy_policy_url() ); ?>">privacy policy</a>.</p>
+				<?php endif; ?>
 				<button class="dd-button dd-button-primary dd-button--block" type="submit">Create account</button>
 			</form>
 		<?php endif; ?>
