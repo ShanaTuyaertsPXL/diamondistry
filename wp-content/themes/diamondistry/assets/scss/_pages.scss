@@ -340,7 +340,8 @@
 }
 
 // 404: a little painting with one diamond missing.
-.dd-404 {
+.dd-hero.dd-404 {
+  padding-block: 0;
   min-height: calc(100vh - var(--dd-header-h) - 120px);
   display: grid;
   align-items: center;
