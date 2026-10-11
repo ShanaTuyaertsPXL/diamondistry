@@ -17,17 +17,19 @@ define( 'DIAMONDISTRY_CHALLENGE_START_META_KEY', '_diamondistry_challenge_start'
 define( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY', '_diamondistry_leaderboard_hidden' );
 
 /*
- * Anti-cheat. Progress comes from the browser, so times are only trusted when
- * they look human: a save may add at most MAX_CELLS_PER_SECOND new diamonds per
- * second since the previous save (plus slack), and a finish must take at least
- * MIN_SECONDS_PER_CELL per diamond. Failing either only skips the leaderboard.
+ * Anti-cheat. Progress comes from the browser, so a finish only earns its reward
+ * and a leaderboard spot when it looks human. Players can drag across a row to
+ * fill it, so bursts of 10-30 diamonds a second are normal play: a save may add
+ * up to MAX_CELLS_PER_SECOND per second since the previous save (+10 slack), and
+ * a finish must take at least MIN_SECONDS_PER_CELL per diamond. This still stops
+ * a request that sends the whole painting at once.
  */
-define( 'DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND', 6 );
-define( 'DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL', 0.25 );
+define( 'DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND', 40 );
+define( 'DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL', 0.02 );
 
 /** Whether one save added a humanly possible number of diamonds. */
 function diamondistry_challenge_save_is_plausible( $added_cells, $seconds_since_last_save ) {
-	return $added_cells <= 5 + max( 0, $seconds_since_last_save ) * DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND;
+	return $added_cells <= 10 + max( 0, $seconds_since_last_save ) * DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND;
 }
 
 /** Diamonds for places 1, 2 and 3 when a challenge week ends. */
