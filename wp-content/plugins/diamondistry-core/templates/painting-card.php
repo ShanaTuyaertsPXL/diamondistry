@@ -93,7 +93,12 @@ if ( $is_locked ) {
 		<?php endif; ?>
 
 		<?php if ( $show_action ) : ?>
-			<a class="diamondistry-painting-card-action" href="<?php echo esc_url( $play_url ); ?>"><span class="diamondistry-painting-card-action-label"><?php echo esc_html( $action_label ); ?></span> <span class="diamondistry-painting-card-action-arrow" aria-hidden="true">→</span></a>
+			<div class="diamondistry-painting-card-actions">
+				<a class="diamondistry-painting-card-action" href="<?php echo esc_url( $play_url ); ?>"><span class="diamondistry-painting-card-action-label"><?php echo esc_html( $action_label ); ?></span> <span class="diamondistry-painting-card-action-arrow" aria-hidden="true">→</span></a>
+				<?php if ( 'completed' === $status ) : ?>
+					<a class="diamondistry-painting-card-download" href="<?php echo esc_url( $play_url . '#download' ); ?>">Download</a>
+				<?php endif; ?>
+			</div>
 		<?php endif; ?>
 	</div>
 </article>

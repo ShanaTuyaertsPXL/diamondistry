@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const expectedCells = painting.width * painting.height;
 
   if (painting.pattern.length !== expectedCells) {
-    message.textContent = `Ongeldig patroon: verwacht ${expectedCells} vakjes, maar vond ${painting.pattern.length}.`;
+    message.textContent = `Invalid pattern: expected ${expectedCells} cells, found ${painting.pattern.length}.`;
     return;
   }
 
@@ -430,6 +430,46 @@ document.addEventListener("DOMContentLoaded", () => {
   |--------------------------------------------------------------------------
   */
 
+  /*
+  |--------------------------------------------------------------------------
+  | Download (finished paintings only)
+  |--------------------------------------------------------------------------
+  */
+
+  const downloadButton = document.getElementById("diamondistry-download");
+  let autoDownloaded = false;
+
+  function downloadPainting() {
+    if (!window.DiamondistryDownload) {
+      return;
+    }
+    window.DiamondistryDownload.save(
+      {
+        width: painting.width,
+        height: painting.height,
+        shape: painting.shape,
+        palette: painting.palette,
+        pattern: painting.pattern,
+      },
+      painting.title,
+    );
+  }
+
+  function setDownloadReady(ready) {
+    if (downloadButton) {
+      downloadButton.hidden = !ready;
+    }
+    // Dashboard "Download" links land here with #download.
+    if (ready && !autoDownloaded && window.location.hash === "#download") {
+      autoDownloaded = true;
+      downloadPainting();
+    }
+  }
+
+  if (downloadButton) {
+    downloadButton.addEventListener("click", downloadPainting);
+  }
+
   function updateProgress() {
     const percentage =
       totalDiamonds > 0 ? (completed / totalDiamonds) * 100 : 0;
@@ -442,6 +482,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (progressBar) {
       progressBar.style.width = `${percentage}%`;
     }
+
+    setDownloadReady(totalDiamonds > 0 && completed === totalDiamonds);
 
     if (completed === totalDiamonds) {
       message.textContent = `✨ ${painting.title} completed!`;
@@ -966,7 +1008,13 @@ document.addEventListener("DOMContentLoaded", () => {
   completionBack.href = paintingsLink ? paintingsLink.href : "/paintings/";
   completionBack.textContent = "Back to paintings";
 
-  completionActions.append(completionClose, completionBack);
+  const completionDownload = document.createElement("button");
+  completionDownload.type = "button";
+  completionDownload.className = "diamondistry-complete-back";
+  completionDownload.textContent = "Download painting";
+  completionDownload.addEventListener("click", downloadPainting);
+
+  completionActions.append(completionClose, completionDownload, completionBack);
 
   completionCard.append(
     completionMark,

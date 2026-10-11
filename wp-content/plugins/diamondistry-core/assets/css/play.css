@@ -927,6 +927,14 @@ html.diamondistry-workspace-open {
     border-color 0.15s ease;
 }
 
+.diamondistry-download {
+  margin-top: 10px;
+}
+
+.diamondistry-download[hidden] {
+  display: none;
+}
+
 .diamondistry-reset:hover {
   background: #fff;
 

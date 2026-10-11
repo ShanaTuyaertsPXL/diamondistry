@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.19.3
+ * Version: 0.20.0
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.19.3' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.20.0' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -309,6 +309,16 @@ function diamondistry_get_requested_painting() {
 |--------------------------------------------------------------------------
 */
 
+/** Logo for the download poster: the Customizer logo, else the theme's logo.png. Same origin, so the canvas stays exportable. */
+function diamondistry_get_brand_logo_url() {
+	$logo_id = (int) get_theme_mod( 'custom_logo' );
+	if ( $logo_id ) {
+		return (string) wp_get_attachment_image_url( $logo_id, 'full' );
+	}
+
+	return file_exists( get_theme_file_path( 'assets/logo.png' ) ) ? get_theme_file_uri( 'assets/logo.png' ) : '';
+}
+
 function diamondistry_enqueue_play_assets( $painting ) {
 
 	wp_enqueue_script(
@@ -320,9 +330,26 @@ function diamondistry_enqueue_play_assets( $painting ) {
 	);
 
 	wp_enqueue_script(
+		'diamondistry-download',
+		DIAMONDISTRY_CORE_URL . 'assets/js/download.js',
+		array( 'diamondistry-grid' ),
+		DIAMONDISTRY_CORE_VERSION,
+		true
+	);
+
+	wp_localize_script(
+		'diamondistry-download',
+		'DiamondistryDownloadConfig',
+		array(
+			'logo'     => diamondistry_get_brand_logo_url(),
+			'siteName' => get_bloginfo( 'name' ),
+		)
+	);
+
+	wp_enqueue_script(
 		'diamondistry-play',
 		DIAMONDISTRY_CORE_URL . 'assets/js/play.js',
-		array( 'diamondistry-grid' ),
+		array( 'diamondistry-grid', 'diamondistry-download' ),
 		DIAMONDISTRY_CORE_VERSION,
 		true
 	);
@@ -470,6 +497,10 @@ function diamondistry_render_playground() {
 				<div id="diamondistry-palette" class="diamondistry-palette"></div>
 				<div id="diamondistry-message" class="diamondistry-message" aria-live="polite"></div>
 				<button type="button" id="diamondistry-reset" class="diamondistry-reset">Reset painting</button>
+				<button type="button" id="diamondistry-download" class="dd-button dd-button-primary dd-button--block diamondistry-download" hidden>
+					<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+					Download painting
+				</button>
 			</aside>
 
 			<div class="diamondistry-board">
