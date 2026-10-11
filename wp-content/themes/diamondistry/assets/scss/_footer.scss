@@ -1,0 +1,67 @@
+/* -------------------------------------------------------
+   Footer
+------------------------------------------------------- */
+
+.diamondistry-site-footer {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border-top: 1px solid var(--dd-border);
+  background: #fff;
+}
+.dd-footer {
+  padding: 48px var(--dd-edge) 28px;
+}
+.dd-footer__top {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  gap: 32px;
+}
+.dd-footer__brand .diamondistry-brand-slot {
+  line-height: 0;
+}
+.dd-footer__brand p {
+  max-width: 340px;
+  margin: 12px 0 0;
+  color: var(--dd-muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.dd-footer__heading {
+  margin: 0 0 12px;
+  color: var(--dd-ink);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.dd-footer__col ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dd-footer__col a {
+  color: var(--dd-muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.dd-footer__col a:hover {
+  color: var(--dd-purple);
+}
+.dd-footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--dd-border);
+  color: var(--dd-muted);
+  font-size: 0.84rem;
+}
+.dd-footer__bottom p {
+  margin: 0;
+}

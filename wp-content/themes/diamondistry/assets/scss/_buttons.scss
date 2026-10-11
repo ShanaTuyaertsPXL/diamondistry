@@ -1,0 +1,67 @@
+/* -------------------------------------------------------
+   Buttons
+------------------------------------------------------- */
+
+.dd-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+.dd-button:hover {
+  transform: translateY(-2px);
+}
+.dd-button-primary {
+  background: var(--dd-pink);
+  color: #fff;
+  box-shadow: 0 10px 22px rgb(255 95 147 / 0.28);
+}
+.dd-button-primary:hover {
+  background: #ff4b86;
+  color: #fff;
+}
+.dd-button-secondary {
+  border: 1px solid #e6e3ee;
+  background: #fff;
+  color: var(--dd-ink);
+  box-shadow: 0 8px 18px rgb(40 30 80 / 0.06);
+}
+.dd-button-ghost {
+  border: 1px solid rgb(255 255 255 / 0.35);
+  background: transparent;
+  color: #fff;
+}
+.dd-button--sm {
+  min-height: 36px;
+  padding: 6px 16px;
+  font-size: 0.86rem;
+  box-shadow: none;
+}
+.dd-button--block {
+  width: 100%;
+}
+.dd-play {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 2px;
+  border: 1.5px solid #d9d6e4;
+  border-radius: 50%;
+  color: #2a3148;
+}

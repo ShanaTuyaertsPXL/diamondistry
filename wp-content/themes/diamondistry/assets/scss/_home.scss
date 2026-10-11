@@ -1,0 +1,165 @@
+/* -------------------------------------------------------
+   Home
+------------------------------------------------------- */
+
+.diamondistry-home {
+  overflow: hidden;
+}
+.diamondistry-home-hero {
+  position: relative;
+  width: 100%;
+  height: min(78vh, 760px);
+  min-height: 520px;
+  margin: 0;
+  overflow: hidden;
+  background: #2a2158;
+}
+.diamondistry-home-hero > p,
+.diamondistry-home-hero > .wp-block-shortcode {
+  margin: 0;
+  height: 0;
+  line-height: 0;
+}
+.diamondistry-home-hero-photo {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 140%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+  will-change: transform;
+}
+/* Soft light wash behind the copy so it stays readable on any photo. */
+.diamondistry-home-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    rgb(255 250 252 / 0.82) 0%,
+    rgb(255 250 252 / 0.55) 34%,
+    rgb(255 250 252 / 0) 60%
+  );
+  pointer-events: none;
+}
+.diamondistry-home-hero-copy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  width: 100%;
+  padding: clamp(48px, 8vh, 88px) var(--dd-edge) 120px;
+}
+.diamondistry-home-hero-copy > * {
+  max-width: 520px;
+}
+.diamondistry-home-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 92px;
+}
+.diamondistry-home-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--dd-purple);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.diamondistry-home-kicker span {
+  color: #ff8fba;
+  font-size: 1rem;
+}
+.diamondistry-home-title {
+  margin: 0;
+  color: #24305f;
+  font-family: var(--dd-serif);
+  font-size: clamp(3rem, 6vw, 4.7rem);
+  font-weight: 560;
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+}
+.diamondistry-home-lead {
+  max-width: 440px;
+  margin: 18px 0 0;
+  color: #444b6e;
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.65;
+}
+.diamondistry-home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.diamondistry-home-benefits {
+  padding: 8px var(--dd-edge) 16px;
+}
+.diamondistry-home-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.diamondistry-home-benefit {
+  padding: 12px 12px 8px;
+  text-align: center;
+}
+.diamondistry-home-benefit-icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  background: #f3eeff;
+  color: var(--dd-purple);
+}
+.diamondistry-home-benefit:nth-child(2) .diamondistry-home-benefit-icon {
+  background: var(--dd-pink-soft);
+  color: #ff6f9f;
+}
+.diamondistry-home-benefit:nth-child(3) .diamondistry-home-benefit-icon {
+  background: var(--dd-blue-soft);
+  color: var(--dd-blue);
+}
+.diamondistry-home-benefit:nth-child(4) .diamondistry-home-benefit-icon {
+  background: var(--dd-orange-soft);
+  color: #f0a15a;
+}
+.diamondistry-home-benefit-icon svg {
+  width: 26px;
+  height: 26px;
+}
+.diamondistry-home-benefit h3 {
+  margin: 0;
+  color: var(--dd-ink);
+  font-size: 1rem;
+  font-weight: 800;
+}
+.diamondistry-home-benefit p {
+  max-width: 220px;
+  margin: 6px auto 0;
+  color: var(--dd-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.diamondistry-home-paintings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}

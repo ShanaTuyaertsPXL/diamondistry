@@ -1,0 +1,161 @@
+/* -------------------------------------------------------
+   Forms
+------------------------------------------------------- */
+
+.dd-form {
+  display: grid;
+  gap: 16px;
+}
+.dd-form__cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.dd-form__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.92rem;
+}
+.dd-field {
+  display: grid;
+  gap: 6px;
+}
+.dd-field__label {
+  color: var(--dd-ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.dd-field__input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1.5px solid #e4e1ee;
+  border-radius: var(--dd-radius-sm);
+  background: #fff;
+  color: var(--dd-ink);
+  font: inherit;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.dd-field__input:hover {
+  border-color: #d3cde6;
+}
+.dd-field__input:focus {
+  border-color: var(--dd-purple);
+  outline: none;
+  box-shadow: 0 0 0 4px rgb(110 77 246 / 0.14);
+}
+.dd-field__hint {
+  margin: 0;
+  color: var(--dd-muted);
+  font-size: 0.82rem;
+}
+.dd-avatar-field {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.dd-text-button {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--dd-muted);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.dd-text-button--danger:hover {
+  color: #c22a55;
+}
+.dd-default-submit {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.dd-avatar-field__preview {
+  flex: 0 0 auto;
+  overflow: hidden;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgb(40 30 80 / 0.12);
+}
+.dd-avatar-field__preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dd-avatar-field__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.dd-avatar-field__body .dd-field__hint {
+  flex-basis: 100%;
+}
+/* Visually hidden but focusable: the label acts as the button. */
+.dd-avatar-field__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.dd-avatar-field__input:focus-visible + label {
+  outline: 3px solid rgb(110 77 246 / 0.45);
+  outline-offset: 2px;
+}
+.dd-field--trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.dd-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dd-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+.dd-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--dd-purple);
+}
+.dd-form .dd-button {
+  justify-self: start;
+}
+.dd-form .dd-button--block {
+  justify-self: stretch;
+}
+
+.dd-notice {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.dd-notice--error {
+  background: #fff0f2;
+  color: #b4234a;
+}
+.dd-notice--success {
+  background: var(--dd-green-soft);
+  color: #22764b;
+}

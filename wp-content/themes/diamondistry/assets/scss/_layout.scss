@@ -1,0 +1,81 @@
+/* -------------------------------------------------------
+   Layout primitives
+------------------------------------------------------- */
+
+.dd-container {
+  width: min(100% - 2 * var(--dd-gutter), var(--dd-max));
+  margin-inline: auto;
+}
+.dd-narrow {
+  max-width: 780px;
+}
+
+.dd-eyebrow {
+  margin: 0;
+  color: var(--dd-purple);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.dd-h2 {
+  margin: 6px 0 0;
+  color: var(--dd-ink);
+  font-family: var(--dd-serif);
+  font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+  font-weight: 560;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+.dd-link {
+  color: var(--dd-purple);
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+.dd-link:hover {
+  text-decoration-color: currentColor;
+}
+/* Links and buttons with a trailing arrow: no underline, the arrow nudges instead. */
+.dd-link:has(> span[aria-hidden="true"]):hover {
+  text-decoration-color: transparent;
+}
+.dd-link > span[aria-hidden="true"],
+.dd-button > span[aria-hidden="true"]:not(.dd-play) {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.dd-link:hover > span[aria-hidden="true"],
+.dd-button:hover > span[aria-hidden="true"]:not(.dd-play) {
+  transform: translateX(4px);
+}
+
+.dd-section {
+  padding-block: clamp(48px, 7vw, 88px);
+}
+.dd-section--tint {
+  background: var(--dd-tint);
+}
+.dd-section__head {
+  margin-bottom: 28px;
+}
+.dd-section__head--center {
+  text-align: center;
+}
+.dd-section__head--split {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+}
+.dd-section__head--split > p {
+  max-width: 440px;
+  margin: 0;
+  color: var(--dd-muted);
+  line-height: 1.6;
+}
+.dd-section__more {
+  margin: 24px 0 0;
+  text-align: center;
+}
