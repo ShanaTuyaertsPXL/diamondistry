@@ -1177,7 +1177,7 @@ function diamondistry_render_account() {
 					<?php if ( defined( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY' ) ) : ?>
 						<div class="dd-form__row"><label class="dd-check"><input type="checkbox" name="leaderboard_hidden" value="1" <?php checked( (bool) get_user_meta( $user->ID, DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY, true ) ); ?>> Hide my name and photo on leaderboards</label></div>
 					<?php endif; ?>
-					<button class="dd-button dd-button-primary" type="submit">Save profile</button>
+					<button class="dd-button dd-button-primary" type="submit"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M7 3v5h8V3"/><rect x="7" y="13" width="10" height="8" rx="1"/></svg>Save profile</button>
 				</form>
 			</section>
 
