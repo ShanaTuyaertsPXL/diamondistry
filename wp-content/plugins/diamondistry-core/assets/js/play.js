@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     !Array.isArray(painting.palette) ||
     !Array.isArray(painting.pattern)
   ) {
-    message.textContent = "Painting kon niet correct worden geladen.";
+    message.textContent = "This painting could not be loaded.";
     return;
   }
 
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (painting.pattern.some((value) => value === 0)) {
     message.textContent =
-      "Deze painting is nog niet compleet en kan nog niet gespeeld worden.";
+      "This painting is not finished yet and cannot be played.";
     return;
   }
 
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (painting.pattern.some((value) => !paletteIds.has(value))) {
     message.textContent =
-      "Deze painting bevat een ongeldige kleur en kan niet geladen worden.";
+      "This painting contains an invalid colour and cannot be loaded.";
     return;
   }
 
@@ -88,11 +88,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const colors = painting.palette.filter((color) => usedColorIds.has(color.id));
 
   if (!colors.length) {
-    message.textContent = "Deze painting bevat geen bruikbare kleuren.";
+    message.textContent = "This painting has no usable colours.";
     return;
   }
 
+  const colorById = new Map(colors.map((color) => [color.id, color]));
   const totalDiamonds = expectedCells;
+  const placed = new Uint8Array(totalDiamonds);
+  let hoverIndex = -1;
+  let wrongIndex = -1;
+  let wrongTimer = 0;
+  let board = null;
 
   const storageKey = `diamondistry-progress-${painting.id}`;
 
@@ -148,9 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function applyZoom() {
-    const size = cellSteps[zoomLevel];
-    grid.style.setProperty("--dd-cell", `${size}px`);
-    grid.style.gridTemplateColumns = `repeat(${painting.width}, ${size}px)`;
+    if (board) {
+      board.setCellSize(cellSteps[zoomLevel]);
+    }
     if (zoomInButton) {
       zoomInButton.disabled = zoomLevel >= cellSteps.length - 1;
     }
@@ -180,13 +186,38 @@ document.addEventListener("DOMContentLoaded", () => {
   function getCompletedIndexes() {
     const indexes = [];
 
-    document.querySelectorAll(".diamondistry-cell").forEach((cell) => {
-      if (cell.dataset.completed === "true") {
-        indexes.push(Number(cell.dataset.index));
+    for (let index = 0; index < placed.length; index += 1) {
+      if (placed[index]) {
+        indexes.push(index);
       }
-    });
+    }
 
     return indexes;
+  }
+
+  function syncReference() {
+    const canvas = document.querySelector(".diamondistry-reference .diamondistry-preview-canvas");
+    if (!canvas || !window.DiamondistryGrid) {
+      return;
+    }
+    const data = window.DiamondistryGrid.previewData(canvas);
+    data.ghostUnfilled = true;
+    data.filled = getCompletedIndexes();
+    window.DiamondistryGrid.paintPreview(canvas, data);
+  }
+
+  function cellStyle(index) {
+    const color = colorById.get(painting.pattern[index]);
+    const isPlaced = placed[index] === 1;
+    return {
+      hex: color ? color.hex : "#eeeeee",
+      symbol: color ? color.symbol : "",
+      placed: isPlaced,
+      hover: index === hoverIndex,
+      wrong: index === wrongIndex,
+      shape: painting.shape === "round" ? "round" : "square",
+      scale: index === hoverIndex ? (isPlaced ? 0.92 : 1.06) : isPlaced ? 0.88 : 1,
+    };
   }
 
   /*
@@ -196,34 +227,25 @@ document.addEventListener("DOMContentLoaded", () => {
   */
 
   function createGrid() {
-    grid.innerHTML = "";
-
-    applyZoom();
-
-    painting.pattern.forEach((colorId, index) => {
-      const color = getColor(colorId);
-
-      if (!color) {
-        return;
+    painting.pattern.forEach((colorId) => {
+      const color = colorById.get(colorId);
+      if (color) {
+        totalsByColor[color.id] += 1;
       }
-
-      totalsByColor[color.id]++;
-
-      const cell = document.createElement("button");
-
-      cell.type = "button";
-      cell.className = "diamondistry-cell";
-
-      cell.dataset.color = color.id;
-      cell.dataset.completed = "false";
-      cell.dataset.index = index;
-
-      cell.textContent = color.symbol;
-
-      cell.setAttribute("aria-label", `${color.name} diamond`);
-
-      grid.appendChild(cell);
     });
+
+    const stage = grid.closest(".diamondistry-stage");
+    board = window.DiamondistryGrid.createViewport(grid, {
+      columns: painting.width,
+      rows: painting.height,
+      cellSize: cellSteps[zoomLevel],
+      gap: 1,
+      padding: 10,
+      scrollParent: stage || grid.parentElement,
+      variant: "play",
+      styleAt: cellStyle,
+    });
+    applyZoom();
   }
 
   /*
@@ -266,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <span class="diamondistry-color-count">
           <strong data-remaining="${color.id}">
-            0 over
+            0 left
           </strong>
 
           <small data-total="${color.id}">
@@ -338,56 +360,46 @@ document.addEventListener("DOMContentLoaded", () => {
   |--------------------------------------------------------------------------
   */
 
-  function completeCell(cell, color) {
-    cell.dataset.completed = "true";
-
-    cell.classList.remove("is-wrong");
-    cell.classList.add("is-completed");
-
-    cell.style.setProperty("--diamond-color", color.hex);
-
-    cell.textContent = "";
-
-    cell.setAttribute("aria-label", `${color.name} diamond geplaatst`);
-  }
-
-  function placeDiamond(cell) {
-    if (!cell || !cell.classList.contains("diamondistry-cell")) {
+  function placeDiamond(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= totalDiamonds || placed[index]) {
       return;
     }
 
-    if (cell.dataset.completed === "true") {
-      return;
-    }
-
-    const color = getColor(cell.dataset.color);
+    const color = colorById.get(painting.pattern[index]);
 
     if (!color) {
       return;
     }
 
     if (selectedColor !== color.id) {
-      cell.classList.remove("is-wrong");
-
-      void cell.offsetWidth;
-
-      cell.classList.add("is-wrong");
-
+      wrongIndex = index;
       message.textContent = `Verkeerde diamond — kies ${color.symbol} ${color.name}.`;
-
-      syncLoupeCell(cell.dataset.index);
-
+      board.redraw();
+      syncLoupeCell(index);
+      window.clearTimeout(wrongTimer);
+      wrongTimer = window.setTimeout(() => {
+        if (wrongIndex === index) {
+          wrongIndex = -1;
+          board.redraw();
+        }
+      }, 320);
       return;
     }
 
-    completeCell(cell, color);
+    if (wrongIndex === index) {
+      wrongIndex = -1;
+    }
+
+    placed[index] = 1;
 
     completed++;
     completedByColor[color.id]++;
 
     updateProgress();
     updatePaletteCounts();
-    syncLoupeCell(cell.dataset.index);
+    board.redraw();
+    syncReference();
+    syncLoupeCell(index);
 
     /*
      * Bij volledige painting meteen opslaan,
@@ -432,11 +444,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (completed === totalDiamonds) {
-      message.textContent = `✨ ${painting.title} voltooid!`;
+      message.textContent = `✨ ${painting.title} completed!`;
       return;
     }
 
-    message.textContent = `${Math.round(percentage)}% voltooid`;
+    message.textContent = `${Math.round(percentage)}% complete`;
   }
 
   function updatePaletteCounts() {
@@ -459,7 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (remainingElement) {
         remainingElement.textContent =
-          remaining === 0 ? "✓ Klaar" : `${remaining} over`;
+          remaining === 0 ? "✓ Done" : `${remaining} left`;
       }
 
       if (totalElementForColor) {
@@ -596,7 +608,7 @@ document.addEventListener("DOMContentLoaded", () => {
         userState.balance = Number(result.data.balance || 0);
 
         message.textContent =
-          `✨ ${painting.title} voltooid! ` +
+          `✨ ${painting.title} completed! ` +
           `+${result.data.reward} 💎 · ` +
           `Balance: ${userState.balance} 💎`;
 
@@ -605,7 +617,7 @@ document.addEventListener("DOMContentLoaded", () => {
           userState.balance,
         );
       } else if (completed === totalDiamonds) {
-        message.textContent = `✨ ${painting.title} voltooid!`;
+        message.textContent = `✨ ${painting.title} completed!`;
       }
 
       return result.data;
@@ -676,27 +688,20 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const cell = document.querySelector(
-        `.diamondistry-cell[data-index="${numericIndex}"]`,
-      );
-
-      if (!cell) {
-        return;
-      }
-
-      const color = getColor(cell.dataset.color);
+      const color = colorById.get(painting.pattern[numericIndex]);
 
       if (!color) {
         return;
       }
 
       restored.add(numericIndex);
-
-      completeCell(cell, color);
-
+      placed[numericIndex] = 1;
       completed++;
       completedByColor[color.id]++;
     });
+
+    board.redraw();
+    syncReference();
 
     const storedColor = Number(progress.selectedColor);
 
@@ -743,7 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (completed > 0 && completed < totalDiamonds) {
           const percentage = Math.round((completed / totalDiamonds) * 100);
 
-          message.textContent = `Verder waar je gebleven was — ${percentage}% voltooid`;
+          message.textContent = `Welcome back, picking up at ${percentage}%`;
         }
 
         return;
@@ -759,13 +764,13 @@ document.addEventListener("DOMContentLoaded", () => {
         applyProgress(localProgress);
 
         message.textContent =
-          "Bestaande voortgang wordt naar je account overgezet…";
+          "Moving your progress to your account…";
 
         saveServerProgress().then(() => {
           if (completed < totalDiamonds) {
             const percentage = Math.round((completed / totalDiamonds) * 100);
 
-            message.textContent = `Voortgang opgeslagen in je account — ${percentage}% voltooid`;
+            message.textContent = `Progress saved to your account: ${percentage}% complete`;
           }
         });
 
@@ -795,7 +800,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (completed > 0 && completed < totalDiamonds) {
       const percentage = Math.round((completed / totalDiamonds) * 100);
 
-      message.textContent = `Verder waar je gebleven was — ${percentage}% voltooid`;
+      message.textContent = `Welcome back, picking up at ${percentage}%`;
     }
   }
 
@@ -814,21 +819,11 @@ document.addEventListener("DOMContentLoaded", () => {
       completedByColor[color.id] = 0;
     });
 
-    document.querySelectorAll(".diamondistry-cell").forEach((cell) => {
-      const color = getColor(cell.dataset.color);
-
-      cell.dataset.completed = "false";
-
-      cell.classList.remove("is-completed", "is-wrong");
-
-      cell.style.removeProperty("--diamond-color");
-
-      if (color) {
-        cell.textContent = color.symbol;
-
-        cell.setAttribute("aria-label", `${color.name} diamond`);
-      }
-    });
+    placed.fill(0);
+    hoverIndex = -1;
+    wrongIndex = -1;
+    board.redraw();
+    syncReference();
 
     if (colors.length) {
       selectColor(colors[0].id, false);
@@ -866,7 +861,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function resetPainting() {
     const confirmed = window.confirm(
-      `Weet je zeker dat je "${painting.title}" opnieuw wilt beginnen?`,
+      `Start "${painting.title}" over from scratch?`,
     );
 
     if (!confirmed) {
@@ -886,7 +881,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await resetServerProgress();
 
         if (!result.success) {
-          window.alert("Reset kon niet worden opgeslagen. Probeer opnieuw.");
+          window.alert("The reset could not be saved. Please try again.");
 
           return;
         }
@@ -905,7 +900,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error(error);
 
-        window.alert("Reset kon niet worden opgeslagen. Probeer opnieuw.");
+        window.alert("The reset could not be saved. Please try again.");
 
         return;
       }
@@ -945,7 +940,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const completionKicker = document.createElement("p");
   completionKicker.className = "diamondistry-complete-kicker";
-  completionKicker.textContent = "Voltooid";
+  completionKicker.textContent = "Completed";
 
   completionTitle.id = "diamondistry-complete-title";
   completionTitle.textContent = painting.title;
@@ -953,7 +948,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const completionBody = document.createElement("p");
   completionBody.className = "diamondistry-complete-text";
-  completionBody.textContent = "Alle diamonds zitten op hun plek.";
+  completionBody.textContent = "Every diamond is in its place.";
 
   completionRewardText.className = "diamondistry-complete-reward";
   completionRewardText.hidden = true;
@@ -963,13 +958,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   completionClose.type = "button";
   completionClose.className = "diamondistry-complete-close";
-  completionClose.textContent = "Sluiten";
+  completionClose.textContent = "Close";
 
   const completionBack = document.createElement("a");
-  const paintingsLink = document.querySelector(".diamondistry-back");
+  const paintingsLink = document.querySelector(".diamondistry-breadcrumb a");
   completionBack.className = "diamondistry-complete-back";
   completionBack.href = paintingsLink ? paintingsLink.href : "/paintings/";
-  completionBack.textContent = "Terug naar paintings";
+  completionBack.textContent = "Back to paintings";
 
   completionActions.append(completionClose, completionBack);
 
@@ -993,7 +988,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     completionRewardText.hidden = false;
     completionRewardText.textContent =
-      `+${completionReward.amount} 💎 toegevoegd · Balance ${completionReward.balance} 💎`;
+      `+${completionReward.amount} 💎 added · Balance ${completionReward.balance} 💎`;
   }
 
   function openCompletion() {
@@ -1050,32 +1045,38 @@ document.addEventListener("DOMContentLoaded", () => {
   |--------------------------------------------------------------------------
   */
 
-  grid.addEventListener("pointerdown", (event) => {
-    const cell = event.target.closest(".diamondistry-cell");
+  function hoverCell(event) {
+    const index = board ? board.cellFromEvent(event) : -1;
+    if (index === hoverIndex) {
+      return index;
+    }
+    hoverIndex = index;
+    if (board) {
+      board.redraw();
+    }
+    return index;
+  }
 
-    if (!cell) {
+  grid.addEventListener("pointerdown", (event) => {
+    const index = hoverCell(event);
+
+    if (index < 0) {
       return;
     }
 
     event.preventDefault();
-
     isPainting = true;
-
-    placeDiamond(cell);
+    placeDiamond(index);
   });
 
   grid.addEventListener("pointermove", (event) => {
-    if (!isPainting) {
+    const index = hoverCell(event);
+
+    if (!isPainting || index < 0) {
       return;
     }
 
-    const element = document.elementFromPoint(event.clientX, event.clientY);
-
-    const cell = element?.closest(".diamondistry-cell");
-
-    if (cell && grid.contains(cell)) {
-      placeDiamond(cell);
-    }
+    placeDiamond(index);
   });
 
   /*
@@ -1136,93 +1137,61 @@ document.addEventListener("DOMContentLoaded", () => {
   const stage = grid.closest(".diamondistry-stage");
   const loupe = document.createElement("div");
   const loupeView = document.createElement("div");
-  const loupeGrid = document.createElement("div");
+  const loupeCanvas = document.createElement("canvas");
   const loupeLens = 188;
   const loupeScale = 2.2;
   let loupeOn = false;
+  let loupePoint = null;
 
   loupe.className = "diamondistry-loupe";
   loupe.hidden = true;
   loupe.setAttribute("aria-hidden", "true");
   loupeView.className = "diamondistry-loupe-view";
-  loupeGrid.className = "diamondistry-grid diamondistry-loupe-grid";
-  loupeView.appendChild(loupeGrid);
+  loupeCanvas.className = "diamondistry-loupe-canvas";
+  loupeView.appendChild(loupeCanvas);
   loupe.appendChild(loupeView);
   document.body.appendChild(loupe);
 
   function syncLoupeMetrics() {
-    loupeGrid.style.gridTemplateColumns = grid.style.gridTemplateColumns;
-    const size = grid.style.getPropertyValue("--dd-cell");
-    if (size) {
-      loupeGrid.style.setProperty("--dd-cell", size);
-    }
+    syncLoupeGrid();
   }
 
   function syncLoupeGrid() {
-    if (!loupeOn) {
+    if (!loupeOn || !loupePoint || !board) {
       return;
     }
-
-    loupeGrid.replaceChildren(
-      ...[...grid.children].map((cell) => {
-        const copy = cell.cloneNode(true);
-        copy.tabIndex = -1;
-        return copy;
-      }),
-    );
-    syncLoupeMetrics();
+    board.paintMagnifier(loupeCanvas, loupePoint.x, loupePoint.y, loupeLens, loupeScale);
   }
 
-  function syncLoupeCell(index) {
-    if (!loupeOn) {
-      return;
-    }
-
-    const source = grid.querySelector(
-      `.diamondistry-cell[data-index="${index}"]`,
-    );
-    const copy = loupeGrid.querySelector(
-      `.diamondistry-cell[data-index="${index}"]`,
-    );
-
-    if (!source || !copy) {
-      syncLoupeGrid();
-      return;
-    }
-
-    copy.className = source.className;
-    copy.dataset.completed = source.dataset.completed;
-    copy.textContent = source.textContent;
-    copy.setAttribute("aria-label", source.getAttribute("aria-label") || "");
-
-    const diamondColor = source.style.getPropertyValue("--diamond-color");
-    if (diamondColor) {
-      copy.style.setProperty("--diamond-color", diamondColor);
-    } else {
-      copy.style.removeProperty("--diamond-color");
-    }
+  function syncLoupeCell() {
+    syncLoupeGrid();
   }
 
   function moveLoupe(event) {
-    if (!loupeOn) {
+    if (!loupeOn || !board) {
       return;
     }
 
+    const point = board.localPoint(event);
     const rect = grid.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const inside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
+    const inside =
+      point.x >= 0 &&
+      point.y >= 0 &&
+      point.x <= rect.width &&
+      point.y <= rect.height;
 
     loupe.hidden = !inside;
 
     if (!inside) {
+      loupePoint = null;
       return;
     }
 
+    loupePoint = point;
     const lift = event.pointerType === "touch" ? loupeLens / 2 + 28 : 0;
     const frame = 3;
     loupe.style.transform = `translate(${event.clientX - loupeLens / 2 - frame}px, ${event.clientY - loupeLens / 2 - frame - lift}px)`;
-    loupeGrid.style.transform = `translate(${loupeLens / 2 - x * loupeScale}px, ${loupeLens / 2 - y * loupeScale}px) scale(${loupeScale})`;
+    board.paintMagnifier(loupeCanvas, point.x, point.y, loupeLens, loupeScale);
   }
 
   function setLoupe(enabled) {
@@ -1269,6 +1238,11 @@ document.addEventListener("DOMContentLoaded", () => {
   grid.addEventListener("pointerdown", moveLoupe);
   grid.addEventListener("pointerleave", () => {
     loupe.hidden = true;
+    loupePoint = null;
+    if (hoverIndex !== -1) {
+      hoverIndex = -1;
+      board.redraw();
+    }
   });
 
   if (zoomInButton) {
@@ -1391,4 +1365,5 @@ document.addEventListener("DOMContentLoaded", () => {
   createPalette();
   updatePaletteCounts();
   loadProgress();
+  syncReference();
 });

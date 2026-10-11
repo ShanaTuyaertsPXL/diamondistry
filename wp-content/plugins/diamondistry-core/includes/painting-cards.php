@@ -22,6 +22,14 @@ function diamondistry_enqueue_painting_card_assets() {
 		array(),
 		DIAMONDISTRY_CORE_VERSION
 	);
+
+	wp_enqueue_script(
+		'diamondistry-grid',
+		DIAMONDISTRY_CORE_URL . 'assets/js/grid-canvas.js',
+		array(),
+		DIAMONDISTRY_CORE_VERSION,
+		true
+	);
 }
 
 
@@ -235,16 +243,20 @@ function diamondistry_get_painting_card_state(
 		$status =
 			'progress';
 
+		// In progress: never show 0% or 100%, even when rounding would.
 		$percentage =
 			$total > 0
-				? min(
-					100,
-					round(
-						(
-							$completed_count /
-							$total
-						) *
-						100
+				? max(
+					1,
+					min(
+						99,
+						round(
+							(
+								$completed_count /
+								$total
+							) *
+							100
+						)
 					)
 				)
 				: 0;
@@ -438,6 +450,8 @@ function diamondistry_render_painting_card(
 	}
 
 	$show_action = ( 'dashboard' === $context );
+	$unlock_cost = function_exists( 'diamondistry_get_unlock_cost' ) ? diamondistry_get_unlock_cost( $painting->ID ) : 0;
+	$is_locked   = $unlock_cost && function_exists( 'diamondistry_user_can_play' ) && ! diamondistry_user_can_play( get_current_user_id(), $painting );
 
 	ob_start();
 

@@ -4,7 +4,8 @@
  *
  * Available:
  * $painting, $data, $state, $context, $progress, $play_url,
- * $category_label, $category_slugs, $cover_url, $is_favorite, $show_action
+ * $category_label, $category_slugs, $cover_url, $is_favorite, $show_action,
+ * $unlock_cost, $is_locked
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,16 +16,20 @@ $status     = $state['status'];
 $percentage = $state['percentage'];
 
 if ( 'completed' === $status ) {
-	$action_label = 'View painting →';
+	$action_label = 'View painting';
 } elseif ( 'progress' === $status ) {
-	$action_label = 'Continue Painting →';
+	$action_label = 'Continue painting';
 } else {
-	$action_label = 'Start painting →';
+	$action_label = 'Start painting';
+}
+
+if ( $is_locked ) {
+	$action_label = 'Unlock';
 }
 ?>
 
 <article
-	class="diamondistry-painting-card diamondistry-painting-card--<?php echo esc_attr( $context ); ?> is-<?php echo esc_attr( $status ); ?>"
+	class="diamondistry-painting-card diamondistry-painting-card--<?php echo esc_attr( $context ); ?> is-<?php echo esc_attr( $status ); ?><?php echo $is_locked ? ' is-locked' : ''; ?>"
 	data-painting-id="<?php echo esc_attr( $data['id'] ); ?>"
 	data-painting-post-id="<?php echo esc_attr( $painting->ID ); ?>"
 	data-total="<?php echo esc_attr( $state['total'] ); ?>"
@@ -51,6 +56,14 @@ if ( 'completed' === $status ) {
 				<path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 4.6-7 9-7 9Z" fill="currentColor" stroke="currentColor" stroke-width="1.4"/>
 			</svg>
 		</button>
+
+		<?php if ( $is_locked ) : ?>
+			<span class="diamondistry-painting-card-lock">
+				<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+				<?php echo esc_html( number_format_i18n( $unlock_cost ) ); ?> 💎
+				<span class="screen-reader-text">to unlock</span>
+			</span>
+		<?php endif; ?>
 
 		<span class="diamondistry-painting-card-badge" <?php echo 'completed' === $status ? '' : 'hidden'; ?>>
 			<?php echo 'completed' === $status ? 'Completed' : ''; ?>
@@ -80,7 +93,7 @@ if ( 'completed' === $status ) {
 		<?php endif; ?>
 
 		<?php if ( $show_action ) : ?>
-			<a class="diamondistry-painting-card-action" href="<?php echo esc_url( $play_url ); ?>"><?php echo esc_html( $action_label ); ?></a>
+			<a class="diamondistry-painting-card-action" href="<?php echo esc_url( $play_url ); ?>"><span class="diamondistry-painting-card-action-label"><?php echo esc_html( $action_label ); ?></span> <span class="diamondistry-painting-card-action-arrow" aria-hidden="true">→</span></a>
 		<?php endif; ?>
 	</div>
 </article>

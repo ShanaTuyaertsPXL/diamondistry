@@ -1,4 +1,4 @@
-.diamondistry-gallery-page { padding: 8px 10px 6px; }
+.diamondistry-gallery-page { padding: 0; }
 .diamondistry-gallery-intro h1 {
   margin: 0;
   color: #12142b;
@@ -130,10 +130,6 @@
     border-color: #e4dff6;
     box-shadow: 0 18px 40px rgb(80 62 160 / 0.14);
   }
-  .diamondistry-painting-card:hover .diamondistry-painting-card-cover,
-  .diamondistry-painting-card:hover .diamondistry-card-preview-grid {
-    transform: scale(1.045);
-  }
   .diamondistry-gallery.is-booting .diamondistry-painting-card--gallery:hover,
   .diamondistry-painting-card--gallery.is-entering:hover,
   .diamondistry-painting-card--gallery.is-leaving:hover {
@@ -147,9 +143,7 @@
   .diamondistry-painting-card--gallery,
   .diamondistry-painting-card-cover,
   .diamondistry-card-preview-grid { transition: none; }
-  .diamondistry-painting-card:hover,
-  .diamondistry-painting-card:hover .diamondistry-painting-card-cover,
-  .diamondistry-painting-card:hover .diamondistry-card-preview-grid { transform: none; }
+  .diamondistry-painting-card:hover { transform: none; }
   .diamondistry-favorite.is-pop svg,
   .diamondistry-favorite.is-pop::after,
   .diamondistry-favorite.is-pop .diamondistry-favorite-burst i,
@@ -165,6 +159,8 @@
   position: relative;
   aspect-ratio: 4 / 3;
   background: #f6f4fb;
+  /* Lets the artwork size itself against both width and height of this box. */
+  container-type: size;
 }
 .diamondistry-painting-card-media {
   position: absolute;
@@ -178,18 +174,22 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.45s ease;
 }
 .diamondistry-card-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--painting-width), 1fr);
-  width: min(78%, 220px);
-  transition: transform 0.45s ease;
+  display: block;
+  /* Fit inside the preview with an even 28px frame, whatever the painting's ratio. */
+  width: min(100cqw - 56px, (100cqh - 56px) * var(--painting-width) / var(--painting-height));
   aspect-ratio: var(--painting-width) / var(--painting-height);
   overflow: hidden;
   border-radius: 10px;
   background: #ddd;
   box-shadow: 0 12px 28px rgb(0 0 0 / 0.12);
+}
+.diamondistry-preview-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 .diamondistry-card-preview-cell {
   display: block;
@@ -301,7 +301,34 @@
   text-overflow: ellipsis;
 }
 .diamondistry-painting-card-badge[hidden] { display: none; }
-.diamondistry-painting-card-content { padding: 14px 14px 16px; }
+.diamondistry-painting-card-lock {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgb(28 33 68 / 0.82);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+/* Locked art is shown muted so the price reads first. */
+.diamondistry-painting-card.is-locked .diamondistry-card-preview-grid,
+.diamondistry-painting-card.is-locked .diamondistry-painting-card-cover { filter: saturate(0.55) brightness(0.96); opacity: 0.85; }
+.diamondistry-painting-card.is-locked .diamondistry-painting-card-progress { visibility: hidden; }
+.diamondistry-painting-card-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 14px 14px 16px;
+}
+/* Progress always sits at the bottom so cards line up with or without a category. */
+.diamondistry-painting-card-progress { margin-top: auto; padding-top: 12px; }
 .diamondistry-painting-card h3 { margin: 0; font-size: 1rem; line-height: 1.3; }
 .diamondistry-painting-card h3 a { color: inherit; text-decoration: none; }
 .diamondistry-painting-card-category {
@@ -314,7 +341,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
 }
 .diamondistry-painting-card-progress-track {
   flex: 1;
@@ -346,18 +372,21 @@
 }
 .diamondistry-painting-card-action {
   display: inline-flex;
+  align-self: flex-start;
   align-items: center;
-  justify-content: center;
-  min-height: 40px;
+  gap: 6px;
   margin-top: 14px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: #6e4df6;
-  color: #fff;
-  font-size: 0.86rem;
+  color: #6e4df6;
+  font-size: 0.9rem;
   font-weight: 800;
   text-decoration: none;
 }
+.diamondistry-painting-card-action-arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.diamondistry-painting-card:hover .diamondistry-painting-card-action-arrow,
+.diamondistry-painting-card-action:focus-visible .diamondistry-painting-card-action-arrow { transform: translateX(4px); }
 
 @media (max-width: 1100px) {
   .diamondistry-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -389,6 +418,5 @@
   .diamondistry-gallery-intro h1 { font-size: 2rem; }
   .diamondistry-painting-card-content { padding: 14px 16px 16px; }
   .diamondistry-painting-card h3 { font-size: 1.2rem; line-height: 1.25; }
-  .diamondistry-card-preview-grid { width: min(70%, 240px); }
   .diamondistry-painting-card-badge { max-width: none; }
 }
