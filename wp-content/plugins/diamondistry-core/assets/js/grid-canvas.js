@@ -622,19 +622,21 @@
       }
     }
 
-    // Footer: logo left, small purple eyebrow + title right, both centred on one line.
+    // Footer: logo left, small purple eyebrow + title right; logo and title share one baseline.
     const footerMid = boardY + boardH + margin * 0.6 + 36;
+    const baseline = footerMid + 30;
     const left = Math.max(margin, boardX);
     const right = width - left;
     if (opts.logo && opts.logo.naturalWidth) {
       const logoH = 64;
       const logoW = (opts.logo.naturalWidth / opts.logo.naturalHeight) * logoH;
-      ctx.drawImage(opts.logo, left, footerMid - logoH / 2, logoW, logoH);
+      // +20: the logo file has padding under its wordmark; this puts the wordmark on the title's baseline.
+      ctx.drawImage(opts.logo, left, baseline - logoH + 20, logoW, logoH);
     } else {
       ctx.fillStyle = "#1c2144";
       ctx.font = "800 40px Nunito, Arial, sans-serif";
-      ctx.textBaseline = "middle";
-      ctx.fillText(opts.siteName || "Diamondistry", left, footerMid);
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(opts.siteName || "Diamondistry", left, baseline);
     }
 
     ctx.textAlign = "right";
@@ -650,7 +652,7 @@
     }
     ctx.fillStyle = "#1c2144";
     ctx.font = "600 36px Fraunces, Georgia, serif";
-    ctx.fillText(opts.title || "", right, footerMid + 30);
+    ctx.fillText(opts.title || "", right, baseline);
 
     return canvas;
   }
