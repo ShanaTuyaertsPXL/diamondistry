@@ -23,6 +23,22 @@ function diamondistry_theme_setup() {
 }
 add_action( 'after_setup_theme', 'diamondistry_theme_setup' );
 
+/**
+ * Privacy: don't load emoji images from s.w.org (WordPress.org, US). Browsers
+ * render emoji natively, so nothing changes visually.
+ */
+function diamondistry_theme_disable_emoji() {
+	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+	remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+	remove_action( 'wp_print_styles', 'print_emoji_styles' );
+	remove_action( 'admin_print_styles', 'print_emoji_styles' );
+	remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
+	remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
+	remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
+	add_filter( 'emoji_svg_url', '__return_false' );
+}
+add_action( 'init', 'diamondistry_theme_disable_emoji' );
+
 function diamondistry_theme_enqueue_assets() {
 	$theme = wp_get_theme();
 	wp_enqueue_style(
