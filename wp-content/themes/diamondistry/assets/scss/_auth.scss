@@ -97,6 +97,19 @@
   color: var(--dd-muted);
   text-align: center;
 }
+.dd-auth__legal {
+  margin: 32px 0 0;
+  font-size: 0.82rem;
+  text-align: center;
+}
+.dd-auth__legal a {
+  color: var(--dd-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.dd-auth__legal a:hover {
+  color: var(--dd-purple);
+}
 
 // Login and register stay flat: no glow on focused fields, no shadow under the buttons.
 .dd-auth .dd-field__input:focus,

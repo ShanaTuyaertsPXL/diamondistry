@@ -850,6 +850,7 @@ function diamondistry_render_login() {
 			<button class="dd-button dd-button-primary dd-button--block" type="submit">Log in</button>
 		</form>
 		<p class="dd-auth__switch">New here? <a class="dd-link" href="<?php echo esc_url( wp_registration_url() ); ?>">Create an account</a></p>
+		<?php echo diamondistry_auth_privacy_link(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
 	</div>
 	<?php
 	return ob_get_clean();
@@ -882,6 +883,7 @@ function diamondistry_render_lostpassword() {
 			<button class="dd-button dd-button-primary dd-button--block" type="submit">Send reset link</button>
 		</form>
 		<p class="dd-auth__switch"><a class="dd-link" href="<?php echo esc_url( wp_login_url() ); ?>">← Back to log in</a></p>
+		<?php echo diamondistry_auth_privacy_link(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
 	</div>
 	<?php
 	return ob_get_clean();
@@ -982,6 +984,7 @@ function diamondistry_render_register() {
 			</form>
 		<?php endif; ?>
 		<p class="dd-auth__switch">Already have an account? <a class="dd-link" href="<?php echo esc_url( wp_login_url() ); ?>">Log in</a></p>
+		<?php echo diamondistry_auth_privacy_link(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
 	</div>
 	<?php
 	return ob_get_clean();
@@ -1217,3 +1220,9 @@ add_shortcode(
 		return diamondistry_compact_html( diamondistry_render_account() );
 	}
 );
+
+/** Small privacy link under the login, register and password forms, once the page is published. */
+function diamondistry_auth_privacy_link() {
+	$url = get_privacy_policy_url();
+	return $url ? '<p class="dd-auth__legal"><a href="' . esc_url( $url ) . '">Privacy policy</a></p>' : '';
+}
