@@ -813,9 +813,6 @@ function diamondistry_render_players_notice() {
 			'balance-updated' =>
 				'Diamond balance updated.',
 
-			'painting-unlocked' =>
-				'Painting unlocked for this player. No diamonds were charged.',
-
 			'painting-locked' =>
 				'Painting locked again. Any diamonds the player paid for it were refunded.',
 

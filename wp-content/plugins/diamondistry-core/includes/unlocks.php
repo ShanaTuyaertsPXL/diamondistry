@@ -5,7 +5,7 @@
  * Post meta `_diamondistry_unlock_cost` (int, 0 = free) is set in the painting editor.
  * User meta `_diamondistry_unlocked` stores unlocked painting IDs, for example [12, 34].
  * User meta `_diamondistry_unlock_paid` stores what was paid per painting, for example {"12": 100},
- * so locking again refunds exactly that (0 for free admin unlocks, even if the price changed since).
+ * so locking again refunds exactly that, even if the price changed since.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -231,7 +231,7 @@ function diamondistry_handle_unlock_admin_actions() {
 	}
 
 	$action = sanitize_key( wp_unslash( $_POST['diamondistry_player_action'] ) );
-	if ( ! in_array( $action, array( 'unlock_painting', 'lock_painting', 'reset_unlocks' ), true ) ) {
+	if ( ! in_array( $action, array( 'lock_painting', 'reset_unlocks' ), true ) ) {
 		return;
 	}
 
@@ -252,12 +252,6 @@ function diamondistry_handle_unlock_admin_actions() {
 		diamondistry_players_redirect( $user_id, 'unlocks-reset' );
 	}
 
-	if ( $painting_id && 'unlock_painting' === $action ) {
-		// Free admin unlock: nothing paid, so nothing to refund later.
-		diamondistry_set_painting_unlocked( $user_id, $painting_id, true );
-		diamondistry_players_redirect( $user_id, 'painting-unlocked' );
-	}
-
 	if ( $painting_id && 'lock_painting' === $action ) {
 		diamondistry_relock_painting( $user_id, $painting_id );
 		diamondistry_players_redirect( $user_id, 'painting-locked' );
@@ -267,89 +261,44 @@ function diamondistry_handle_unlock_admin_actions() {
 add_action( 'admin_init', 'diamondistry_handle_unlock_admin_actions', 5 );
 
 function diamondistry_render_player_unlocks( $user_id ) {
-	$paintings = get_posts(
-		array(
-			'post_type'      => 'ddp_painting',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'orderby'        => 'title',
-			'order'          => 'ASC',
-			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery -- admin screen, small table.
-				array(
-					'key'     => DIAMONDISTRY_UNLOCK_COST_META_KEY,
-					'value'   => 0,
-					'compare' => '>',
-					'type'    => 'NUMERIC',
-				),
-			),
-		)
-	);
-
 	$unlocked = diamondistry_get_user_unlocked_ids( $user_id );
 	$payments = diamondistry_get_unlock_payments( $user_id );
-	$progress = diamondistry_get_all_user_progress( $user_id );
 
-	$form = function ( $action, $painting_id, $label, $class = 'button', $enabled = true ) use ( $user_id ) {
+	$form = function ( $action, $painting_id, $label ) use ( $user_id ) {
 		?>
 		<form method="post" style="display:inline-block;">
 			<?php wp_nonce_field( 'diamondistry_player_admin_action', 'diamondistry_player_nonce' ); ?>
 			<input type="hidden" name="diamondistry_player_action" value="<?php echo esc_attr( $action ); ?>">
 			<input type="hidden" name="user_id" value="<?php echo esc_attr( $user_id ); ?>">
 			<input type="hidden" name="painting_id" value="<?php echo esc_attr( $painting_id ); ?>">
-			<button type="submit" class="<?php echo esc_attr( $class ); ?>" <?php disabled( ! $enabled ); ?>><?php echo esc_html( $label ); ?></button>
+			<button type="submit" class="button"><?php echo esc_html( $label ); ?></button>
 		</form>
 		<?php
 	};
 	?>
 	<hr>
 	<h2>Unlocks</h2>
-	<p>Paintings with an unlock price. Unlocking here is free for the player. Locking again refunds what the player paid for it.</p>
 
-	<?php if ( empty( $paintings ) ) : ?>
-		<p><em>No paintings have an unlock price yet. Set one under Paintings → Edit → Unlock price.</em></p>
+	<?php if ( empty( $unlocked ) ) : ?>
+		<p><em>This player has not unlocked any paintings.</em></p>
 	<?php else : ?>
+		<p>Paintings this player unlocked. Locking again refunds what they paid for it.</p>
 		<table class="widefat striped" style="max-width:900px;">
 			<thead>
-				<tr><th>Painting</th><th>Price</th><th>Status</th><th>Paid</th><th>Action</th></tr>
+				<tr><th>Painting</th><th>Paid</th><th>Action</th></tr>
 			</thead>
 			<tbody>
-				<?php foreach ( $paintings as $painting ) : ?>
-					<?php
-					$is_unlocked = in_array( (int) $painting->ID, $unlocked, true );
-					$started     = ! empty( $progress[ (string) $painting->ID ]['completedCells'] );
-					?>
+				<?php foreach ( $unlocked as $painting_id ) : ?>
+					<?php $paid = isset( $payments[ (string) $painting_id ] ) ? $payments[ (string) $painting_id ] : 0; ?>
 					<tr>
-						<td><?php echo esc_html( get_the_title( $painting ) ); ?></td>
-						<td><?php echo esc_html( number_format_i18n( diamondistry_get_unlock_cost( $painting->ID ) ) ); ?> 💎</td>
-						<td>
-							<?php
-							if ( $is_unlocked ) {
-								echo 'Unlocked';
-							} elseif ( $started ) {
-								echo 'Playable (already started)';
-							} else {
-								echo 'Locked';
-							}
-							?>
-						</td>
-						<td><?php echo $is_unlocked ? esc_html( number_format_i18n( isset( $payments[ (string) $painting->ID ] ) ? $payments[ (string) $painting->ID ] : 0 ) ) . ' 💎' : '—'; ?></td>
-						<td>
-							<?php
-							$paid = isset( $payments[ (string) $painting->ID ] ) ? $payments[ (string) $painting->ID ] : 0;
-							if ( $is_unlocked ) {
-								$form( 'lock_painting', $painting->ID, $paid ? sprintf( 'Lock again (refund %s 💎)', number_format_i18n( $paid ) ) : 'Lock again' );
-							} else {
-								$form( 'unlock_painting', $painting->ID, 'Unlock (free)' );
-							}
-							?>
-						</td>
+						<td><?php echo esc_html( function_exists( 'diamondistry_get_painting_title_by_id' ) ? diamondistry_get_painting_title_by_id( $painting_id ) : get_the_title( $painting_id ) ); ?></td>
+						<td><?php echo esc_html( number_format_i18n( $paid ) ); ?> 💎</td>
+						<td><?php $form( 'lock_painting', $painting_id, $paid ? sprintf( 'Lock again (refund %s 💎)', number_format_i18n( $paid ) ) : 'Lock again' ); ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>
 		</table>
-		<p>
-			<?php $form( 'reset_unlocks', 0, 'Reset all unlocks', 'button', ! empty( $unlocked ) ); ?>
-		</p>
+		<p><?php $form( 'reset_unlocks', 0, 'Reset all unlocks' ); ?></p>
 	<?php endif; ?>
 	<?php
 }
