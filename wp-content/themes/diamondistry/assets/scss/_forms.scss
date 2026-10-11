@@ -39,9 +39,7 @@
   font: inherit;
   font-size: 1rem;
   box-sizing: border-box;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 .dd-field__input:hover {
   border-color: #d3cde6;
@@ -49,7 +47,6 @@
 .dd-field__input:focus {
   border-color: var(--dd-purple);
   outline: none;
-  box-shadow: 0 0 0 4px rgb(110 77 246 / 0.14);
 }
 .dd-field__hint {
   margin: 0;

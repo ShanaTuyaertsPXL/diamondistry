@@ -24,7 +24,7 @@ function diamondistry_render_demo_login_hint() {
 	}
 
 	return sprintf(
-		'<div class="dd-demo-hint"><p><strong>Just looking around?</strong> Use the demo account: <span class="dd-demo-hint__login"><code>%1$s</code> / <code>%2$s</code></span></p><button type="button" class="dd-text-button" data-demo-fill data-login="%1$s" data-password="%2$s">Fill in</button></div>',
+		'<div class="dd-demo-hint"><p><strong>Just looking around?</strong> Log in with the shared demo account.</p><div class="dd-demo-hint__row"><span><code>%1$s</code> / <code>%2$s</code></span><button type="button" class="dd-text-button" data-demo-fill data-login="%1$s" data-password="%2$s">Fill in →</button></div></div>',
 		esc_attr( DIAMONDISTRY_DEMO_LOGIN ),
 		esc_attr( DIAMONDISTRY_DEMO_PASSWORD )
 	);

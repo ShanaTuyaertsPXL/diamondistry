@@ -1084,7 +1084,7 @@ function diamondistry_render_account() {
 			<div class="dd-notice dd-notice--info" role="status">This is the shared demo account: play as much as you like, but its settings are locked.</div>
 		<?php endif; ?>
 
-		<div class="dd-account__grid">
+		<div class="dd-account__grid<?php echo diamondistry_is_demo_user() ? ' is-locked" inert' : '"'; ?>>
 			<section class="dd-panel" aria-labelledby="dd-profile-title">
 				<h2 class="dd-panel__title" id="dd-profile-title">Profile</h2>
 				<p class="dd-panel__lead">Your photo, name and the line shown on your dashboard.</p>
@@ -1175,7 +1175,7 @@ function diamondistry_render_account() {
 					);
 					?>
 					<?php if ( defined( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY' ) ) : ?>
-						<label class="dd-check"><input type="checkbox" name="leaderboard_hidden" value="1" <?php checked( (bool) get_user_meta( $user->ID, DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY, true ) ); ?>> Hide my name and photo on leaderboards</label>
+						<div class="dd-form__row"><label class="dd-check"><input type="checkbox" name="leaderboard_hidden" value="1" <?php checked( (bool) get_user_meta( $user->ID, DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY, true ) ); ?>> Hide my name and photo on leaderboards</label></div>
 					<?php endif; ?>
 					<button class="dd-button dd-button-primary" type="submit">Save profile</button>
 				</form>
@@ -1222,7 +1222,7 @@ function diamondistry_render_account() {
 		<?php echo function_exists( 'diamondistry_render_delete_account_panel' ) ? diamondistry_render_delete_account_panel() : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</div>
 	<?php
-	return ob_get_clean();
+	return diamondistry_compact_html( ob_get_clean() );
 }
 
 add_shortcode(

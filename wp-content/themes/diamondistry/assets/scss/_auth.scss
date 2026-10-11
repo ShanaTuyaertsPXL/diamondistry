@@ -94,12 +94,10 @@
   margin: 20px 0 16px;
 }
 .dd-demo-hint {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  gap: 8px;
   margin: 0 0 22px;
-  padding: 12px 14px 12px 16px;
+  padding: 14px 16px;
   border-radius: 12px;
   background: var(--dd-purple-soft);
   color: var(--dd-text);
@@ -109,19 +107,21 @@
 .dd-demo-hint p {
   margin: 0;
 }
-.dd-demo-hint__login {
-  white-space: nowrap;
+.dd-demo-hint__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 .dd-demo-hint code {
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 6px;
   background: #fff;
   color: var(--dd-purple-dark);
   font-size: 0.85rem;
 }
 .dd-demo-hint .dd-text-button {
-  flex: 0 0 auto;
-  white-space: nowrap;
+  padding: 0;
   color: var(--dd-purple);
 }
 .dd-demo-hint .dd-text-button:hover {
@@ -152,8 +152,7 @@
   color: var(--dd-purple);
 }
 
-// Login and register stay flat: no glow on focused fields, no shadow under the buttons.
-.dd-auth .dd-field__input:focus,
+// Login and register stay flat: no shadow under the buttons.
 .dd-auth .dd-button,
 .dd-auth .dd-button:hover {
   box-shadow: none;

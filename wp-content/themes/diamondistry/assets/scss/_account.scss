@@ -110,7 +110,12 @@
   line-height: 1.6;
 }
 .dd-account > .dd-notice {
-  margin: 0 0 20px;
+  margin: 0;
+}
+// Demo account: the forms are inert, so show them as locked.
+.dd-account__grid.is-locked {
+  opacity: 0.55;
+  user-select: none;
 }
 .dd-panel > .dd-notice {
   margin-bottom: 16px;
