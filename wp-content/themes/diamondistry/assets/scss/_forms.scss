@@ -6,6 +6,13 @@
   display: grid;
   gap: 16px;
 }
+// wpautop wraps loose buttons in <p> and leaves empty ones; the grid gap does the spacing.
+.dd-form > p {
+  margin: 0;
+}
+.dd-form p:empty {
+  display: none;
+}
 .dd-form__cols {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
