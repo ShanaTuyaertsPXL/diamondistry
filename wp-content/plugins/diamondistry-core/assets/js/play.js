@@ -681,6 +681,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (result.data?.rewardGranted) {
         userState.balance = Number(result.data.balance || 0);
 
+        // Keep the header balance (desktop + mobile menu) in sync without a reload.
+        document.querySelectorAll(".diamondistry-header-balance-value").forEach((el) => {
+          el.textContent = el.textContent.includes("💎")
+            ? `· ${userState.balance.toLocaleString()} 💎`
+            : userState.balance.toLocaleString();
+        });
+
         message.textContent =
           `✨ ${painting.title} completed! ` +
           `+${result.data.reward} 💎 · ` +

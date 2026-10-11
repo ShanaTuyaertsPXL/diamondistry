@@ -376,7 +376,8 @@ function diamondistry_ajax_save_progress() {
 	$last_save_at = ! empty( $old_progress['lastSaveAt'] ) ? absint( $old_progress['lastSaveAt'] ) : $now;
 	$added_cells  = count( array_diff( $completed_cells, $old_completed_cells ) );
 	$implausible  = ! empty( $old_completed_cells ) && ! empty( $old_progress['implausible'] );
-	if ( function_exists( 'diamondistry_challenge_save_is_plausible' ) && ! diamondistry_challenge_save_is_plausible( $added_cells, $now - $last_save_at ) ) {
+	$first_save   = empty( $old_completed_cells ) || empty( $old_progress['lastSaveAt'] );
+	if ( function_exists( 'diamondistry_challenge_save_is_plausible' ) && ! diamondistry_challenge_save_is_plausible( $added_cells, $now - $last_save_at, $first_save ) ) {
 		$implausible = true;
 	}
 

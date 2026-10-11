@@ -27,9 +27,14 @@ define( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY', '_diamondistry_leaderboard_h
 define( 'DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND', 40 );
 define( 'DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL', 0.02 );
 
-/** Whether one save added a humanly possible number of diamonds. */
-function diamondistry_challenge_save_is_plausible( $added_cells, $seconds_since_last_save ) {
-	return $added_cells <= 10 + max( 0, $seconds_since_last_save ) * DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND;
+/**
+ * Whether one save added a humanly possible number of diamonds. The first save of
+ * an attempt has no previous save to measure against, so it may carry a couple of
+ * dragged rows (40); later saves get 10 slack plus the per-second allowance.
+ */
+function diamondistry_challenge_save_is_plausible( $added_cells, $seconds_since_last_save, $first_save = false ) {
+	$slack = $first_save ? 40 : 10;
+	return $added_cells <= $slack + max( 0, $seconds_since_last_save ) * DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND;
 }
 
 /** Diamonds for places 1, 2 and 3 when a challenge week ends. */
