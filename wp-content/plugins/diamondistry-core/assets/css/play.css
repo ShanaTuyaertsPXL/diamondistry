@@ -1074,6 +1074,23 @@ html.diamondistry-workspace-open {
   }
 }
 
+/* Tablet: board and reference side by side, colours in two columns. */
+@media (min-width: 641px) and (max-width: 950px) {
+  .diamondistry-board {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .diamondistry-play-tools {
+    flex: 0 0 180px;
+    width: 180px;
+  }
+
+  .diamondistry-palette {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* -------------------------------------------------------
    Locked painting (unlock with diamonds)
 ------------------------------------------------------- */
