@@ -87,6 +87,7 @@ input {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    transition-delay: 0s !important;
   }
 }
 

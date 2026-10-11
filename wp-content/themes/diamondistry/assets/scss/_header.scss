@@ -187,29 +187,88 @@ header.wp-block-template-part {
   background: #fff;
   color: #2e3354;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.diamondistry-menu-toggle span,
-.diamondistry-menu-toggle span::before,
-.diamondistry-menu-toggle span::after {
+.diamondistry-menu-toggle:hover {
+  border-color: #ddd5f3;
+}
+.is-menu-open .diamondistry-menu-toggle {
+  // Stays above the backdrop and panel, so it doubles as the close button.
+  position: relative;
+  z-index: 3001;
+}
+
+// Hamburger: two lines and a short one with a gem; open, the lines cross and the gem sits in the middle.
+$burger-ease: cubic-bezier(0.65, 0, 0.25, 1);
+
+.dd-burger {
+  position: relative;
   display: block;
-  width: 16px;
+  width: 20px;
+  height: 14px;
+}
+.dd-burger__bar {
+  position: absolute;
+  left: 0;
+  width: 20px;
   height: 2px;
   border-radius: 99px;
   background: currentColor;
-  position: relative;
+  transition: top 0.2s $burger-ease 0.2s, transform 0.2s $burger-ease, width 0.3s $burger-ease, opacity 0.2s;
 }
-.diamondistry-menu-toggle span::before,
-.diamondistry-menu-toggle span::after {
-  content: "";
+.dd-burger__bar:nth-child(1) {
+  top: 0;
+}
+.dd-burger__bar:nth-child(2) {
+  top: 6px;
+  width: 11px;
+}
+.dd-burger__bar:nth-child(3) {
+  top: 12px;
+}
+.dd-burger__gem {
   position: absolute;
-  left: 0;
+  top: 4.5px;
+  left: 15px;
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: var(--dd-purple);
+  transform: rotate(45deg);
+  transition: left 0.35s $burger-ease, transform 0.45s $burger-ease;
 }
-.diamondistry-menu-toggle span::before {
-  top: -5px;
+.diamondistry-menu-toggle:hover .dd-burger__bar:nth-child(2) {
+  width: 8px;
 }
-.diamondistry-menu-toggle span::after {
-  top: 5px;
+.diamondistry-menu-toggle:hover .dd-burger__gem {
+  left: 12px;
+  transform: rotate(225deg);
 }
+
+[aria-expanded="true"] .dd-burger__bar {
+  transition: top 0.2s $burger-ease, transform 0.2s $burger-ease 0.2s, width 0.3s $burger-ease, opacity 0.2s;
+}
+[aria-expanded="true"] .dd-burger__bar:nth-child(1) {
+  top: 6px;
+  transform: rotate(45deg);
+}
+[aria-expanded="true"] .dd-burger__bar:nth-child(2) {
+  width: 0;
+  opacity: 0;
+}
+[aria-expanded="true"] .dd-burger__bar:nth-child(3) {
+  top: 6px;
+  transform: rotate(-45deg);
+}
+[aria-expanded="true"] .dd-burger__gem,
+.diamondistry-menu-toggle[aria-expanded="true"]:hover .dd-burger__gem {
+  left: 7.5px;
+  transform: rotate(405deg) scale(1.3);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+// Sidebar: slides in from the right, where the toggle is.
+$drawer-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
 .diamondistry-mobile-menu[hidden] {
   display: none;
@@ -220,8 +279,13 @@ header.wp-block-template-part {
   z-index: 3000;
   display: flex;
   justify-content: flex-end;
-  padding: 12px;
-  background: rgb(28 24 48 / 0.28);
+  margin: 0; // WordPress block gap would push it down
+  background: rgb(28 24 48 / 0.32);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.diamondistry-mobile-menu.is-open {
+  opacity: 1;
 }
 .admin-bar .diamondistry-mobile-menu {
   top: 32px;
@@ -229,14 +293,39 @@ header.wp-block-template-part {
 .diamondistry-mobile-panel {
   display: flex;
   flex-direction: column;
-  width: min(320px, 100%);
-  max-height: 100%;
+  width: min(330px, 86vw);
+  height: 100%;
   overflow: auto;
-  padding: 16px 14px 18px;
-  border-radius: 26px;
+  padding: 0 14px 18px;
+  border-radius: 26px 0 0 26px;
   background: #fff;
-  box-shadow: 0 18px 50px rgb(42 34 86 / 0.16);
+  box-shadow: -18px 0 50px rgb(42 34 86 / 0.18);
   box-sizing: border-box;
+  transform: translateX(100%);
+  transition: transform 0.42s $drawer-ease;
+}
+.is-open .diamondistry-mobile-panel {
+  transform: none;
+}
+// Links follow the panel in, one after the other.
+.diamondistry-mobile-links a,
+.diamondistry-mobile-account {
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 0.3s ease, transform 0.4s $drawer-ease;
+}
+.is-open .diamondistry-mobile-links a,
+.is-open .diamondistry-mobile-account {
+  opacity: 1;
+  transform: none;
+}
+@for $i from 1 through 8 {
+  .is-open .diamondistry-mobile-links a:nth-child(#{$i}) {
+    transition-delay: #{80 + $i * 35}ms;
+  }
+}
+.is-open .diamondistry-mobile-account {
+  transition-delay: 380ms;
 }
 .diamondistry-mobile-panel .diamondistry-logo,
 .diamondistry-mobile-panel .custom-logo {
@@ -245,21 +334,9 @@ header.wp-block-template-part {
 .diamondistry-mobile-panel-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-.diamondistry-menu-close {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: #8b90a4;
-  font-size: 1.6rem;
-  line-height: 1;
-  cursor: pointer;
+  min-height: var(--dd-header-h);
+  margin-bottom: 6px;
+  padding-left: 6px;
 }
 .diamondistry-mobile-links,
 .diamondistry-mobile-account {

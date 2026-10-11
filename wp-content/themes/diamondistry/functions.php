@@ -225,10 +225,9 @@ function diamondistry_theme_render_mobile_menu() {
 	ob_start();
 	?>
 	<div id="diamondistry-mobile-menu" class="diamondistry-mobile-menu" hidden>
-		<div class="diamondistry-mobile-panel" data-lenis-prevent role="dialog" aria-modal="true" aria-label="Menu">
+		<div class="diamondistry-mobile-panel" data-lenis-prevent role="dialog" aria-label="Menu">
 			<div class="diamondistry-mobile-panel-head">
 				<?php echo diamondistry_theme_render_logo(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
-				<button type="button" class="diamondistry-menu-close" aria-label="Close menu">×</button>
 			</div>
 			<nav class="diamondistry-mobile-links" aria-label="Mobile">
 				<?php foreach ( diamondistry_theme_nav_items( true ) as $item ) : ?>
