@@ -68,6 +68,7 @@
   background: base.$dd-gem center / contain no-repeat;
 }
 .dd-auth__main {
+  position: relative;
   display: grid;
   place-items: center;
   padding: 40px var(--dd-gutter) 56px;
@@ -97,9 +98,15 @@
   color: var(--dd-muted);
   text-align: center;
 }
+// Pinned to the bottom of the form column, level with the bottom of the image.
 .dd-auth__legal {
-  margin: 32px 0 0;
+  position: absolute;
+  right: 0;
+  bottom: 16px;
+  left: 0;
+  margin: 0;
   font-size: 0.82rem;
+  line-height: 1;
   text-align: center;
 }
 .dd-auth__legal a {
