@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.21.2
+ * Version: 0.21.3
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.21.2' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.21.3' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -502,10 +502,7 @@ function diamondistry_render_playground() {
 				<div id="diamondistry-palette" class="diamondistry-palette"></div>
 				<div id="diamondistry-message" class="diamondistry-message" aria-live="polite"></div>
 				<button type="button" id="diamondistry-reset" class="diamondistry-reset">Reset painting</button>
-				<button type="button" id="diamondistry-download" class="dd-button dd-button-primary dd-button--block diamondistry-download" hidden>
-					<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
-					Download painting
-				</button>
+				<button type="button" id="diamondistry-download" class="dd-button dd-button-primary dd-button--block diamondistry-download" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>Download painting</button>
 			</aside>
 
 			<div class="diamondistry-board">
@@ -543,7 +540,8 @@ function diamondistry_render_playground() {
 
 	<?php
 
-	return ob_get_clean();
+	// Compact so wpautop (wp:shortcode block) cannot inject <br>/<p> between tags.
+	return diamondistry_compact_html( ob_get_clean() );
 }
 
 add_shortcode(
