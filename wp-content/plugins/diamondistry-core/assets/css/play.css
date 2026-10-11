@@ -909,27 +909,22 @@ html.diamondistry-workspace-open {
 ------------------------------------------------------- */
 
 .diamondistry-reset {
+  /* Same pill as the Download button (dd-button), secondary style. */
   width: 100%;
-
+  min-height: 48px;
   margin-top: 24px;
-
-  padding: 11px 16px;
-
-  border: 1px solid #ddd;
-
-  border-radius: 10px;
-
-  background: transparent;
-
-  color: #666;
-
+  padding: 10px 20px;
+  border: 1px solid #e6e3ee;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--dd-ink, #1c2144);
   font: inherit;
-
-  font-size: 0.85rem;
-  font-weight: 600;
-
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.2;
   cursor: pointer;
-
+  box-shadow: 0 8px 18px rgb(40 30 80 / 0.06);
+  box-sizing: border-box;
   transition:
     background 0.15s ease,
     color 0.15s ease,
@@ -945,16 +940,12 @@ html.diamondistry-workspace-open {
 }
 
 .diamondistry-reset:hover {
-  background: #fff;
-
-  border-color: #bbb;
-
-  color: #b42318;
+  border-color: #f2b8c8;
+  color: #b4234a;
 }
 
 .diamondistry-reset:focus-visible {
-  outline: 3px solid #222;
-
+  outline: 3px solid rgb(110 77 246 / 0.45);
   outline-offset: 2px;
 }
 
