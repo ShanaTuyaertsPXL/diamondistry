@@ -37,7 +37,8 @@ if ( $is_locked ) {
 	data-categories="<?php echo esc_attr( $category_slugs ); ?>"
 >
 	<div class="diamondistry-painting-card-preview<?php echo $cover_url ? ' has-cover' : ''; ?>">
-		<a class="diamondistry-painting-card-media" href="<?php echo esc_url( $play_url ); ?>">
+		<?php // Same target as the title link, which carries the name, so keep it out of the tab order and screen readers. ?>
+		<a class="diamondistry-painting-card-media" href="<?php echo esc_url( $play_url ); ?>" tabindex="-1" aria-hidden="true">
 			<?php if ( $cover_url ) : ?>
 				<img class="diamondistry-painting-card-cover" src="<?php echo esc_url( $cover_url ); ?>" alt="">
 			<?php else : ?>

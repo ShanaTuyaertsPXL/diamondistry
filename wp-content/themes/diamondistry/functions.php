@@ -98,7 +98,8 @@ function diamondistry_theme_body_class( $classes ) {
 add_filter( 'body_class', 'diamondistry_theme_body_class' );
 
 function diamondistry_theme_compact_html( $html ) {
-	return trim( preg_replace( '/>\s+</', '><', $html ) );
+	// Newlines inside tags (multi-line attributes) also make wpautop add <p>, so fold them too.
+	return trim( preg_replace( array( '/\s*\n\s*/', '/>\s+</' ), array( ' ', '><' ), $html ) );
 }
 
 function diamondistry_theme_nav_items( $include_home = false ) {

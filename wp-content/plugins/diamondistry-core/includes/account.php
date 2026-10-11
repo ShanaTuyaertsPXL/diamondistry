@@ -228,7 +228,8 @@ function diamondistry_render_form_messages( $form ) {
 
 /** Strip whitespace between tags so wpautop cannot inject <p>/<br> into shortcode output. */
 function diamondistry_compact_html( $html ) {
-	return trim( preg_replace( '/>\s+</', '><', $html ) );
+	// Newlines inside tags (multi-line attributes) also make wpautop add <p>, so fold them too.
+	return trim( preg_replace( array( '/\s*\n\s*/', '/>\s+</' ), array( ' ', '><' ), $html ) );
 }
 
 function diamondistry_post_field( $key ) {
