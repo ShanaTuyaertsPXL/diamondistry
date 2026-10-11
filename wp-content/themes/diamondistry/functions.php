@@ -86,6 +86,91 @@ function diamondistry_theme_reveal_flag() {
 }
 add_action( 'wp_head', 'diamondistry_theme_reveal_flag', 1 );
 
+/*
+|--------------------------------------------------------------------------
+| Meta description, Open Graph and Twitter tags (no SEO plugin)
+|--------------------------------------------------------------------------
+*/
+
+function diamondistry_theme_meta_description() {
+	if ( is_front_page() ) {
+		return 'Diamondistry is a calm diamond painting game. Place every diamond, earn rewards and build your collection of pixel-art paintings.';
+	}
+
+	if ( is_page( 'play' ) && function_exists( 'diamondistry_get_requested_painting' ) ) {
+		$painting = diamondistry_get_requested_painting();
+		$data     = $painting && function_exists( 'diamondistry_get_painting_data' ) ? diamondistry_get_painting_data( $painting ) : null;
+		if ( $data ) {
+			return sprintf( 'Fill in %s, a %d × %d diamond painting with %d colours, one diamond at a time.', get_the_title( $painting ), $data['width'], $data['height'], count( $data['palette'] ) );
+		}
+	}
+
+	$pages = array(
+		'paintings'      => 'Browse diamond paintings to play: animals, flowers, places and more. Some are free, others you unlock with the diamonds you earn.',
+		'challenge'      => 'One painting a week. Place every diamond as fast as you can and climb the leaderboard for bonus diamonds.',
+		'how-it-works'   => 'How Diamondistry works: pick a painting, match colours to symbols and place every diamond to earn rewards.',
+		'about'          => 'About Diamondistry, a calm diamond painting game for slow, happy moments.',
+		'privacy-policy' => 'What Diamondistry collects when you play, why, and what you can do about it.',
+		'login'          => 'Log in to Diamondistry to continue your paintings, or try the shared demo account.',
+		'register'       => 'Create a Diamondistry account to save your progress, earn diamonds and build your collection.',
+	);
+	foreach ( $pages as $slug => $text ) {
+		if ( is_page( $slug ) ) {
+			return $text;
+		}
+	}
+
+	return '';
+}
+
+function diamondistry_theme_social_meta() {
+	if ( is_404() ) {
+		return;
+	}
+
+	$description = diamondistry_theme_meta_description();
+	$url         = is_front_page() ? home_url( '/' ) : get_permalink();
+	$painting    = is_page( 'play' ) && function_exists( 'diamondistry_get_requested_painting' ) ? diamondistry_get_requested_painting() : null;
+	if ( $painting ) {
+		$url = add_query_arg( 'painting', $painting->post_name, $url );
+	}
+	$tags        = array(
+		'og:type'      => 'website',
+		'og:site_name' => get_bloginfo( 'name' ),
+		'og:title'     => wp_get_document_title(),
+		'og:url'       => $url,
+		'og:image'     => get_theme_file_uri( 'assets/og-image.jpg' ),
+		'twitter:card' => 'summary_large_image',
+	);
+	if ( $description ) {
+		printf( '<meta name="description" content="%s">' . "\n", esc_attr( $description ) );
+		$tags['og:description'] = $description;
+	}
+
+	foreach ( $tags as $property => $content ) {
+		printf(
+			'<meta %1$s="%2$s" content="%3$s">' . "\n",
+			0 === strpos( $property, 'og:' ) ? 'property' : 'name',
+			esc_attr( $property ),
+			esc_attr( $content )
+		);
+	}
+	echo '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">' . "\n";
+}
+add_action( 'wp_head', 'diamondistry_theme_social_meta', 5 );
+
+/** Account pages are personal: keep them out of search results. */
+add_filter(
+	'wp_robots',
+	function ( $robots ) {
+		if ( is_page( array( 'login', 'register', 'account', 'dashboard' ) ) ) {
+			$robots['noindex'] = true;
+			$robots['follow']  = true;
+		}
+		return $robots;
+	}
+);
+
 function diamondistry_theme_body_class( $classes ) {
 	if ( is_page( array( 'paintings', 'dashboard', 'play', 'account' ) ) ) {
 		$classes[] = 'diamondistry-app-screen';
