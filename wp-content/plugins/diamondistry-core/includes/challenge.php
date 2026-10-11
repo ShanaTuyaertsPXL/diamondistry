@@ -59,8 +59,8 @@ function diamondistry_challenge_window( $painting_id ) {
 
 /** The painting whose challenge week is running now, or null. */
 function diamondistry_get_current_challenge() {
-	static $current = false;
-	if ( false !== $current ) {
+	static $current = null;
+	if ( $current ) { // ponytail: only a found week is cached, so a rotation in this request is seen.
 		return $current;
 	}
 
@@ -235,6 +235,111 @@ add_action( 'init', 'diamondistry_award_finished_challenges', 40 );
 
 /*
 |--------------------------------------------------------------------------
+| Always a challenge: rotate automatically when no week is running
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * When no challenge week is running, start the next painting on Monday of this
+ * week: never-featured paintings first, then the one featured longest ago.
+ * Prizes of ended weeks are paid first, because moving a painting's start date
+ * would otherwise lose its old week. One request claims the rotation per week.
+ */
+function diamondistry_ensure_weekly_challenge() {
+	global $wpdb;
+
+	if ( diamondistry_get_current_challenge() ) {
+		return;
+	}
+
+	$monday  = new DateTimeImmutable( 'monday this week', wp_timezone() );
+	$claimed = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->prepare(
+			"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+			'diamondistry_challenge_rotated_' . $monday->format( 'Ymd' ),
+			(string) time()
+		)
+	);
+	if ( 1 !== (int) $claimed ) {
+		return;
+	}
+
+	delete_transient( 'diamondistry_challenge_award_check' );
+	diamondistry_award_finished_challenges();
+
+	$ids = get_posts(
+		array(
+			'post_type'      => 'ddp_painting',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'orderby'        => 'date',
+			'order'          => 'ASC',
+		)
+	);
+	$ids = array_values( array_filter( $ids, fn( $id ) => (bool) diamondistry_get_painting_data( get_post( $id ) ) ) );
+	if ( ! $ids ) {
+		return;
+	}
+
+	// '' (never featured) sorts before any date; ties keep the oldest painting first.
+	usort( $ids, fn( $a, $b ) => strcmp( (string) get_post_meta( $a, DIAMONDISTRY_CHALLENGE_START_META_KEY, true ), (string) get_post_meta( $b, DIAMONDISTRY_CHALLENGE_START_META_KEY, true ) ) );
+
+	update_post_meta( $ids[0], DIAMONDISTRY_CHALLENGE_START_META_KEY, $monday->format( 'Y-m-d' ) );
+	diamondistry_add_sample_results( $ids[0], $monday->format( 'Ymd' ) );
+}
+
+add_action( 'init', 'diamondistry_ensure_weekly_challenge', 50 );
+
+/*
+ * Sample players, so the leaderboard of this portfolio demo is never empty.
+ * Their times are beatable by a real player (roughly 0.6 to 1.4 s per diamond).
+ */
+define( 'DIAMONDISTRY_SAMPLE_PLAYER_META_KEY', '_diamondistry_sample_player' );
+
+function diamondistry_get_sample_players() {
+	$names = array( 'Ava Martens', 'Noah Peeters', 'Lina Janssens', 'Milo De Smet', 'Juno Claes' );
+	$ids   = get_users(
+		array(
+			'meta_key' => DIAMONDISTRY_SAMPLE_PLAYER_META_KEY, // phpcs:ignore WordPress.DB.SlowDBQuery -- five users.
+			'fields'   => 'ID',
+		)
+	);
+
+	foreach ( array_slice( $names, count( $ids ) ) as $name ) {
+		$id = wp_insert_user(
+			array(
+				'user_login'   => 'sample-' . sanitize_title( strtok( $name, ' ' ) ),
+				'user_pass'    => wp_generate_password( 32 ),
+				'user_email'   => sanitize_title( strtok( $name, ' ' ) ) . '@sample.diamondistry.test',
+				'display_name' => $name,
+				'role'         => 'subscriber',
+			)
+		);
+		if ( ! is_wp_error( $id ) ) {
+			update_user_meta( $id, DIAMONDISTRY_SAMPLE_PLAYER_META_KEY, 1 );
+			$ids[] = $id;
+		}
+	}
+
+	return array_map( 'intval', $ids );
+}
+
+function diamondistry_add_sample_results( $painting_id, $week_key ) {
+	$data = diamondistry_get_painting_data( get_post( $painting_id ) );
+	if ( ! $data ) {
+		return;
+	}
+
+	$cells = $data['width'] * $data['height'];
+	foreach ( diamondistry_get_sample_players() as $user_id ) {
+		$seconds = (int) round( $cells * wp_rand( 60, 140 ) / 100 );
+		add_post_meta( $painting_id, diamondistry_challenge_result_prefix( $week_key ) . $user_id, $seconds, true );
+	}
+}
+
+/*
+|--------------------------------------------------------------------------
 | [diamondistry_challenge] — full page; compact="1" = home banner
 |--------------------------------------------------------------------------
 */
@@ -255,7 +360,8 @@ function diamondistry_time_left_label( $end ) {
 	if ( $days ) {
 		return sprintf( '%d day%s %d h left', $days, 1 === $days ? '' : 's', $hours );
 	}
-	return sprintf( '%d h %d min left', $hours, intdiv( $left % HOUR_IN_SECONDS, MINUTE_IN_SECONDS ) );
+	$minutes = intdiv( $left % HOUR_IN_SECONDS, MINUTE_IN_SECONDS );
+	return $hours ? sprintf( '%d h %d min left', $hours, $minutes ) : sprintf( '%d min left', max( 1, $minutes ) );
 }
 
 function diamondistry_render_challenge( $atts ) {
