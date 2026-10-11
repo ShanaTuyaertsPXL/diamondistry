@@ -57,3 +57,55 @@ add_filter(
 	10,
 	2
 );
+
+/*
+ * Nightly reset, so every visitor finds the demo the same way: 120 diamonds,
+ * one finished free painting, nothing unlocked or favourited.
+ */
+function diamondistry_reset_demo_account() {
+	$user = get_user_by( 'login', DIAMONDISTRY_DEMO_LOGIN );
+	if ( ! $user ) {
+		return;
+	}
+
+	$finished = array();
+	foreach ( get_posts( array( 'post_type' => 'ddp_painting', 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'date', 'order' => 'DESC' ) ) as $painting ) {
+		$data = diamondistry_get_painting_data( $painting );
+		if ( $data && ! (int) get_post_meta( $painting->ID, '_diamondistry_unlock_cost', true ) && ! diamondistry_is_current_challenge( $painting->ID ) ) {
+			$done                                 = time() - DAY_IN_SECONDS;
+			$finished[ (string) $painting->ID ] = array(
+				'completedCells' => range( 0, $data['width'] * $data['height'] - 1 ),
+				'selectedColor'  => null,
+				'completed'      => true,
+				'rewardClaimed'  => true,
+				'lastWorkedAt'   => $done,
+				'startedAt'      => $done - 600,
+				'completedAt'    => $done,
+				'lastSaveAt'     => $done,
+				'implausible'    => false,
+				'updatedAt'      => gmdate( 'Y-m-d H:i:s', $done ),
+				'revision'       => 1,
+			);
+			break;
+		}
+	}
+
+	// Same per-user lock as saves, so the reset never interleaves with a visitor's move.
+	$locked = diamondistry_begin_progress_write( $user->ID );
+	update_user_meta( $user->ID, DIAMONDISTRY_PROGRESS_META_KEY, $finished );
+	update_user_meta( $user->ID, DIAMONDISTRY_BALANCE_META_KEY, 120 );
+	delete_user_meta( $user->ID, DIAMONDISTRY_FAVORITES_META_KEY );
+	delete_user_meta( $user->ID, DIAMONDISTRY_UNLOCKED_META_KEY );
+	delete_user_meta( $user->ID, DIAMONDISTRY_UNLOCK_PAID_META_KEY );
+	diamondistry_commit_progress_write( $locked );
+}
+add_action( 'diamondistry_reset_demo', 'diamondistry_reset_demo_account' );
+
+add_action(
+	'init',
+	function () {
+		if ( ! wp_next_scheduled( 'diamondistry_reset_demo' ) ) {
+			wp_schedule_event( ( new DateTimeImmutable( 'tomorrow 04:00', wp_timezone() ) )->getTimestamp(), 'daily', 'diamondistry_reset_demo' );
+		}
+	}
+);
