@@ -408,7 +408,7 @@ function diamondistry_render_challenge( $atts ) {
 
 	ob_start();
 	?>
-	<div class="dd-challenge">
+	<div class="dd-challenge" data-animate="stagger">
 		<article class="dd-challenge__painting">
 			<div class="dd-challenge__art">
 				<?php if ( $cover ) : ?>

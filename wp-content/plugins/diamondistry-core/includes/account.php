@@ -1059,7 +1059,7 @@ function diamondistry_render_account() {
 	ob_start();
 	?>
 	<div class="dd-account">
-		<header class="dd-account__head">
+		<header class="dd-account__head" data-animate="fade-up">
 			<span class="dd-account__avatar"><?php echo get_avatar( $user->ID, 160 ); ?></span>
 			<div class="dd-account__who">
 				<p class="dd-eyebrow">My account</p>
@@ -1072,7 +1072,7 @@ function diamondistry_render_account() {
 			</div>
 		</header>
 
-		<ul class="dd-account__stats">
+		<ul class="dd-account__stats" data-animate="stagger">
 			<?php foreach ( $stats as $stat ) : ?>
 				<li class="dd-stat <?php echo esc_attr( $stat[2] ); ?>">
 					<strong class="dd-stat__value"><?php echo esc_html( $stat[1] ); ?></strong>
@@ -1085,7 +1085,7 @@ function diamondistry_render_account() {
 			<div class="dd-notice dd-notice--info" role="status">This is the shared demo account: play as much as you like, but its settings are locked.</div>
 		<?php endif; ?>
 
-		<div class="dd-account__grid<?php echo diamondistry_is_demo_user() ? ' is-locked" inert' : '"'; ?>>
+		<div data-animate="fade-up" class="dd-account__grid<?php echo diamondistry_is_demo_user() ? ' is-locked" inert' : '"'; ?>>
 			<section class="dd-panel" aria-labelledby="dd-profile-title">
 				<h2 class="dd-panel__title" id="dd-profile-title">Profile</h2>
 				<p class="dd-panel__lead">Your photo, name and the line shown on your dashboard.</p>
