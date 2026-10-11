@@ -574,7 +574,34 @@ document.addEventListener("DOMContentLoaded", () => {
   |--------------------------------------------------------------------------
   */
 
-  async function saveServerProgress() {
+  /*
+   * One save at a time. Two overlapping saves carry the same revision, so the
+   * second one comes back "stale" and its diamonds were silently lost when the
+   * player stopped clicking. Now a save that arrives mid-flight is queued and
+   * sent afterwards with the latest state and revision.
+   */
+  let saveInFlight = null;
+  let saveQueued = false;
+
+  function saveServerProgress() {
+    if (saveInFlight) {
+      saveQueued = true;
+      return saveInFlight;
+    }
+
+    saveInFlight = sendServerProgress().finally(() => {
+      saveInFlight = null;
+
+      if (saveQueued) {
+        saveQueued = false;
+        saveServerProgress();
+      }
+    });
+
+    return saveInFlight;
+  }
+
+  async function sendServerProgress() {
     if (!userState.loggedIn || !userState.ajaxUrl || !userState.nonce) {
       return null;
     }
@@ -630,7 +657,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadedRevision = Number(result.data.revision ?? loadedRevision);
 
         if (progressDirty) {
-          return saveServerProgress();
+          return sendServerProgress();
         }
 
         return null;
