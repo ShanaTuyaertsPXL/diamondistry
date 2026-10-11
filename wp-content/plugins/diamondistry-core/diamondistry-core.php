@@ -31,6 +31,8 @@ require_once DIAMONDISTRY_CORE_PATH . 'includes/dashboard.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/account.php';
 
+require_once DIAMONDISTRY_CORE_PATH . 'includes/faq.php';
+
 require_once DIAMONDISTRY_CORE_PATH . 'includes/admin/painting-editor.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/admin/players.php';
