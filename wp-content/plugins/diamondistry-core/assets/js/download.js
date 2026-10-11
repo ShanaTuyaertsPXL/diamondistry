@@ -28,7 +28,7 @@
       logo,
       siteName: config.siteName,
       title,
-      subtitle: `Completed on ${date}`,
+      subtitle: `Completed · ${date}`,
     });
 
     const slug = String(title || "painting").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

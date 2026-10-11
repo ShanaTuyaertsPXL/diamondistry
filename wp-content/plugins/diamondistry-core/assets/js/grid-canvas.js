@@ -582,7 +582,7 @@
     const boardW = cols * cell + boardPad * 2;
     const boardH = rows * cell + boardPad * 2;
     const margin = 96;
-    const footer = 170;
+    const footer = 150;
     const width = Math.max(boardW + margin * 2, 900);
     const height = boardH + margin * 2 + footer;
 
@@ -622,29 +622,35 @@
       }
     }
 
-    // Footer: logo left, title and date right.
-    const footerY = boardY + boardH + margin * 0.6;
+    // Footer: logo left, small purple eyebrow + title right, both centred on one line.
+    const footerMid = boardY + boardH + margin * 0.6 + 36;
     const left = Math.max(margin, boardX);
     const right = width - left;
     if (opts.logo && opts.logo.naturalWidth) {
-      const logoH = 56;
+      const logoH = 64;
       const logoW = (opts.logo.naturalWidth / opts.logo.naturalHeight) * logoH;
-      ctx.drawImage(opts.logo, left, footerY + 12, logoW, logoH);
+      ctx.drawImage(opts.logo, left, footerMid - logoH / 2, logoW, logoH);
     } else {
       ctx.fillStyle = "#1c2144";
       ctx.font = "800 40px Nunito, Arial, sans-serif";
-      ctx.textBaseline = "top";
-      ctx.fillText(opts.siteName || "Diamondistry", left, footerY + 18);
+      ctx.textBaseline = "middle";
+      ctx.fillText(opts.siteName || "Diamondistry", left, footerMid);
     }
 
     ctx.textAlign = "right";
-    ctx.textBaseline = "top";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#6e4df6";
+    ctx.font = "800 15px Nunito, Arial, sans-serif";
+    if ("letterSpacing" in ctx) {
+      ctx.letterSpacing = "2px";
+    }
+    ctx.fillText(String(opts.subtitle || "").toUpperCase(), right, footerMid - 12);
+    if ("letterSpacing" in ctx) {
+      ctx.letterSpacing = "0px";
+    }
     ctx.fillStyle = "#1c2144";
-    ctx.font = "600 46px Fraunces, Georgia, serif";
-    ctx.fillText(opts.title || "", right, footerY);
-    ctx.fillStyle = "#7d829c";
-    ctx.font = "700 24px Nunito, Arial, sans-serif";
-    ctx.fillText(opts.subtitle || "", right, footerY + 64);
+    ctx.font = "600 36px Fraunces, Georgia, serif";
+    ctx.fillText(opts.title || "", right, footerMid + 30);
 
     return canvas;
   }
