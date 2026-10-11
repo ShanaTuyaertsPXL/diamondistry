@@ -264,14 +264,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const gallery = document.querySelector(".diamondistry-gallery");
   const motionOk = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (gallery && motionOk) {
-    gallery.classList.add("is-booting");
-    galleryCards.forEach((card, index) => {
-      card.style.transitionDelay = `${Math.min(index, 10) * 45}ms`;
-    });
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => gallery.classList.remove("is-booting"));
-    });
+  // Cards fade up as they scroll into view, like the site's other reveals; a row staggers in.
+  // The theme hides unshown cards before first paint (html.dd-anim), so the first row animates too.
+  if (gallery && motionOk && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries
+          .filter((entry) => entry.isIntersecting)
+          .forEach((entry, i) => {
+            const card = entry.target;
+            observer.unobserve(card);
+            card.style.transitionDelay = `${Math.min(i, 6) * 90}ms`;
+            card.classList.add("is-revealing", "is-shown");
+            window.setTimeout(() => {
+              card.classList.remove("is-revealing");
+              card.style.transitionDelay = "";
+            }, 1500);
+          });
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.1 },
+    );
+    galleryCards.forEach((card) => observer.observe(card));
+  } else {
+    galleryCards.forEach((card) => card.classList.add("is-shown"));
   }
 
   function revealCard(card) {
