@@ -35,9 +35,12 @@ function diamondistry_theme_disable_emoji() {
 	remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
 	remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
 	remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
-	add_filter( 'emoji_svg_url', '__return_false' );
+	remove_action( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+	remove_action( 'admin_enqueue_scripts', 'wp_enqueue_emoji_styles' );
 }
 add_action( 'init', 'diamondistry_theme_disable_emoji' );
+// wp-admin registers its emoji hooks after init (admin-filters.php), so unhook again there.
+add_action( 'admin_init', 'diamondistry_theme_disable_emoji' );
 
 function diamondistry_theme_enqueue_assets() {
 	$theme = wp_get_theme();
