@@ -29,6 +29,8 @@ require_once DIAMONDISTRY_CORE_PATH . 'includes/painting-cards.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/dashboard.php';
 
+require_once DIAMONDISTRY_CORE_PATH . 'includes/demo.php';
+
 require_once DIAMONDISTRY_CORE_PATH . 'includes/account.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/faq.php';

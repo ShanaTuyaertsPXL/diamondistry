@@ -117,6 +117,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Account: preview the chosen profile photo before saving.
+  // Login page: fill in the shared demo account.
+  const demoFill = document.querySelector("[data-demo-fill]");
+  if (demoFill) {
+    demoFill.addEventListener("click", () => {
+      const form = demoFill.closest(".dd-auth__card").querySelector("form");
+      form.elements.log.value = demoFill.dataset.login;
+      form.elements.pwd.value = demoFill.dataset.password;
+      form.querySelector('[type="submit"]').focus();
+    });
+  }
+
   const avatarInput = document.querySelector(".dd-avatar-field__input");
   if (avatarInput) {
     avatarInput.addEventListener("change", () => {

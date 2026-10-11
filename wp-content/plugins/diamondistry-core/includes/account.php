@@ -302,6 +302,12 @@ function diamondistry_handle_account_forms() {
 		return;
 	}
 
+	// The shared demo account keeps its settings, so the next visitor can still log in.
+	if ( in_array( $form, array( 'profile', 'password', 'delete' ), true ) && diamondistry_is_demo_user() ) {
+		diamondistry_form_error( $form, 'Settings are locked on the shared demo account.' );
+		return;
+	}
+
 	call_user_func( $handlers[ $form ] );
 }
 
@@ -824,6 +830,7 @@ function diamondistry_render_login() {
 		<h1 class="dd-auth__title">Welcome back</h1>
 		<p class="dd-auth__lead">Log in to continue your paintings and collect your diamonds.</p>
 		<?php echo $notice; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static markup. ?>
+		<?php echo diamondistry_render_demo_login_hint(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the helper. ?>
 		<?php echo diamondistry_form_open( 'login', '<input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '">' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<?php
 			echo diamondistry_field( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -1072,6 +1079,10 @@ function diamondistry_render_account() {
 				</li>
 			<?php endforeach; ?>
 		</ul>
+
+		<?php if ( diamondistry_is_demo_user() ) : ?>
+			<div class="dd-notice dd-notice--info" role="status">This is the shared demo account: play as much as you like, but its settings are locked.</div>
+		<?php endif; ?>
 
 		<div class="dd-account__grid">
 			<section class="dd-panel" aria-labelledby="dd-profile-title">

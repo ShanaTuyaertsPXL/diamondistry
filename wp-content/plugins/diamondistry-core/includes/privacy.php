@@ -58,7 +58,7 @@ function diamondistry_handle_delete_account() {
 }
 
 function diamondistry_render_delete_account_panel() {
-	if ( current_user_can( 'edit_posts' ) ) {
+	if ( current_user_can( 'edit_posts' ) || diamondistry_is_demo_user() ) {
 		return '';
 	}
 

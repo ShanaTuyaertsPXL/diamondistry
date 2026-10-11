@@ -151,6 +151,10 @@
   font-weight: 700;
   line-height: 1.5;
 }
+.dd-notice--info {
+  background: var(--dd-purple-soft);
+  color: var(--dd-purple-dark);
+}
 .dd-notice--error {
   background: #fff0f2;
   color: #b4234a;
