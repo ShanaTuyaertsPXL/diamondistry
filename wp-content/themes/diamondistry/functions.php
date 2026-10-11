@@ -124,7 +124,8 @@ function diamondistry_theme_meta_description() {
 }
 
 function diamondistry_theme_social_meta() {
-	if ( is_404() ) {
+	// Yoast SEO prints these itself; only the play page needs help (see below).
+	if ( is_404() || defined( 'WPSEO_VERSION' ) ) {
 		return;
 	}
 
@@ -158,6 +159,34 @@ function diamondistry_theme_social_meta() {
 	echo '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">' . "\n";
 }
 add_action( 'wp_head', 'diamondistry_theme_social_meta', 5 );
+
+/*
+ * With Yoast: the play page shows a different painting per ?painting=, which
+ * Yoast cannot know, so give it the painting's title, description and URL.
+ */
+function diamondistry_theme_play_painting() {
+	return is_page( 'play' ) && function_exists( 'diamondistry_get_requested_painting' ) ? diamondistry_get_requested_painting() : null;
+}
+add_filter(
+	'wpseo_title',
+	function ( $title ) {
+		$painting = diamondistry_theme_play_painting();
+		return $painting ? get_the_title( $painting ) . ' - Play this diamond painting | Diamondistry' : $title;
+	}
+);
+add_filter( 'wpseo_opengraph_title', fn( $title ) => diamondistry_theme_play_painting() ? wp_get_document_title() : $title );
+foreach ( array( 'wpseo_metadesc', 'wpseo_opengraph_desc' ) as $diamondistry_filter ) {
+	add_filter( $diamondistry_filter, fn( $desc ) => diamondistry_theme_play_painting() ? diamondistry_theme_meta_description() : $desc );
+}
+foreach ( array( 'wpseo_canonical', 'wpseo_opengraph_url' ) as $diamondistry_filter ) {
+	add_filter(
+		$diamondistry_filter,
+		function ( $url ) {
+			$painting = diamondistry_theme_play_painting();
+			return $painting ? add_query_arg( 'painting', $painting->post_name, get_permalink() ) : $url;
+		}
+	);
+}
 
 /** Account pages are personal: keep them out of search results. */
 add_filter(
