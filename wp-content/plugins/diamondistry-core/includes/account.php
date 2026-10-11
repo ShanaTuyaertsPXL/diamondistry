@@ -288,6 +288,7 @@ function diamondistry_handle_account_forms() {
 		'resetpass'    => 'diamondistry_handle_resetpass',
 		'profile'      => 'diamondistry_handle_profile',
 		'password'     => 'diamondistry_handle_password',
+		'delete'       => 'diamondistry_handle_delete_account',
 	);
 
 	if ( ! isset( $handlers[ $form ] ) ) {
@@ -295,7 +296,7 @@ function diamondistry_handle_account_forms() {
 	}
 
 	// Profile forms are only valid for a logged in user.
-	if ( in_array( $form, array( 'profile', 'password' ), true ) && ! is_user_logged_in() ) {
+	if ( in_array( $form, array( 'profile', 'password', 'delete' ), true ) && ! is_user_logged_in() ) {
 		return;
 	}
 
@@ -804,6 +805,8 @@ function diamondistry_render_login() {
 		$notice = '<div class="dd-notice dd-notice--success" role="status">If an account matches, a reset link is on its way to your inbox.</div>';
 	} elseif ( isset( $_GET['password'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 		$notice = '<div class="dd-notice dd-notice--success" role="status">Your password has been changed. You can log in now.</div>';
+	} elseif ( isset( $_GET['account'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		$notice = '<div class="dd-notice dd-notice--success" role="status">Your account and all its data have been deleted.</div>';
 	}
 
 	ob_start();
@@ -1186,6 +1189,8 @@ function diamondistry_render_account() {
 				</form>
 			</section>
 		</div>
+
+		<?php echo function_exists( 'diamondistry_render_delete_account_panel' ) ? diamondistry_render_delete_account_panel() : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</div>
 	<?php
 	return ob_get_clean();
