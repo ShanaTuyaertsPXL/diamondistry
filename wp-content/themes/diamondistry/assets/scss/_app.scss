@@ -1,0 +1,25 @@
+/* -------------------------------------------------------
+   App pages (paintings, dashboard, play, account)
+------------------------------------------------------- */
+
+.diamondistry-page-shell {
+  width: auto;
+  margin: 0;
+  padding: 24px var(--dd-edge) 64px;
+}
+.diamondistry-app-screen .diamondistry-page-shell > .wp-block-post-title {
+  display: none;
+}
+.diamondistry-page-shell > .wp-block-post-title,
+.diamondistry-page-shell .wp-block-post-title {
+  margin: 8px 0 12px;
+  color: var(--dd-ink);
+  font-family: var(--dd-serif);
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 560;
+  letter-spacing: -0.04em;
+}
+.diamondistry-page-shell .wp-block-post-content {
+  margin: 0;
+  max-width: none;
+}

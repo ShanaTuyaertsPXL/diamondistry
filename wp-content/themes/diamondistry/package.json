@@ -1,0 +1,12 @@
+{
+  "name": "diamondistry-theme",
+  "private": true,
+  "description": "Build step for the Diamondistry theme styles.",
+  "scripts": {
+    "build": "sass assets/scss/main.scss assets/css/main.css --no-source-map --style=compressed",
+    "watch": "sass assets/scss/main.scss assets/css/main.css --watch"
+  },
+  "devDependencies": {
+    "sass": "1.77.8"
+  }
+}

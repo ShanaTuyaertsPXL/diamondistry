@@ -331,6 +331,7 @@
 
 .diamondistry-admin-grid-wrapper {
   overflow: auto;
+  max-height: min(70vh, 760px);
 
   padding: 14px;
 
@@ -350,6 +351,26 @@
 
   user-select: none;
   -webkit-user-select: none;
+}
+
+.diamondistry-admin-grid.is-canvas {
+  display: block;
+  position: relative;
+  min-width: 0;
+  justify-self: start;
+}
+
+.diamondistry-admin-grid.is-canvas .diamondistry-board-canvas {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.diamondistry-admin-preview .diamondistry-preview-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 
 .diamondistry-admin-cell {

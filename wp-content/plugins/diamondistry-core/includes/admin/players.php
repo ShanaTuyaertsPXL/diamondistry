@@ -800,6 +800,15 @@ function diamondistry_render_players_notice() {
 
 			'balance-updated' =>
 				'Diamond balance updated.',
+
+			'painting-unlocked' =>
+				'Painting unlocked for this player. No diamonds were charged.',
+
+			'painting-locked' =>
+				'Painting locked again. Any diamonds the player paid for it were refunded.',
+
+			'unlocks-reset' =>
+				'All unlocks reset and paid diamonds refunded. Paintings the player already started stay playable.',
 		);
 
 	if (
@@ -1591,6 +1600,8 @@ function diamondistry_render_player_detail(
 		</table>
 
 	<?php endif; ?>
+
+	<?php do_action( 'diamondistry_player_detail_after_paintings', $user_id ); ?>
 
 	<hr>
 

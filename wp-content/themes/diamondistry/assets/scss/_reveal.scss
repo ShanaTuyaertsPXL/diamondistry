@@ -1,0 +1,23 @@
+/* -------------------------------------------------------
+   Scroll reveal (data-animate="fade-up|scale-in|fade|stagger")
+   .dd-anim is set in <head> (functions.php); nav.js reveals on view.
+   Only opacity/transform: compositor-only, no layout work.
+------------------------------------------------------- */
+
+.dd-anim [data-animate]:not([data-animate="stagger"]):not(.is-inview),
+.dd-anim [data-animate="stagger"] > :not(.is-inview) {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+}
+.dd-anim [data-animate="scale-in"]:not(.is-inview) {
+  transform: scale(0.96);
+}
+.dd-anim [data-animate="fade"]:not(.is-inview) {
+  transform: none;
+}
+.dd-anim .is-revealing {
+  transition:
+    opacity 0.7s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--dd-delay, 0ms);
+}

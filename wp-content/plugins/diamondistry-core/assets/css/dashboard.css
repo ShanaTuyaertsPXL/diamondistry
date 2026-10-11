@@ -2,7 +2,7 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 8px 12px 10px;
+  padding: 0;
   color: #1c2144;
   font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -63,8 +63,24 @@
   letter-spacing: -0.03em;
 }
 .diamondistry-dashboard-welcome p { margin: 4px 0 0; color: #8b90a8; font-weight: 700; }
+.diamondistry-dashboard-settings {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #ebe8f3;
+  color: #1c2144;
+  font-weight: 800;
+  text-decoration: none;
+}
+.diamondistry-dashboard-settings svg { flex: 0 0 auto; color: #6e4df6; }
+.diamondistry-dashboard-settings-arrow { margin-left: auto; color: #6e4df6; transition: transform 0.2s ease; }
+.diamondistry-dashboard-settings:hover { color: #6e4df6; }
+.diamondistry-dashboard-settings:hover .diamondistry-dashboard-settings-arrow { transform: translateX(4px); }
 .diamondistry-dashboard-balance {
-  min-width: 220px;
+  box-sizing: border-box;
+  width: 280px;
   padding: 18px 22px;
   border-radius: 22px;
   background: linear-gradient(145deg, #ff8fb8, #ff6f9f);
@@ -83,22 +99,64 @@
 .diamondistry-dashboard-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 22px;
+  gap: 40px;
   align-items: start;
 }
-.diamondistry-dashboard-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.diamondistry-dashboard-tabs {
+  position: relative;
+  display: flex;
+  gap: 28px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  border-bottom: 1px solid #ebe8f3;
+  scrollbar-width: none;
+}
 .diamondistry-dashboard-tabs button {
-  min-height: 38px;
-  padding: 7px 14px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 12px;
   border: 0;
-  border-radius: 999px;
-  background: #f3f1f8;
+  background: none;
   color: #5c617c;
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+  transition: color 0.2s ease;
 }
-.diamondistry-dashboard-tabs button.is-active { background: #efeaff; color: #6e4df6; }
+.diamondistry-dashboard-tabs button:hover,
+.diamondistry-dashboard-tabs button.is-active { color: #6e4df6; }
+.diamondistry-dashboard-tab-count {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f3f1f8;
+  color: #5c617c;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.diamondistry-dashboard-tabs button.is-active .diamondistry-dashboard-tab-count { background: #efeaff; color: #6e4df6; }
+/* Underline that slides to the active tab (positioned by dashboard.js). */
+.diamondistry-dashboard-tabs-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: #6e4df6;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .diamondistry-dashboard-tabs-indicator { transition: none; }
+}
+@media (max-width: 480px) {
+  .diamondistry-dashboard-tabs { gap: 16px; }
+  .diamondistry-dashboard-tabs button { gap: 6px; font-size: 0.92rem; }
+}
 .diamondistry-dashboard-painting-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -136,6 +194,7 @@
 }
 @media (max-width: 860px) {
   .diamondistry-dashboard-top,
-  .diamondistry-dashboard-layout { display: grid; grid-template-columns: 1fr; }
+  .diamondistry-dashboard-layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
   .diamondistry-dashboard-painting-grid { grid-template-columns: 1fr; }
+  .diamondistry-dashboard-balance { width: auto; }
 }

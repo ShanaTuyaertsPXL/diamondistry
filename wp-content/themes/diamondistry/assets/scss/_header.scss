@@ -1,0 +1,316 @@
+/* -------------------------------------------------------
+   Header
+------------------------------------------------------- */
+
+/* Fixed (not sticky): the template-part wrapper and split dd-shells leave sticky no room. */
+:root {
+  --dd-header-h: 72px;
+}
+body {
+  padding-top: var(--dd-header-h);
+}
+header.wp-block-template-part {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 100;
+}
+.admin-bar header.wp-block-template-part {
+  top: 32px;
+}
+.diamondistry-site-header {
+  position: relative;
+  width: 100%;
+  /* No backdrop-filter: it would trap the fixed mobile menu inside the header. */
+  background: #fff;
+}
+/* Shadow on its own layer: opacity fades smoothly both ways, box-shadow from none does not. */
+.diamondistry-site-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  box-shadow:
+    0 1px 0 var(--dd-border),
+    0 8px 24px rgb(42 34 86 / 0.07);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.diamondistry-site-header.is-scrolled::after {
+  opacity: 1;
+}
+.diamondistry-site-header-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  min-height: var(--dd-header-h);
+  padding: 8px var(--dd-edge);
+  box-sizing: border-box;
+}
+.diamondistry-site-header-inner > * {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+.diamondistry-brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.diamondistry-site-header p,
+.diamondistry-mobile-panel-head p {
+  margin: 0;
+}
+.diamondistry-logo,
+.wp-block-site-logo .custom-logo {
+  display: block;
+  width: auto !important;
+  /* height: 38px; */
+  height: 60px;
+  max-width: none;
+}
+.wp-block-site-logo {
+  line-height: 0;
+}
+.diamondistry-site-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.diamondistry-site-nav br {
+  display: none;
+}
+.diamondistry-site-nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 14px;
+  color: #111;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+.diamondistry-site-nav a::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  bottom: 5px;
+  left: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.diamondistry-site-nav a:hover,
+.diamondistry-site-nav a.is-current {
+  color: var(--dd-purple);
+}
+.diamondistry-site-nav a:hover::after,
+.diamondistry-site-nav a.is-current::after {
+  transform: scaleX(1);
+}
+
+.diamondistry-header-tools,
+.diamondistry-header-account {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.diamondistry-header-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 5px 11px;
+  border: 1px solid #eeeaf4;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--dd-ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.diamondistry-header-balance svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+.diamondistry-header-avatar {
+  display: block;
+  overflow: hidden;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgb(37 30 70 / 0.12);
+}
+.diamondistry-header-avatar.is-current {
+  box-shadow: 0 0 0 2px var(--dd-purple);
+}
+.diamondistry-header-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.diamondistry-header-login {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--dd-ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.diamondistry-header-login:hover {
+  color: var(--dd-purple);
+}
+.diamondistry-menu-toggle {
+  display: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #ece8f2;
+  border-radius: 14px;
+  background: #fff;
+  color: #2e3354;
+  cursor: pointer;
+}
+.diamondistry-menu-toggle span,
+.diamondistry-menu-toggle span::before,
+.diamondistry-menu-toggle span::after {
+  display: block;
+  width: 16px;
+  height: 2px;
+  border-radius: 99px;
+  background: currentColor;
+  position: relative;
+}
+.diamondistry-menu-toggle span::before,
+.diamondistry-menu-toggle span::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+.diamondistry-menu-toggle span::before {
+  top: -5px;
+}
+.diamondistry-menu-toggle span::after {
+  top: 5px;
+}
+
+.diamondistry-mobile-menu[hidden] {
+  display: none;
+}
+.diamondistry-mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px;
+  background: rgb(28 24 48 / 0.28);
+}
+.admin-bar .diamondistry-mobile-menu {
+  top: 32px;
+}
+.diamondistry-mobile-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(320px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 16px 14px 18px;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgb(42 34 86 / 0.16);
+  box-sizing: border-box;
+}
+.diamondistry-mobile-panel .diamondistry-logo,
+.diamondistry-mobile-panel .custom-logo {
+  height: 30px;
+}
+.diamondistry-mobile-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.diamondistry-menu-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #8b90a4;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.diamondistry-mobile-links,
+.diamondistry-mobile-account {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.diamondistry-mobile-links br {
+  display: none;
+}
+.diamondistry-mobile-links a,
+.diamondistry-mobile-account a:not(.dd-button) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: #111;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+.diamondistry-mobile-links a:hover,
+.diamondistry-mobile-account a:not(.dd-button):hover {
+  background: #f8f6fd;
+}
+.diamondistry-mobile-links a svg,
+.diamondistry-mobile-account a svg {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+.diamondistry-mobile-links a.is-current {
+  background: #f3e8ff;
+  color: #6d46ea;
+}
+.diamondistry-mobile-account {
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--dd-border);
+}
+.diamondistry-mobile-account .diamondistry-header-avatar {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  box-shadow: none;
+}
+.diamondistry-mobile-account .diamondistry-header-balance-value {
+  color: var(--dd-muted);
+  font-weight: 700;
+}

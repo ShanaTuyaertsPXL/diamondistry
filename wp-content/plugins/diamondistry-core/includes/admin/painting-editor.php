@@ -57,9 +57,17 @@ function diamondistry_enqueue_painting_admin_assets( $hook ) {
 	);
 
 	wp_enqueue_script(
+		'diamondistry-grid',
+		DIAMONDISTRY_CORE_URL . 'assets/js/grid-canvas.js',
+		array(),
+		DIAMONDISTRY_CORE_VERSION,
+		true
+	);
+
+	wp_enqueue_script(
 		'diamondistry-admin-painting',
 		DIAMONDISTRY_CORE_URL . 'assets/js/admin-painting.js',
-		array(),
+		array( 'diamondistry-grid' ),
 		DIAMONDISTRY_CORE_VERSION,
 		true
 	);
@@ -213,6 +221,18 @@ function diamondistry_render_painting_editor( $post ) {
 		true
 	);
 
+	$unlock_cost = absint( get_post_meta( $post->ID, '_diamondistry_unlock_cost', true ) );
+
+	$shape = get_post_meta(
+		$post->ID,
+		'_diamondistry_shape',
+		true
+	);
+
+	if ( 'round' !== $shape ) {
+		$shape = 'square';
+	}
+
 	$palette_raw = get_post_meta(
 		$post->ID,
 		'_diamondistry_palette',
@@ -328,6 +348,37 @@ function diamondistry_render_painting_editor( $post ) {
 					min="0"
 					value="<?php echo esc_attr( $reward ); ?>"
 				>
+
+			</div>
+
+			<div class="diamondistry-admin-field">
+
+				<label for="diamondistry_unlock_cost">
+					Unlock price
+				</label>
+
+				<input
+					type="number"
+					id="diamondistry_unlock_cost"
+					name="diamondistry_unlock_cost"
+					min="0"
+					value="<?php echo esc_attr( $unlock_cost ); ?>"
+					aria-describedby="diamondistry_unlock_cost_hint"
+				>
+				<p class="description" id="diamondistry_unlock_cost_hint">Diamonds a player spends to unlock it. 0 = free.</p>
+
+			</div>
+
+			<div class="diamondistry-admin-field">
+
+				<label for="diamondistry_shape">
+					Shape
+				</label>
+
+				<select id="diamondistry_shape" name="diamondistry_shape">
+					<option value="square" <?php selected( $shape, 'square' ); ?>>Squares</option>
+					<option value="round" <?php selected( $shape, 'round' ); ?>>Circles</option>
+				</select>
 
 			</div>
 
@@ -648,6 +699,20 @@ function diamondistry_save_painting( $post_id ) {
 		$post_id,
 		'_diamondistry_reward',
 		$reward
+	);
+
+	update_post_meta(
+		$post_id,
+		'_diamondistry_unlock_cost',
+		isset( $_POST['diamondistry_unlock_cost'] ) ? absint( $_POST['diamondistry_unlock_cost'] ) : 0
+	);
+
+	$shape = isset( $_POST['diamondistry_shape'] ) ? sanitize_key( wp_unslash( $_POST['diamondistry_shape'] ) ) : 'square';
+
+	update_post_meta(
+		$post_id,
+		'_diamondistry_shape',
+		'round' === $shape ? 'round' : 'square'
 	);
 
 	/*

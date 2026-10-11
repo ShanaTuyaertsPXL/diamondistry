@@ -1,0 +1,164 @@
+/* -------------------------------------------------------
+   Responsive
+------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .diamondistry-site-header-inner {
+    gap: 16px;
+  }
+  .diamondistry-logo,
+  .wp-block-site-logo .custom-logo {
+    height: 34px;
+  }
+  .diamondistry-site-nav {
+    gap: 2px;
+  }
+  .diamondistry-site-nav a {
+    font-size: 15px;
+    padding: 6px 11px;
+  }
+}
+@media (max-width: 960px) {
+  .diamondistry-home-benefits-grid,
+  .diamondistry-home-paintings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .diamondistry-home-hero {
+    height: 560px;
+    min-height: 0;
+  }
+  .dd-cards {
+    grid-template-columns: 1fr;
+  }
+  .dd-account__head {
+    grid-template-columns: auto 1fr;
+  }
+  .dd-account__actions {
+    grid-column: 1 / -1;
+  }
+  .dd-account__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dd-account__grid {
+    grid-template-columns: 1fr;
+  }
+  .dd-auth {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .dd-auth__art {
+    height: 220px;
+    margin: 0 16px;
+  }
+  .dd-auth__quote {
+    right: 24px;
+    bottom: 22px;
+    left: 24px;
+  }
+  .dd-auth__quote-text {
+    font-size: 1.3rem;
+  }
+  .dd-auth__perks {
+    display: none;
+  }
+}
+@media (max-width: 860px) {
+  .dd-section__head--split {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .dd-split,
+  .dd-steps {
+    grid-template-columns: 1fr;
+  }
+  .dd-footer__top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dd-footer__brand {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 782px) {
+  .admin-bar .diamondistry-mobile-menu,
+  .admin-bar header.wp-block-template-part {
+    top: 46px;
+  }
+}
+@media (max-width: 720px) {
+  .diamondistry-site-nav,
+  .diamondistry-header-account {
+    display: none;
+  }
+  .diamondistry-menu-toggle {
+    display: grid;
+  }
+  :root {
+    --dd-header-h: 64px;
+  }
+  .diamondistry-site-header-inner {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+  .diamondistry-page-shell {
+    padding-top: 12px;
+    padding-bottom: 48px;
+  }
+}
+@media (max-width: 640px) {
+  .diamondistry-home-benefits-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .diamondistry-home-paintings {
+    grid-template-columns: 1fr;
+  }
+  .diamondistry-home-hero {
+    height: auto;
+    min-height: 560px;
+  }
+  .diamondistry-home-hero::before {
+    background: linear-gradient(
+      180deg,
+      rgb(255 250 252 / 0.88) 0%,
+      rgb(255 250 252 / 0.7) 55%,
+      rgb(255 250 252 / 0) 85%
+    );
+  }
+  .diamondistry-home-hero-copy {
+    padding-top: 40px;
+  }
+  .diamondistry-home-title {
+    font-size: clamp(2.6rem, 12vw, 3.4rem);
+  }
+  .diamondistry-home-actions .dd-button {
+    flex: 1 1 auto;
+  }
+  .diamondistry-home-wave {
+    height: 56px;
+  }
+  .dd-form__cols {
+    grid-template-columns: 1fr;
+  }
+  .dd-account__avatar {
+    width: 64px;
+    height: 64px;
+  }
+  .dd-account__actions .dd-button {
+    flex: 1 1 auto;
+  }
+  .dd-stat {
+    padding: 14px 16px;
+  }
+  .dd-stat__value {
+    font-size: 1.45rem;
+  }
+  .dd-step {
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+  }
+  .dd-footer__bottom {
+    flex-direction: column;
+  }
+}

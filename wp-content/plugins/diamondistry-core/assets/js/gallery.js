@@ -78,13 +78,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     preview.classList.remove("is-new", "is-progress", "is-completed");
     preview.classList.add(`is-${status}`);
-    const completedSet = new Set(completedIndexes);
-    preview.querySelectorAll(".diamondistry-card-preview-cell").forEach((cell) => {
-      cell.classList.toggle(
-        "is-filled",
-        completedSet.has(Number(cell.dataset.index)),
-      );
-    });
+    const canvas = preview.querySelector(".diamondistry-preview-canvas");
+    if (!canvas || !window.DiamondistryGrid) {
+      return;
+    }
+    const data = window.DiamondistryGrid.previewData(canvas);
+    data.status = status;
+    data.filled = status === "progress" ? completedIndexes : [];
+    window.DiamondistryGrid.paintPreview(canvas, data);
   }
 
   if (!userState.loggedIn) {
@@ -147,12 +148,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (completedFlag) {
       completed = total;
     }
-    const percentage = Math.min(100, Math.round((completed / total) * 100));
+    let percentage = Math.min(100, Math.round((completed / total) * 100));
     let status = "new";
     if (completed >= total) {
       status = "completed";
     } else if (completed > 0) {
       status = "progress";
+      // Same as PHP: in progress never reads 0% or 100%.
+      percentage = Math.max(1, Math.min(99, percentage));
     }
 
     card.classList.remove("is-new", "is-progress", "is-completed");
@@ -180,13 +183,14 @@ document.addEventListener("DOMContentLoaded", () => {
           : "Reward available";
       }
     }
-    if (action) {
-      action.textContent =
+    const actionLabel = action && action.querySelector(".diamondistry-painting-card-action-label");
+    if (actionLabel && !card.classList.contains("is-locked")) {
+      actionLabel.textContent =
         status === "completed"
-          ? "View painting →"
+          ? "View painting"
           : status === "progress"
-            ? "Continue Painting →"
-            : "Start painting →";
+            ? "Continue painting"
+            : "Start painting";
     }
   });
 

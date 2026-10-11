@@ -1,0 +1,114 @@
+/* -------------------------------------------------------
+   Account
+------------------------------------------------------- */
+
+.dd-account {
+  display: grid;
+  gap: 24px;
+}
+.dd-account__head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 20px;
+}
+.dd-account__avatar {
+  display: block;
+  overflow: hidden;
+  width: 88px;
+  height: 88px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 10px 26px rgb(40 30 80 / 0.14);
+}
+.dd-account__avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dd-account__name {
+  margin: 4px 0 0;
+  color: var(--dd-ink);
+  font-family: var(--dd-serif);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 560;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+.dd-account__since {
+  margin: 6px 0 0;
+  color: var(--dd-muted);
+  font-weight: 700;
+}
+.dd-account__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.dd-account__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dd-stat {
+  display: grid;
+  gap: 2px;
+  padding: 18px 20px;
+  border-radius: var(--dd-radius);
+}
+.dd-stat.is-pink {
+  background: var(--dd-pink-soft);
+}
+.dd-stat.is-green {
+  background: var(--dd-green-soft);
+}
+.dd-stat.is-purple {
+  background: var(--dd-purple-soft);
+}
+.dd-stat.is-blue {
+  background: var(--dd-blue-soft);
+}
+.dd-stat__value {
+  color: var(--dd-ink);
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.dd-stat__label {
+  color: var(--dd-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.dd-account__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.dd-panel {
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--dd-border);
+  border-radius: var(--dd-radius);
+  background: #fff;
+  box-shadow: var(--dd-shadow-soft);
+}
+.dd-panel__title {
+  margin: 0;
+  color: var(--dd-ink);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.dd-panel__lead {
+  margin: 6px 0 20px;
+  color: var(--dd-muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.dd-panel > .dd-notice {
+  margin-bottom: 16px;
+}

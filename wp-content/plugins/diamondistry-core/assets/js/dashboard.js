@@ -6,6 +6,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const tabs = root.querySelectorAll("[data-dashboard-tab]");
   const panels = document.querySelectorAll("[data-dashboard-panel]");
+  const indicator = root.querySelector(".diamondistry-dashboard-tabs-indicator");
+
+  const moveIndicator = () => {
+    const active = root.querySelector("[data-dashboard-tab].is-active");
+    if (!indicator || !active) {
+      return;
+    }
+    indicator.style.width = `${active.offsetWidth}px`;
+    indicator.style.transform = `translateX(${active.offsetLeft}px)`;
+  };
+
+  moveIndicator();
+  window.addEventListener("resize", moveIndicator);
+  // Web fonts change tab widths after first paint.
+  if (document.fonts) {
+    document.fonts.ready.then(moveIndicator);
+  }
 
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -18,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
       panels.forEach((panel) => {
         panel.hidden = panel.dataset.dashboardPanel !== name;
       });
+      moveIndicator();
     });
   });
 });

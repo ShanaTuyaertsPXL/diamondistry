@@ -1,0 +1,92 @@
+/* -------------------------------------------------------
+   Auth (login, register)
+------------------------------------------------------- */
+
+.dd-auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: calc(100vh - var(--dd-header-h));
+}
+.dd-auth__art {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 16px 16px;
+  border-radius: var(--dd-radius-lg);
+  background: #2a2158;
+}
+.dd-auth__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dd-auth__art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(33 31 74 / 0) 35%,
+    rgb(33 31 74 / 0.85)
+  );
+}
+.dd-auth__quote {
+  position: absolute;
+  right: 40px;
+  bottom: 40px;
+  left: 40px;
+  z-index: 1;
+  color: #fff;
+}
+.dd-auth__quote-text {
+  max-width: 460px;
+  margin: 0;
+  font-family: var(--dd-serif);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 560;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.dd-auth__perks {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 700;
+}
+.dd-auth__perks li::before {
+  content: "💎";
+  margin-right: 10px;
+}
+.dd-auth__main {
+  display: grid;
+  place-items: center;
+  padding: 40px var(--dd-gutter) 56px;
+}
+.dd-auth__card {
+  width: min(100%, 420px);
+}
+.dd-auth__title {
+  margin: 0;
+  color: var(--dd-ink);
+  font-family: var(--dd-serif);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 560;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+.dd-auth__lead {
+  margin: 10px 0 26px;
+  color: var(--dd-muted);
+  line-height: 1.6;
+}
+.dd-auth__card > .dd-notice {
+  margin: 20px 0 16px;
+}
+.dd-auth__switch {
+  margin: 24px 0 0;
+  color: var(--dd-muted);
+  text-align: center;
+}

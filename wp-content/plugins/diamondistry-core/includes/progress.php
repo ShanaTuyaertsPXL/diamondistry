@@ -268,6 +268,10 @@ function diamondistry_ajax_save_progress() {
 		wp_send_json_error( array( 'message' => 'Painting not available.' ), 404 );
 	}
 
+	if ( function_exists( 'diamondistry_user_can_play' ) && ! diamondistry_user_can_play( $user_id, $painting ) ) {
+		wp_send_json_error( array( 'message' => 'Unlock this painting first.' ), 403 );
+	}
+
 	$data = diamondistry_get_valid_playable_painting_data( $painting );
 
 	if ( ! $data ) {

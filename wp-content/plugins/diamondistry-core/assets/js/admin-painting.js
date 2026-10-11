@@ -52,6 +52,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const status = document.getElementById("diamondistry-admin-status");
 
   let palette = [];
+  const shapeInput = document.getElementById("diamondistry_shape");
+
+  function diamondShape() {
+    return shapeInput && shapeInput.value === "round" ? "round" : "square";
+  }
+
   let pattern = [];
 
   let selectedColorId = null;
@@ -61,6 +67,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let isPainting = false;
   let dragSnapshotTaken = false;
+  let board = null;
+  let previewCanvas = null;
+  let adminHover = -1;
+  let boardEventsBound = false;
 
   let currentWidth = Number(widthInput.value) || 10;
 
@@ -607,34 +617,68 @@ document.addEventListener("DOMContentLoaded", () => {
   |--------------------------------------------------------------------------
   */
 
-  function renderCell(cell, colorId) {
+  function adminCellStyle(index) {
+    const colorId = Number(pattern[index] || 0);
     const color = getColor(colorId);
-
-    cell.classList.remove("is-empty");
-
-    cell.style.removeProperty("--cell-color");
-
-    cell.style.removeProperty("--symbol-color");
-
-    if (Number(colorId) === 0 || !color) {
-      cell.classList.add("is-empty");
-
-      cell.textContent = "";
-
-      return;
-    }
-
-    cell.style.setProperty("--cell-color", color.hex);
-
-    cell.style.setProperty("--symbol-color", getContrastColor(color.hex));
-
-    cell.textContent = color.symbol;
-
-    cell.title = `${color.symbol} ${color.name}`;
+    return {
+      empty: !color,
+      hex: color ? color.hex : "#ffffff",
+      symbol: color ? color.symbol : "",
+      hover: index === adminHover,
+      shape: diamondShape(),
+      scale: 1,
+    };
   }
 
-  function paintCell(cell) {
-    const index = Number(cell.dataset.index);
+  function bindBoardEvents() {
+    if (boardEventsBound) {
+      return;
+    }
+    boardEventsBound = true;
+
+    grid.addEventListener("pointerdown", (event) => {
+      const index = board.cellFromEvent(event);
+      if (index < 0) {
+        return;
+      }
+      event.preventDefault();
+      if (activeTool === "row" || activeTool === "column") {
+        paintCell(index);
+        return;
+      }
+      isPainting = true;
+      if (!dragSnapshotTaken) {
+        pushHistory();
+        dragSnapshotTaken = true;
+      }
+      paintCell(index);
+    });
+
+    grid.addEventListener("pointermove", (event) => {
+      const index = board.cellFromEvent(event);
+      if (index !== adminHover) {
+        adminHover = index;
+        board.redraw();
+      }
+      if (!isPainting || index < 0) {
+        return;
+      }
+      if (activeTool === "paint" || activeTool === "eraser") {
+        paintCell(index);
+      }
+    });
+
+    grid.addEventListener("pointerleave", () => {
+      if (adminHover === -1) {
+        return;
+      }
+      adminHover = -1;
+      board.redraw();
+    });
+  }
+
+  function paintCell(index) {
+    index = Number(index);
 
     if (!Number.isInteger(index)) {
       return;
@@ -662,61 +706,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     pattern[index] = target;
 
-    renderCell(cell, target);
-
+    board.redraw();
     syncFields();
     updateStatus();
-    renderPreview();
+    if (!isPainting) {
+      renderPreview();
+    }
   }
 
   function renderGrid() {
-    grid.innerHTML = "";
-
-    grid.style.gridTemplateColumns = `repeat(${currentWidth}, minmax(34px, 1fr))`;
-
-    pattern.forEach((colorId, index) => {
-      const cell = document.createElement("button");
-
-      cell.type = "button";
-
-      cell.className = "diamondistry-admin-cell";
-
-      cell.dataset.index = index;
-
-      renderCell(cell, colorId);
-
-      cell.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-
-        if (activeTool === "row" || activeTool === "column") {
-          paintCell(cell);
-          return;
-        }
-
-        isPainting = true;
-
-        if (!dragSnapshotTaken) {
-          pushHistory();
-
-          dragSnapshotTaken = true;
-        }
-
-        paintCell(cell);
+    if (!board) {
+      const wrapper = grid.closest(".diamondistry-admin-grid-wrapper");
+      board = window.DiamondistryGrid.createViewport(grid, {
+        columns: () => currentWidth,
+        rows: () => currentHeight,
+        cellSize: 36,
+        gap: 3,
+        padding: 0,
+        scrollParent: wrapper || grid.parentElement,
+        variant: "admin",
+        styleAt: adminCellStyle,
       });
+      bindBoardEvents();
+    }
 
-      cell.addEventListener("pointerenter", () => {
-        if (!isPainting) {
-          return;
-        }
-
-        if (activeTool === "paint" || activeTool === "eraser") {
-          paintCell(cell);
-        }
-      });
-
-      grid.appendChild(cell);
-    });
-
+    board.redraw();
     syncFields();
     updateStatus();
     renderPreview();
@@ -805,26 +819,29 @@ document.addEventListener("DOMContentLoaded", () => {
   */
 
   function renderPreview() {
-    preview.innerHTML = "";
-
-    preview.style.gridTemplateColumns = `repeat(${currentWidth}, 1fr)`;
+    if (!previewCanvas) {
+      preview.innerHTML = "";
+      previewCanvas = document.createElement("canvas");
+      previewCanvas.className = "diamondistry-preview-canvas";
+      preview.appendChild(previewCanvas);
+    }
 
     preview.style.aspectRatio = `${currentWidth} / ${currentHeight}`;
 
-    pattern.forEach((colorId) => {
-      const previewCell = document.createElement("span");
+    const paletteMap = {};
+    palette.forEach((color) => {
+      paletteMap[color.id] = color.hex;
+    });
 
-      previewCell.className = "diamondistry-preview-cell";
-
-      const color = getColor(colorId);
-
-      if (color) {
-        previewCell.style.backgroundColor = color.hex;
-      } else {
-        previewCell.classList.add("is-empty");
-      }
-
-      preview.appendChild(previewCell);
+    window.DiamondistryGrid.paintPreview(previewCanvas, {
+      width: currentWidth,
+      height: currentHeight,
+      status: "new",
+      palette: paletteMap,
+      pattern,
+      filled: [],
+      shape: diamondShape(),
+      empty: "#f3f1f8",
     });
 
     const filled = pattern.filter((value) => Number(value) !== 0).length;
@@ -1037,9 +1054,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   resizeButton.addEventListener("click", resizeGrid);
 
+  if (shapeInput) {
+    shapeInput.addEventListener("change", () => {
+      if (board) {
+        board.redraw();
+      }
+      renderPreview();
+    });
+  }
+
   document.addEventListener("pointerup", () => {
+    const wasPainting = isPainting;
     isPainting = false;
     dragSnapshotTaken = false;
+    if (wasPainting) {
+      renderPreview();
+    }
   });
 
   document.addEventListener("pointercancel", () => {

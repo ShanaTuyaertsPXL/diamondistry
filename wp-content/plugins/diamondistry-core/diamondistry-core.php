@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Diamondistry Core
  * Description: Core functionality for the Diamondistry digital diamond painting platform.
- * Version: 0.15.16
+ * Version: 0.19.2
  * Author: Diamondistry
  * Text Domain: diamondistry-core
  */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DIAMONDISTRY_CORE_VERSION', '0.15.16' );
+define( 'DIAMONDISTRY_CORE_VERSION', '0.19.2' );
 define( 'DIAMONDISTRY_CORE_URL', plugin_dir_url( __FILE__ ) );
 define( 'DIAMONDISTRY_CORE_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -28,6 +28,12 @@ require_once DIAMONDISTRY_CORE_PATH . 'includes/favorites.php';
 require_once DIAMONDISTRY_CORE_PATH . 'includes/painting-cards.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/dashboard.php';
+
+require_once DIAMONDISTRY_CORE_PATH . 'includes/account.php';
+
+require_once DIAMONDISTRY_CORE_PATH . 'includes/faq.php';
+
+require_once DIAMONDISTRY_CORE_PATH . 'includes/unlocks.php';
 
 require_once DIAMONDISTRY_CORE_PATH . 'includes/admin/painting-editor.php';
 
@@ -190,6 +196,12 @@ function diamondistry_get_painting_data( $post ) {
 		)
 	);
 
+	$shape = get_post_meta(
+		$post->ID,
+		'_diamondistry_shape',
+		true
+	);
+
 	$palette_raw = get_post_meta(
 		$post->ID,
 		'_diamondistry_palette',
@@ -232,6 +244,7 @@ function diamondistry_get_painting_data( $post ) {
 		'width'   => $width,
 		'height'  => $height,
 		'reward'  => $reward,
+		'shape'   => 'round' === $shape ? 'round' : 'square',
 		'palette' => $palette,
 		'pattern' => $pattern,
 	);
@@ -297,9 +310,17 @@ function diamondistry_get_requested_painting() {
 function diamondistry_enqueue_play_assets( $painting ) {
 
 	wp_enqueue_script(
+		'diamondistry-grid',
+		DIAMONDISTRY_CORE_URL . 'assets/js/grid-canvas.js',
+		array(),
+		DIAMONDISTRY_CORE_VERSION,
+		true
+	);
+
+	wp_enqueue_script(
 		'diamondistry-play',
 		DIAMONDISTRY_CORE_URL . 'assets/js/play.js',
-		array(),
+		array( 'diamondistry-grid' ),
 		DIAMONDISTRY_CORE_VERSION,
 		true
 	);
@@ -378,28 +399,39 @@ function diamondistry_render_playground() {
 		return sprintf(
 			'<div class="diamondistry-empty">%s</div>',
 			esc_html__(
-				'Er zijn nog geen paintings beschikbaar.',
+				'No paintings are available yet.',
 				'diamondistry-core'
 			)
 		);
 	}
 
-	diamondistry_enqueue_play_assets( $painting );
-
 	if ( function_exists( 'diamondistry_enqueue_painting_card_assets' ) ) {
 		diamondistry_enqueue_painting_card_assets();
 	}
 
+	if ( ! diamondistry_user_can_play( get_current_user_id(), $painting ) ) {
+		return diamondistry_compact_html( diamondistry_render_locked_painting( $painting ) );
+	}
+
+	diamondistry_enqueue_play_assets( $painting );
+
 	$category_label = function_exists( 'diamondistry_get_painting_category_label' )
 		? diamondistry_get_painting_category_label( $painting->ID )
 		: '';
+
+	$data = diamondistry_get_painting_data( $painting );
 
 	ob_start();
 	?>
 
 	<div class="diamondistry-app">
 
-		<a class="diamondistry-back" href="<?php echo esc_url( home_url( '/paintings/' ) ); ?>">← Back to Paintings</a>
+		<nav class="diamondistry-breadcrumb" aria-label="Breadcrumb">
+			<a href="<?php echo esc_url( home_url( '/paintings/' ) ); ?>">Paintings</a>
+			<?php if ( $category_label ) : ?>
+				<span aria-hidden="true">/</span><span><?php echo esc_html( $category_label ); ?></span>
+			<?php endif; ?>
+		</nav>
 
 		<header class="diamondistry-game-header">
 
@@ -407,8 +439,12 @@ function diamondistry_render_playground() {
 				<h1 id="diamondistry-title">
 					<?php echo esc_html( get_the_title( $painting ) ); ?>
 				</h1>
-				<?php if ( $category_label ) : ?>
-					<p class="diamondistry-eyebrow"><?php echo esc_html( $category_label ); ?></p>
+				<?php if ( $data ) : ?>
+					<ul class="diamondistry-meta">
+						<li><?php echo esc_html( $data['width'] . ' × ' . $data['height'] ); ?> diamonds</li>
+						<li><?php echo esc_html( count( $data['palette'] ) ); ?> colours</li>
+						<li class="is-reward"><?php echo esc_html( number_format_i18n( $data['reward'] ) ); ?> 💎 reward</li>
+					</ul>
 				<?php endif; ?>
 			</div>
 
@@ -420,6 +456,10 @@ function diamondistry_render_playground() {
 			</div>
 
 		</header>
+
+		<?php if ( ! is_user_logged_in() ) : ?>
+			<p class="diamondistry-guest-note">Playing as a guest. <a href="<?php echo esc_url( wp_login_url( add_query_arg( 'painting', $painting->post_name, home_url( '/play/' ) ) ) ); ?>">Log in</a> or <a href="<?php echo esc_url( wp_registration_url() ); ?>">create an account</a> to save your progress and earn diamonds.</p>
+		<?php endif; ?>
 
 		<div class="diamondistry-workspace">
 
@@ -505,7 +545,7 @@ function diamondistry_enqueue_gallery_script() {
 	wp_enqueue_script(
 		'diamondistry-gallery',
 		DIAMONDISTRY_CORE_URL . 'assets/js/gallery.js',
-		array(),
+		array( 'diamondistry-grid' ),
 		DIAMONDISTRY_CORE_VERSION,
 		true
 	);
@@ -547,7 +587,7 @@ function diamondistry_render_gallery() {
 		return sprintf(
 			'<div class="diamondistry-empty">%s</div>',
 			esc_html__(
-				'Er zijn nog geen paintings.',
+				'No paintings yet.',
 				'diamondistry-core'
 			)
 		);
