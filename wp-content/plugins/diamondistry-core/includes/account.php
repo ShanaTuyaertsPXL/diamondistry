@@ -657,6 +657,69 @@ function diamondistry_filter_avatar_data( $args, $id_or_email ) {
 
 add_filter( 'pre_get_avatar_data', 'diamondistry_filter_avatar_data', 10, 2 );
 
+/**
+ * No Gravatar: anyone without an uploaded photo gets an inline SVG with their
+ * initials, so no email hash ever leaves the site (privacy).
+ */
+function diamondistry_initials_avatar( $avatar, $id_or_email, $args ) {
+	$user = false;
+
+	if ( is_numeric( $id_or_email ) ) {
+		$user = get_user_by( 'id', (int) $id_or_email );
+	} elseif ( $id_or_email instanceof WP_User ) {
+		$user = $id_or_email;
+	} elseif ( $id_or_email instanceof WP_Post ) {
+		$user = get_user_by( 'id', (int) $id_or_email->post_author );
+	} elseif ( $id_or_email instanceof WP_Comment ) {
+		$user = $id_or_email->user_id ? get_user_by( 'id', (int) $id_or_email->user_id ) : false;
+	} elseif ( is_string( $id_or_email ) && is_email( $id_or_email ) ) {
+		$user = get_user_by( 'email', $id_or_email );
+	}
+
+	// Uploaded photo: let WordPress build the normal <img> via pre_get_avatar_data.
+	if ( $user && get_user_meta( $user->ID, DIAMONDISTRY_AVATAR_META_KEY, true ) ) {
+		return $avatar;
+	}
+
+	$name     = $user ? $user->display_name : '';
+	$words    = preg_split( '/\s+/u', trim( (string) preg_replace( '/[^\p{L}\p{N}\s]/u', '', $name ) ) );
+	$initials = '';
+	foreach ( array_slice( array_filter( $words ), 0, 2 ) as $word ) {
+		$initials .= mb_strtoupper( mb_substr( $word, 0, 1 ) );
+	}
+	if ( '' === $initials ) {
+		$initials = '💎';
+	}
+
+	$palettes = array(
+		array( '#8f74ff', '#6e4df6' ),
+		array( '#ff8fb8', '#ff5f93' ),
+		array( '#7fb6ff', '#5f9df7' ),
+		array( '#5fd39b', '#3cba7a' ),
+		array( '#ffb877', '#f08a3c' ),
+	);
+	$colors = $palettes[ ( $user ? $user->ID : 0 ) % count( $palettes ) ];
+	$size   = (int) $args['size'];
+
+	$svg = sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%1$s"/><stop offset="1" stop-color="%2$s"/></linearGradient></defs><rect width="64" height="64" fill="url(#g)"/><text x="32" y="32" dy=".35em" text-anchor="middle" font-family="Nunito, Arial, sans-serif" font-weight="800" font-size="%3$d" fill="#fff">%4$s</text></svg>',
+		$colors[0],
+		$colors[1],
+		mb_strlen( $initials ) > 1 ? 24 : 28,
+		htmlspecialchars( $initials, ENT_XML1 )
+	);
+
+	return sprintf(
+		'<img alt="%1$s" src="%2$s" class="%3$s" width="%4$d" height="%4$d" decoding="async">',
+		esc_attr( $args['alt'] ),
+		esc_attr( 'data:image/svg+xml;charset=utf-8,' . rawurlencode( $svg ) ),
+		esc_attr( trim( 'avatar avatar-' . $size . ' photo ' . ( is_array( $args['class'] ) ? implode( ' ', $args['class'] ) : (string) $args['class'] ) ) ),
+		$size
+	);
+}
+
+add_filter( 'pre_get_avatar', 'diamondistry_initials_avatar', 10, 3 );
+
 // Deleting a user also removes their uploaded photo.
 add_action( 'delete_user', 'diamondistry_delete_user_avatar' );
 
