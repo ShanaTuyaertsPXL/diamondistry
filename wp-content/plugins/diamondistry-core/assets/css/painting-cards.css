@@ -73,6 +73,35 @@
   background: #6d4cf6;
   color: #fff;
 }
+/* Free / Premium: a segmented pill next to the search. */
+.diamondistry-price-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #f4f3f8;
+}
+.diamondistry-price-toggle button {
+  min-height: 30px;
+  padding: 4px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #6a7086;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.diamondistry-price-toggle button:hover {
+  color: #1c2144;
+}
+.diamondistry-price-toggle button.is-active {
+  background: #fff;
+  color: #6d4cf6;
+}
 .diamondistry-gallery {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -432,6 +461,9 @@
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+  }
+  .diamondistry-price-toggle {
+    align-self: flex-start;
   }
   .diamondistry-search {
     flex-basis: auto;

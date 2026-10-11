@@ -662,7 +662,7 @@ function diamondistry_render_gallery() {
 	?>
 
 	<div class="diamondistry-gallery-page">
-		<header class="diamondistry-gallery-intro">
+		<header class="diamondistry-gallery-intro" data-animate="fade-up">
 			<h1>Paintings</h1>
 			<p>Discover and complete beautiful diamond paintings. Earn diamonds and grow your collection.</p>
 		</header>
@@ -672,6 +672,11 @@ function diamondistry_render_gallery() {
 				<span class="screen-reader-text">Search paintings</span>
 				<input id="diamondistry-gallery-search" type="search" placeholder="Search paintings..." autocomplete="off">
 			</label>
+			<div class="diamondistry-price-toggle" role="group" aria-label="Price">
+				<button type="button" class="is-active" data-price="all" aria-pressed="true">Any price</button>
+				<button type="button" data-price="free" aria-pressed="false">Free</button>
+				<button type="button" data-price="premium" aria-pressed="false">Premium</button>
+			</div>
 			<div class="diamondistry-filters" role="tablist" aria-label="Categories">
 				<button type="button" class="is-active" data-filter="all" role="tab" aria-selected="true">All</button>
 				<?php foreach ( $categories as $category ) : ?>

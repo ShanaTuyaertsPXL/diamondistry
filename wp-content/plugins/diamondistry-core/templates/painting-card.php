@@ -35,6 +35,7 @@ if ( $is_locked ) {
 	data-total="<?php echo esc_attr( $state['total'] ); ?>"
 	data-title="<?php echo esc_attr( get_the_title( $painting ) ); ?>"
 	data-categories="<?php echo esc_attr( $category_slugs ); ?>"
+	data-price="<?php echo $unlock_cost && ! ( function_exists( 'diamondistry_is_current_challenge' ) && diamondistry_is_current_challenge( $painting->ID ) ) ? 'premium' : 'free'; ?>"
 >
 	<div class="diamondistry-painting-card-preview<?php echo $cover_url ? ' has-cover' : ''; ?>">
 		<?php // Same target as the title link, which carries the name, so keep it out of the tab order and screen readers. ?>

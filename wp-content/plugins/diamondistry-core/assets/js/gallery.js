@@ -251,6 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const search = document.getElementById("diamondistry-gallery-search");
   const filters = document.querySelectorAll(".diamondistry-filters [data-filter]");
+  const priceButtons = document.querySelectorAll(".diamondistry-price-toggle [data-price]");
   const empty = document.querySelector(".diamondistry-gallery-empty");
   const galleryCards = document.querySelectorAll(".diamondistry-painting-card--gallery");
 
@@ -259,6 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let activeFilter = "all";
+  let activePrice = "all";
   const gallery = document.querySelector(".diamondistry-gallery");
   const motionOk = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -321,7 +323,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const categories = (card.dataset.categories || "").split(/\s+/).filter(Boolean);
       const matchesQuery = !query || title.includes(query);
       const matchesCategory = activeFilter === "all" || categories.includes(activeFilter);
-      const show = matchesQuery && matchesCategory;
+      const matchesPrice = activePrice === "all" || card.dataset.price === activePrice;
+      const show = matchesQuery && matchesCategory && matchesPrice;
 
       if (show) {
         visible += 1;
@@ -342,6 +345,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (search) {
     search.addEventListener("input", applyFilters);
   }
+
+  priceButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      activePrice = button.dataset.price || "all";
+      priceButtons.forEach((item) => {
+        item.classList.toggle("is-active", item === button);
+        item.setAttribute("aria-pressed", item === button ? "true" : "false");
+      });
+      applyFilters();
+    });
+  });
 
   filters.forEach((button) => {
     button.addEventListener("click", () => {
