@@ -59,9 +59,10 @@ if ( $is_locked ) {
 
 		<?php if ( $is_locked ) : ?>
 			<span class="diamondistry-painting-card-lock">
-				<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-				<?php echo esc_html( number_format_i18n( $unlock_cost ) ); ?> 💎
-				<span class="screen-reader-text">to unlock</span>
+				<svg class="diamondistry-painting-card-lock-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>
+				<span class="diamondistry-painting-card-lock-price"><?php echo esc_html( number_format_i18n( $unlock_cost ) ); ?></span>
+				<svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path fill="#6ea2ff" d="M10 1.2 17.2 7.4 10 18.8 2.8 7.4Z"/><path fill="#d7cbff" d="M10 1.2 13.4 7.4 10 18.8 6.6 7.4Z"/></svg>
+				<span class="screen-reader-text">diamonds to unlock</span>
 			</span>
 		<?php endif; ?>
 
