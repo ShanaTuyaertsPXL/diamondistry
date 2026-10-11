@@ -352,7 +352,7 @@ function diamondistry_render_dashboard() {
 				<span class="diamondistry-dashboard-avatar"><?php echo get_avatar( $user->ID, 96 ); ?></span>
 				<div>
 					<h1>Welcome back, <?php echo esc_html( $first_name ); ?>!</h1>
-					<p>Keep creating, you're doing great!</p>
+					<p><?php echo esc_html( function_exists( 'diamondistry_get_user_tagline' ) ? diamondistry_get_user_tagline( $user->ID ) : "Keep creating, you're doing great!" ); ?></p>
 				</div>
 			</div>
 			<div class="diamondistry-dashboard-balance">
@@ -367,9 +367,10 @@ function diamondistry_render_dashboard() {
 		<div class="diamondistry-dashboard-layout">
 			<div>
 				<div class="diamondistry-dashboard-tabs" role="tablist">
-					<button type="button" class="is-active" role="tab" aria-selected="true" data-dashboard-tab="progress">In Progress (<?php echo esc_html( $total_in_progress ); ?>)</button>
-					<button type="button" role="tab" aria-selected="false" data-dashboard-tab="completed">Completed (<?php echo esc_html( $total_completed ); ?>)</button>
-					<button type="button" role="tab" aria-selected="false" data-dashboard-tab="favourites">Favourites (<?php echo esc_html( $total_favourites ); ?>)</button>
+					<button type="button" class="is-active" role="tab" aria-selected="true" data-dashboard-tab="progress">In progress <span class="diamondistry-dashboard-tab-count"><?php echo esc_html( $total_in_progress ); ?></span></button>
+					<button type="button" role="tab" aria-selected="false" data-dashboard-tab="completed">Completed <span class="diamondistry-dashboard-tab-count"><?php echo esc_html( $total_completed ); ?></span></button>
+					<button type="button" role="tab" aria-selected="false" data-dashboard-tab="favourites">Favourites <span class="diamondistry-dashboard-tab-count"><?php echo esc_html( $total_favourites ); ?></span></button>
+					<span class="diamondistry-dashboard-tabs-indicator" aria-hidden="true"></span>
 				</div>
 
 				<div class="diamondistry-dashboard-panel" data-dashboard-panel="progress">
@@ -449,9 +450,14 @@ function diamondistry_render_dashboard() {
 				<ul>
 					<li><span>Paintings started</span><strong><?php echo esc_html( $total_started ); ?></strong></li>
 					<li><span>Paintings completed</span><strong><?php echo esc_html( $total_completed ); ?></strong></li>
-					<li><span>Diamonds earned</span><strong><?php echo esc_html( number_format_i18n( $balance ) ); ?></strong></li>
+					<li><span>Paintings unlocked</span><strong><?php echo esc_html( function_exists( 'diamondistry_get_user_unlocked_ids' ) ? count( diamondistry_get_user_unlocked_ids( $user_id ) ) : 0 ); ?></strong></li>
 					<li><span>Favourite paintings</span><strong><?php echo esc_html( $total_favourites ); ?></strong></li>
 				</ul>
+				<a class="diamondistry-dashboard-settings" href="<?php echo esc_url( home_url( '/account/' ) ); ?>">
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+					<span>Account settings</span>
+					<span class="diamondistry-dashboard-settings-arrow" aria-hidden="true">→</span>
+				</a>
 			</aside>
 		</div>
 	</div>
