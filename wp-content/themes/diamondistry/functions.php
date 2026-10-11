@@ -246,7 +246,7 @@ function diamondistry_theme_render_mobile_menu() {
 					<a class="diamondistry-mobile-user" href="<?php echo esc_url( home_url( '/account/' ) ); ?>">
 						<span class="diamondistry-header-avatar"><?php echo get_avatar( $user->ID, 64 ); ?></span>
 						My account
-						<span class="diamondistry-header-balance-value">· <?php echo esc_html( number_format_i18n( $balance ) ); ?> 💎</span>
+						<span class="diamondistry-header-balance-value">· <?php echo esc_html( number_format_i18n( $balance ) ); ?> <span class="dd-gem" aria-hidden="true"></span></span>
 					</a>
 					<a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>">
 						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 7V5a2 2 0 0 1 2-2h7v18h-7a2 2 0 0 1-2-2v-2"/><path d="M15 12H3m0 0 3-3m-3 3 3 3"/></svg>
@@ -313,7 +313,7 @@ function diamondistry_theme_render_header_account() {
 	?>
 	<div class="diamondistry-header-account">
 		<a class="diamondistry-header-balance" href="<?php echo esc_url( $dashboard_url ); ?>" aria-label="<?php echo esc_attr( sprintf( '%s diamonds, view my paintings', number_format_i18n( $balance ) ) ); ?>">
-			<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path fill="#6ea2ff" d="M10 1.2 17.2 7.4 10 18.8 2.8 7.4Z"/><path fill="#d7cbff" d="M10 1.2 13.4 7.4 10 18.8 6.6 7.4Z"/></svg>
+			<span class="dd-gem" aria-hidden="true"></span>
 			<span class="diamondistry-header-balance-value"><?php echo esc_html( number_format_i18n( $balance ) ); ?></span>
 		</a>
 		<a class="diamondistry-header-avatar<?php echo is_page( 'account' ) ? ' is-current' : ''; ?>" href="<?php echo esc_url( home_url( '/account/' ) ); ?>" aria-label="My account">
@@ -369,7 +369,7 @@ function diamondistry_theme_render_footer() {
 		</div>
 		<div class="dd-footer__bottom">
 			<p>© <?php echo esc_html( gmdate( 'Y' ) . ' ' . get_bloginfo( 'name' ) ); ?><?php if ( get_privacy_policy_url() ) : ?> · <a href="<?php echo esc_url( get_privacy_policy_url() ); ?>">Privacy policy</a><?php endif; ?></p>
-			<p>Made with 💎 for slow, happy moments.</p>
+			<p>Made with <span class="dd-gem" role="img" aria-label="diamonds"></span> for slow, happy moments.</p>
 		</div>
 	</div>
 	<?php
@@ -423,7 +423,7 @@ function diamondistry_theme_render_hero_art() {
 					<h3><?php echo esc_html( get_the_title( $painting ) ); ?></h3>
 					<span>Featured painting</span>
 				</div>
-				<strong><?php echo esc_html( $data['reward'] ); ?> 💎</strong>
+				<strong><?php echo esc_html( $data['reward'] ); ?> <span class="dd-gem" role="img" aria-label="diamonds"></span></strong>
 			</div>
 		</div>
 	</a>

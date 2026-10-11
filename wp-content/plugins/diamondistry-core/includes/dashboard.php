@@ -78,7 +78,7 @@ function diamondistry_render_dashboard() {
 			<div class="diamondistry-dashboard-login">
 
 				<div class="diamondistry-dashboard-login-icon">
-					💎
+					<?php echo diamondistry_gem(); ?>
 				</div>
 
 				<h1>

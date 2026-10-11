@@ -323,7 +323,7 @@ function diamondistry_render_challenge( $atts ) {
 				</ul>
 				<p class="dd-challenge__prizes">
 					<?php foreach ( $prizes as $place => $prize ) : ?>
-						<span><?php echo esc_html( $medals[ $place ] . ' ' . $prize ); ?> 💎</span>
+						<span><?php echo esc_html( $medals[ $place ] . ' ' . $prize ); ?> <?php echo diamondistry_gem(); ?></span>
 					<?php endforeach; ?>
 				</p>
 				<a class="dd-button dd-button-primary" href="<?php echo esc_url( $play_url ); ?>"><?php echo $my_rank ? 'View painting' : 'Play the challenge'; ?> <span aria-hidden="true">→</span></a>

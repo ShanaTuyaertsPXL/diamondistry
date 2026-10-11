@@ -130,6 +130,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const cellSteps = [12, 16, 20, 24, 28, 32, 36, 40, 48, 56];
   let zoomLevel = 0;
 
+  // Writes text safely, swapping each 💎 for the brand diamond icon (.dd-gem).
+  function setTextWithGems(el, text) {
+    el.replaceChildren(
+      ...text.split("💎").flatMap((part, i) => {
+        if (i === 0) return [part];
+        const gem = document.createElement("span");
+        gem.className = "dd-gem";
+        gem.setAttribute("role", "img");
+        gem.setAttribute("aria-label", "diamonds");
+        return [gem, part];
+      })
+    );
+  }
+
   function fittedCellSize() {
     const fullscreen = workspace.classList.contains("is-expanded");
     const targetWidth = fullscreen
@@ -683,15 +697,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Keep the header balance (desktop + mobile menu) in sync without a reload.
         document.querySelectorAll(".diamondistry-header-balance-value").forEach((el) => {
-          el.textContent = el.textContent.includes("💎")
-            ? `· ${userState.balance.toLocaleString()} 💎`
-            : userState.balance.toLocaleString();
+          if (el.querySelector(".dd-gem")) {
+            setTextWithGems(el, `· ${userState.balance.toLocaleString()} 💎`);
+          } else {
+            el.textContent = userState.balance.toLocaleString();
+          }
         });
 
-        message.textContent =
+        setTextWithGems(
+          message,
           `✨ ${painting.title} completed! ` +
           `+${result.data.reward} 💎 · ` +
-          `Balance: ${userState.balance} 💎`;
+          `Balance: ${userState.balance} 💎`
+        );
 
         setCompletionReward(
           Number(result.data.reward || 0),
@@ -1017,7 +1035,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const completionMark = document.createElement("div");
   completionMark.className = "diamondistry-complete-mark";
   completionMark.setAttribute("aria-hidden", "true");
-  completionMark.textContent = "💎";
+  setTextWithGems(completionMark, "💎");
 
   const completionKicker = document.createElement("p");
   completionKicker.className = "diamondistry-complete-kicker";
@@ -1074,8 +1092,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     completionRewardText.hidden = false;
-    completionRewardText.textContent =
-      `+${completionReward.amount} 💎 added · Balance ${completionReward.balance} 💎`;
+    setTextWithGems(
+      completionRewardText,
+      `+${completionReward.amount} 💎 added · Balance ${completionReward.balance} 💎`
+    );
   }
 
   function openCompletion() {

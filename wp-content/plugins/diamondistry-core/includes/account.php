@@ -694,9 +694,6 @@ function diamondistry_initials_avatar( $avatar, $id_or_email, $args ) {
 	foreach ( array_slice( array_filter( $words ), 0, 2 ) as $word ) {
 		$initials .= mb_strtoupper( mb_substr( $word, 0, 1 ) );
 	}
-	if ( '' === $initials ) {
-		$initials = '💎';
-	}
 
 	$palettes = array(
 		array( '#8f74ff', '#6e4df6' ),
@@ -709,11 +706,17 @@ function diamondistry_initials_avatar( $avatar, $id_or_email, $args ) {
 	$size   = (int) $args['size'];
 
 	$svg = sprintf(
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%1$s"/><stop offset="1" stop-color="%2$s"/></linearGradient></defs><rect width="64" height="64" fill="url(#g)"/><text x="32" y="32" dy=".35em" text-anchor="middle" font-family="Nunito, Arial, sans-serif" font-weight="800" font-size="%3$d" fill="#fff">%4$s</text></svg>',
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%1$s"/><stop offset="1" stop-color="%2$s"/></linearGradient></defs><rect width="64" height="64" fill="url(#g)"/>%3$s</svg>',
 		$colors[0],
 		$colors[1],
-		mb_strlen( $initials ) > 1 ? 24 : 28,
-		htmlspecialchars( $initials, ENT_XML1 )
+		'' === $initials
+			// No letters to show: a white brand diamond instead.
+			? '<g transform="translate(16 15) scale(1.333)" fill="#fff"><path d="M7 3.5h10L22 9H2z"/><path fill-opacity=".8" d="M2 9h10v12z"/><path fill-opacity=".6" d="M12 9h10L12 21z"/></g>'
+			: sprintf(
+				'<text x="32" y="32" dy=".35em" text-anchor="middle" font-family="Nunito, Arial, sans-serif" font-weight="800" font-size="%d" fill="#fff">%s</text>',
+				mb_strlen( $initials ) > 1 ? 24 : 28,
+				htmlspecialchars( $initials, ENT_XML1 )
+			)
 	);
 
 	return sprintf(

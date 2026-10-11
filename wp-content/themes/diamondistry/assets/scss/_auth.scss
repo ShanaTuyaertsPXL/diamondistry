@@ -1,3 +1,5 @@
+@use 'base';
+
 /* -------------------------------------------------------
    Auth (login, register)
 ------------------------------------------------------- */
@@ -57,8 +59,13 @@
   font-weight: 700;
 }
 .dd-auth__perks li::before {
-  content: "💎";
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
   margin-right: 10px;
+  vertical-align: -0.14em;
+  background: base.$dd-gem center / contain no-repeat;
 }
 .dd-auth__main {
   display: grid;

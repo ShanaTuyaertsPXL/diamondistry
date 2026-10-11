@@ -321,7 +321,8 @@
   box-shadow: 0 6px 16px rgb(40 30 80 / 0.12);
   box-sizing: border-box;
 }
-.diamondistry-painting-card-lock svg { display: block; flex: 0 0 auto; }
+.diamondistry-painting-card-lock svg,
+.diamondistry-painting-card-lock .dd-gem { display: block; flex: 0 0 auto; width: 14px; height: 14px; }
 .diamondistry-painting-card-lock-icon { margin-right: 2px; color: #6e4df6; }
 /* Locked art is shown muted so the price reads first. */
 .diamondistry-painting-card.is-locked .diamondistry-card-preview-grid,

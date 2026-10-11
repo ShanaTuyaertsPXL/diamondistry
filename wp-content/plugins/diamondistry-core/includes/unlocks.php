@@ -192,7 +192,7 @@ function diamondistry_render_locked_painting( $painting ) {
 			<div class="diamondistry-locked__body">
 				<p class="diamondistry-locked__eyebrow">Locked painting</p>
 				<h1><?php echo esc_html( get_the_title( $painting ) ); ?></h1>
-				<p class="diamondistry-locked__price"><strong><?php echo esc_html( number_format_i18n( $cost ) ); ?> 💎</strong> to unlock</p>
+				<p class="diamondistry-locked__price"><strong><?php echo esc_html( number_format_i18n( $cost ) ); ?> <?php echo diamondistry_gem(); ?></strong> to unlock</p>
 
 				<?php if ( ! $logged_in ) : ?>
 					<p class="diamondistry-locked__text">Log in to unlock this painting with the diamonds you earn from finished paintings.</p>
@@ -201,14 +201,14 @@ function diamondistry_render_locked_painting( $painting ) {
 						<a class="dd-button dd-button-secondary" href="<?php echo esc_url( wp_registration_url() ); ?>">Create account</a>
 					</div>
 				<?php elseif ( $short ) : ?>
-					<p class="diamondistry-locked__text">You have <?php echo esc_html( number_format_i18n( $balance ) ); ?> 💎. You need <strong><?php echo esc_html( number_format_i18n( $short ) ); ?> more</strong>. Finish a free painting to earn them.</p>
+					<p class="diamondistry-locked__text">You have <?php echo esc_html( number_format_i18n( $balance ) ); ?> <?php echo diamondistry_gem(); ?>. You need <strong><?php echo esc_html( number_format_i18n( $short ) ); ?> more</strong>. Finish a free painting to earn them.</p>
 					<div class="diamondistry-locked__actions">
 						<a class="dd-button dd-button-primary" href="<?php echo esc_url( home_url( '/paintings/' ) ); ?>">Find a painting <span aria-hidden="true">→</span></a>
 					</div>
 				<?php else : ?>
-					<p class="diamondistry-locked__text">You have <?php echo esc_html( number_format_i18n( $balance ) ); ?> 💎. After unlocking you keep <?php echo esc_html( number_format_i18n( $balance - $cost ) ); ?> 💎, and the painting is yours to play forever.</p>
+					<p class="diamondistry-locked__text">You have <?php echo esc_html( number_format_i18n( $balance ) ); ?> <?php echo diamondistry_gem(); ?>. After unlocking you keep <?php echo esc_html( number_format_i18n( $balance - $cost ) ); ?> <?php echo diamondistry_gem(); ?>, and the painting is yours to play forever.</p>
 					<div class="diamondistry-locked__actions">
-						<button type="button" class="dd-button dd-button-primary" data-unlock>Unlock for <?php echo esc_html( number_format_i18n( $cost ) ); ?> 💎</button>
+						<button type="button" class="dd-button dd-button-primary" data-unlock>Unlock for <?php echo esc_html( number_format_i18n( $cost ) ); ?> <?php echo diamondistry_gem(); ?></button>
 					</div>
 					<p class="diamondistry-locked__error" role="alert" hidden></p>
 				<?php endif; ?>

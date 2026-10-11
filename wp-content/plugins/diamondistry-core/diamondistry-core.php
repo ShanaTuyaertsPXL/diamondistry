@@ -311,6 +311,11 @@ function diamondistry_get_requested_painting() {
 |--------------------------------------------------------------------------
 */
 
+/** Brand diamond icon (styled by the theme's .dd-gem), in place of the 💎 emoji. */
+function diamondistry_gem() {
+	return '<span class="dd-gem" role="img" aria-label="diamonds"></span>';
+}
+
 /** Logo for the download poster: the Customizer logo, else the theme's logo.png. Same origin, so the canvas stays exportable. */
 function diamondistry_get_brand_logo_url() {
 	$logo_id = (int) get_theme_mod( 'custom_logo' );
@@ -474,7 +479,7 @@ function diamondistry_render_playground() {
 					<ul class="diamondistry-meta">
 						<li><?php echo esc_html( $data['width'] . ' × ' . $data['height'] ); ?> diamonds</li>
 						<li><?php echo esc_html( count( $data['palette'] ) ); ?> colours</li>
-						<li class="is-reward"><?php echo esc_html( number_format_i18n( $data['reward'] ) ); ?> 💎 reward</li>
+						<li class="is-reward"><?php echo esc_html( number_format_i18n( $data['reward'] ) ); ?> <?php echo diamondistry_gem(); ?> reward</li>
 						<?php if ( function_exists( 'diamondistry_is_current_challenge' ) && diamondistry_is_current_challenge( $painting->ID ) ) : ?>
 							<li class="is-challenge"><a href="<?php echo esc_url( home_url( '/challenge/' ) ); ?>">🏆 Weekly challenge</a></li>
 						<?php endif; ?>
