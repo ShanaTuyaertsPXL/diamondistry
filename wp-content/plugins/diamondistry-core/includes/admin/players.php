@@ -36,6 +36,17 @@ add_action(
 |--------------------------------------------------------------------------
 */
 
+/** Progress can outlive its painting (trashed or deleted); only live ones count for players. */
+function diamondistry_painting_availability( $painting_id ) {
+	$post = get_post( absint( $painting_id ) );
+
+	if ( ! $post || 'ddp_painting' !== $post->post_type ) {
+		return 'deleted';
+	}
+
+	return 'trash' === $post->post_status ? 'trash' : ( 'publish' === $post->post_status ? 'live' : 'hidden' );
+}
+
 function diamondistry_get_player_progress_summary( $user_id ) {
 
 	$progress =
@@ -52,10 +63,11 @@ function diamondistry_get_player_progress_summary( $user_id ) {
 	$last_activity =
 		null;
 
-	foreach (
-		$progress as
-		$painting_progress
-	) {
+	foreach ( $progress as $summary_painting_id => $painting_progress ) {
+		if ( 'live' !== diamondistry_painting_availability( $summary_painting_id ) ) {
+			continue;
+		}
+
 
 		if (
 			! is_array(
@@ -1356,9 +1368,16 @@ function diamondistry_render_player_detail(
 							]
 						);
 
+					$availability = diamondistry_painting_availability( $painting_id );
+					$availability_labels = array(
+						'trash'   => 'In trash',
+						'deleted' => 'Deleted',
+						'hidden'  => 'Not published',
+					);
+
 					?>
 
-					<tr>
+					<tr<?php echo 'live' !== $availability ? ' style="opacity:.55;"' : ''; ?>>
 
 						<td>
 							<strong>
@@ -1370,6 +1389,9 @@ function diamondistry_render_player_detail(
 								);
 								?>
 							</strong>
+							<?php if ( isset( $availability_labels[ $availability ] ) ) : ?>
+								<br><span class="description"><?php echo esc_html( $availability_labels[ $availability ] ); ?>: not shown to the player, not counted.</span>
+							<?php endif; ?>
 						</td>
 
 						<td>
