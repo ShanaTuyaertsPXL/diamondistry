@@ -16,6 +16,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'DIAMONDISTRY_CHALLENGE_START_META_KEY', '_diamondistry_challenge_start' );
 define( 'DIAMONDISTRY_LEADERBOARD_HIDDEN_META_KEY', '_diamondistry_leaderboard_hidden' );
 
+/*
+ * Anti-cheat. Progress comes from the browser, so times are only trusted when
+ * they look human: a save may add at most MAX_CELLS_PER_SECOND new diamonds per
+ * second since the previous save (plus slack), and a finish must take at least
+ * MIN_SECONDS_PER_CELL per diamond. Failing either only skips the leaderboard.
+ */
+define( 'DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND', 6 );
+define( 'DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL', 0.25 );
+
+/** Whether one save added a humanly possible number of diamonds. */
+function diamondistry_challenge_save_is_plausible( $added_cells, $seconds_since_last_save ) {
+	return $added_cells <= 5 + max( 0, $seconds_since_last_save ) * DIAMONDISTRY_CHALLENGE_MAX_CELLS_PER_SECOND;
+}
+
 /** Diamonds for places 1, 2 and 3 when a challenge week ends. */
 function diamondistry_challenge_prizes() {
 	return array( 100, 50, 25 );
@@ -96,7 +110,7 @@ function diamondistry_challenge_result_prefix( $week_key ) {
  * Called from the progress save (inside the user row lock) on a fresh completion.
  * Returns ['seconds' => int, 'rank' => int] when the time counts, else null.
  */
-function diamondistry_record_challenge_result( $user_id, $painting_id, $started_at, $completed_at ) {
+function diamondistry_record_challenge_result( $user_id, $painting_id, $started_at, $completed_at, $total_cells = 0, $plausible = true ) {
 	if ( ! diamondistry_is_current_challenge( $painting_id ) ) {
 		return null;
 	}
@@ -108,8 +122,14 @@ function diamondistry_record_challenge_result( $user_id, $painting_id, $started_
 		return null;
 	}
 
+	$seconds = max( 1, $completed_at - $started_at );
+
+	// Too fast for a human, or diamonds arrived in impossible bursts: no leaderboard entry.
+	if ( ! $plausible || $seconds < $total_cells * DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL ) {
+		return null;
+	}
+
 	$meta_key = diamondistry_challenge_result_prefix( $current['key'] ) . absint( $user_id );
-	$seconds  = max( 1, $completed_at - $started_at );
 
 	add_post_meta( $painting_id, $meta_key, $seconds, true );
 
@@ -297,7 +317,7 @@ function diamondistry_render_challenge( $atts ) {
 					<?php endforeach; ?>
 				</p>
 				<a class="dd-button dd-button-primary" href="<?php echo esc_url( $play_url ); ?>"><?php echo $my_rank ? 'View painting' : 'Play the challenge'; ?> <span aria-hidden="true">→</span></a>
-				<p class="dd-challenge__rules">Your time runs from your first diamond to your last. Only attempts started this week count, and your first finish is the one that counts. Prizes are added to your balance after the week ends.</p>
+				<p class="dd-challenge__rules">Your time runs from your first diamond to your last. Only attempts started this week count, and your first finish is the one that counts. Times faster than humanly possible are not ranked. Prizes are added to your balance after the week ends.</p>
 			</div>
 		</article>
 

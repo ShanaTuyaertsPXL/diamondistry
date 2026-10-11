@@ -348,11 +348,6 @@ function diamondistry_ajax_save_progress() {
 	 * remains at 100%. Resetting progress first allows the reward to be earned
 	 * again on a later genuine completion.
 	 */
-	if ( $is_completed && ! $was_completed && ! $reward_claimed ) {
-		diamondistry_add_user_diamonds( $user_id, $data['reward'] );
-		$reward_claimed = true;
-		$reward_granted = true;
-	}
 
 	$new_revision = $current_revision + 1;
 	$now          = time();
@@ -367,6 +362,30 @@ function diamondistry_ajax_save_progress() {
 		$completed_at = $now;
 	}
 
+	// Anti-cheat: flag the attempt when one save adds more diamonds than a human could.
+	$last_save_at = ! empty( $old_progress['lastSaveAt'] ) ? absint( $old_progress['lastSaveAt'] ) : $now;
+	$added_cells  = count( array_diff( $completed_cells, $old_completed_cells ) );
+	$implausible  = ! empty( $old_completed_cells ) && ! empty( $old_progress['implausible'] );
+	if ( function_exists( 'diamondistry_challenge_save_is_plausible' ) && ! diamondistry_challenge_save_is_plausible( $added_cells, $now - $last_save_at ) ) {
+		$implausible = true;
+	}
+
+	/*
+	 * Diamonds buy unlocks, so the reward also needs a humanly plausible finish
+	 * (no bursts, and at least the minimum time per diamond). Bulk-transferred
+	 * guest progress therefore completes without a reward, as the guest note says.
+	 */
+	$fair_finish = ! $implausible && (
+		! defined( 'DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL' ) ||
+		( $completed_at - $started_at ) >= $data['totalCells'] * DIAMONDISTRY_CHALLENGE_MIN_SECONDS_PER_CELL
+	);
+
+	if ( $is_completed && ! $was_completed && ! $reward_claimed && $fair_finish ) {
+		diamondistry_add_user_diamonds( $user_id, $data['reward'] );
+		$reward_claimed = true;
+		$reward_granted = true;
+	}
+
 	$all_progress[ $key ] = array(
 		'completedCells' => $completed_cells,
 		'selectedColor'  => $selected_color ?: null,
@@ -375,6 +394,8 @@ function diamondistry_ajax_save_progress() {
 		'lastWorkedAt'   => $last_worked_at,
 		'startedAt'      => $started_at ?: null,
 		'completedAt'    => $completed_at ?: null,
+		'lastSaveAt'     => $now,
+		'implausible'    => $implausible,
 		'updatedAt'      => current_time( 'mysql', true ),
 		'revision'       => $new_revision,
 	);
@@ -383,7 +404,7 @@ function diamondistry_ajax_save_progress() {
 
 	$challenge = null;
 	if ( $is_completed && ! $was_completed && function_exists( 'diamondistry_record_challenge_result' ) ) {
-		$challenge = diamondistry_record_challenge_result( $user_id, $painting_id, $started_at, $completed_at );
+		$challenge = diamondistry_record_challenge_result( $user_id, $painting_id, $started_at, $completed_at, $data['totalCells'], ! $implausible );
 	}
 
 	diamondistry_commit_progress_write( $progress_locked );
